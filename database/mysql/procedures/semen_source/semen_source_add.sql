@@ -55,6 +55,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
 
+DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE cur_semen_source_id                     INT             DEFAULT 0;
 DECLARE cur_semen_source_flag                   INT             DEFAULT 0;
@@ -156,6 +157,24 @@ INSERT INTO semen_source(
 );
 
 SELECT LAST_INSERT_ID() INTO cur_semen_source_id;
+
+
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    account_selection
+WHERE   account_id =  cur_pig_farm_account_id AND 
+        semen_supplier_id = in_semen_supplier_id;
+        
+
+IF cur_count = 0 THEN 
+    INSERT INTO account_selection(
+        account_id,
+        semen_supplier_id
+    ) VALUES (
+        cur_pig_farm_account_id,
+        in_semen_supplier_id
+    );
+END IF;
 
 
 END process_user;
