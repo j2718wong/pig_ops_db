@@ -434,14 +434,14 @@ WHEN BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL THEN
            
     
 WHEN BUSINESS_OBJ_ID_PIG_PROD_PIG_OPS THEN
-    SET cur_group_flag = cur_user_grp_flag_priv_prod_gestating_ops;
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_pig_ops;
         
     
     
 WHEN BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD THEN
     SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_pig_dead;
         
-WHEN BUSINESS_OBJ_ID_PROD_PIG_HARVEST THEN
+WHEN BUSINESS_OBJ_ID_PIG_PROD_HARVEST THEN
     SET cur_group_flag = flag_priv_pig_prod_harvest;
     
 
