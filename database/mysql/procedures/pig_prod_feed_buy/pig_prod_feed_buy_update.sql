@@ -9,11 +9,11 @@ CREATE PROCEDURE pig_prod_feed_buy_update(
     in_feed_type_id         INT,
     in_feed_brand_id        INT,
     in_feed_supplier_id     INT,
-    quantity                INT,
-    kg_per_qty              DECIMAL(5,1),
+    in_quantity             INT,
+    in_kg_per_unit          DECIMAL(5,1),
     
-    unit_cost               DECIMAL(8,2),
-    total_cost              DECIMAL(8,2)
+    in_unit_cost            DECIMAL(8,2),
+    in_total_cost           DECIMAL(8,2)
 )  
 
 BEGIN
@@ -62,12 +62,12 @@ DECLARE cur_feed_quantity_grower                INT             DEFAULT 0;
 DECLARE cur_feed_quantity_finisher              INT             DEFAULT 0;
 
 
-DECLARE cur_feed_cost_lactating                 DECIMAL(8,2)    DEFAULT 0;
-DECLARE cur_feed_cost_booster                   DECIMAL(8,2)    DEFAULT 0;
-DECLARE cur_feed_cost_prestarter                DECIMAL(8,2)    DEFAULT 0;
-DECLARE cur_feed_cost_starter                   DECIMAL(8,2)    DEFAULT 0;
-DECLARE cur_feed_cost_grower                    DECIMAL(8,2)    DEFAULT 0;
-DECLARE cur_feed_cost_finisher                  DECIMAL(8,2)    DEFAULT 0;
+DECLARE cur_total_cost_lactating                 DECIMAL(8,2)    DEFAULT 0;
+DECLARE cur_total_cost_booster                   DECIMAL(8,2)    DEFAULT 0;
+DECLARE cur_total_cost_prestarter                DECIMAL(8,2)    DEFAULT 0;
+DECLARE cur_total_cost_starter                   DECIMAL(8,2)    DEFAULT 0;
+DECLARE cur_total_cost_grower                    DECIMAL(8,2)    DEFAULT 0;
+DECLARE cur_total_cost_finisher                  DECIMAL(8,2)    DEFAULT 0;
 
 
 
@@ -130,11 +130,11 @@ UPDATE pig_prod_feed_buy  SET
     feed_supplier_id    = in_feed_supplier_id,
     
     quantity            = in_quantity,
-    kg_per_qty          = in_kg_per_qty,
-    kg_total            = in_quantity * in_kg_per_qty,
+    kg_per_unit         = in_kg_per_unit,
+    kg_total            = in_quantity * in_kg_per_unit,
     
     unit_cost           = in_unit_cost,
-    feed_cost           = in_feed_cost,
+    total_cost          = in_total_cost,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
@@ -143,74 +143,159 @@ WHERE id = in_pig_prod_feed_buy_id;
 
 
 /* It is difficult to know which feed is updated; so update all;*/
-SELECT  SUM(quantity),
-        SUM(feed_cost)
-INTO    cur_feed_quantity_lactating,
-        cur_feed_cost_lactating
-FROM    pig_prod_feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_LACTATING;
-    
-    
-SELECT  SUM(quantity),
-        SUM(feed_cost)
-INTO    cur_feed_quantity_booster,
-        cur_feed_cost_booster
-FROM    pig_prod_feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_BOOSTER;
-    
-    
-SELECT  SUM(quantity),
-        SUM(feed_cost)
-INTO    cur_feed_quantity_prestarter,
-        cur_feed_cost_prestarter
-FROM    pig_prod_feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_PRESTARTER;
-    
+IF in_pig_prod_id > 0 THEN 
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_lactating,
+            cur_total_cost_lactating
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_id     = in_pig_prod_id AND 
+            feed_type_id    = FEED_TYPE_ID_LACTATING;
+        
+        
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_booster,
+            cur_total_cost_booster
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_id     = in_pig_prod_id AND 
+            feed_type_id    = FEED_TYPE_ID_BOOSTER;
+        
+        
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_prestarter,
+            cur_total_cost_prestarter
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_id     = in_pig_prod_id AND 
+            feed_type_id    = FEED_TYPE_ID_PRESTARTER;
+        
 
-SELECT  SUM(quantity),
-        SUM(feed_cost)
-INTO    cur_feed_quantity_starter,
-        cur_feed_cost_starter
-FROM    pig_prod_feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_STARTER;
-
-
-SELECT  SUM(quantity),
-        SUM(feed_cost)
-INTO    cur_feed_quantity_grower,
-        cur_feed_cost_grower
-FROM    pig_prod_feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_GROWER;
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_starter,
+            cur_total_cost_starter
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_id     = in_pig_prod_id AND 
+            feed_type_id    = FEED_TYPE_ID_STARTER;
 
 
-SELECT  SUM(quantity),
-        SUM(feed_cost)
-INTO    cur_feed_quantity_finisher,
-        cur_feed_cost_finisher
-FROM    pig_prod_feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_FINISHER;
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_grower,
+            cur_total_cost_grower
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_id     = in_pig_prod_id AND 
+            feed_type_id    = FEED_TYPE_ID_GROWER;
 
-    
-    
-UPDATE pig_production SET 
-    num_b_lactating     = cur_feed_quantity_lactating,
-    num_b_booster       = cur_feed_quantity_booster,
-    num_b_prestarter    = cur_feed_quantity_prestarter,
-    num_b_starter       = cur_feed_quantity_starter,
-    num_b_grower        = cur_feed_quantity_grower,
-    num_b_finisher      = cur_feed_quantity_finisher,
-    
-    cost_lactating      = cur_feed_cost_lactating,
-    cost_booster        = cur_feed_cost_booster,
-    cost_prestarter     = cur_feed_cost_prestarter,
-    cost_starter        = cur_feed_cost_starter,
-    cost_grower         = cur_feed_cost_grower,
-    cost_finisher       = cur_feed_cost_finisher,
-    
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
-WHERE id = in_pig_prod_id;
 
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_finisher,
+            cur_total_cost_finisher
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_id     = in_pig_prod_id AND 
+            feed_type_id    = FEED_TYPE_ID_FINISHER;
+
+        
+        
+    UPDATE pig_production SET 
+        num_b_lactating     = cur_feed_quantity_lactating,
+        num_b_booster       = cur_feed_quantity_booster,
+        num_b_prestarter    = cur_feed_quantity_prestarter,
+        num_b_starter       = cur_feed_quantity_starter,
+        num_b_grower        = cur_feed_quantity_grower,
+        num_b_finisher      = cur_feed_quantity_finisher,
+        
+        cost_lactating      = cur_total_cost_lactating,
+        cost_booster        = cur_total_cost_booster,
+        cost_prestarter     = cur_total_cost_prestarter,
+        cost_starter        = cur_total_cost_starter,
+        cost_grower         = cur_total_cost_grower,
+        cost_finisher       = cur_total_cost_finisher,
+        
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP
+    WHERE id = in_pig_prod_id;
+
+ELSE
+
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_lactating,
+            cur_total_cost_lactating
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_group_id   = in_pig_prod_group_id AND 
+            feed_type_id        = FEED_TYPE_ID_LACTATING;
+        
+        
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_booster,
+            cur_total_cost_booster
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_group_id   = in_pig_prod_group_id AND 
+            feed_type_id        = FEED_TYPE_ID_BOOSTER;
+        
+        
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_prestarter,
+            cur_total_cost_prestarter
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_group_id   = in_pig_prod_group_id AND 
+            feed_type_id        = FEED_TYPE_ID_PRESTARTER;
+        
+
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_starter,
+            cur_total_cost_starter
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_group_id   = in_pig_prod_group_id AND 
+            feed_type_id        = FEED_TYPE_ID_STARTER;
+
+
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_grower,
+            cur_total_cost_grower
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_group_id   = in_pig_prod_group_id AND 
+            feed_type_id        = FEED_TYPE_ID_GROWER;
+
+
+    SELECT  SUM(quantity),
+            SUM(total_cost)
+    INTO    cur_feed_quantity_finisher,
+            cur_total_cost_finisher
+    FROM    pig_prod_feed_buy
+    WHERE   pig_prod_group_id   = in_pig_prod_group_id AND 
+            feed_type_id        = FEED_TYPE_ID_FINISHER;
+
+        
+        
+    UPDATE pig_production_group SET 
+        num_b_lactating     = cur_feed_quantity_lactating,
+        num_b_booster       = cur_feed_quantity_booster,
+        num_b_prestarter    = cur_feed_quantity_prestarter,
+        num_b_starter       = cur_feed_quantity_starter,
+        num_b_grower        = cur_feed_quantity_grower,
+        num_b_finisher      = cur_feed_quantity_finisher,
+        
+        cost_lactating      = cur_total_cost_lactating,
+        cost_booster        = cur_total_cost_booster,
+        cost_prestarter     = cur_total_cost_prestarter,
+        cost_starter        = cur_total_cost_starter,
+        cost_grower         = cur_total_cost_grower,
+        cost_finisher       = cur_total_cost_finisher,
+        
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP
+    WHERE id = in_pig_prod_group_id;
+
+
+END IF;
 
 
 END process_user;

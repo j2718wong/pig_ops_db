@@ -159,6 +159,7 @@ INSERT INTO semen_source(
 SELECT LAST_INSERT_ID() INTO cur_semen_source_id;
 
 
+/* Insert INTO account_selection*/
 SELECT  COUNT(*) 
 INTO    cur_count
 FROM    account_selection
