@@ -2,10 +2,11 @@
 
 DROP PROCEDURE IF EXISTS pig_farm_staff_add $$
 CREATE PROCEDURE pig_farm_staff_add(
-    in_user_id              INT,
+    in_user_id                  INT,
 
-    in_pig_farm_id          INT,
-    in_name                 VARCHAR(50)
+    in_pig_farm_id              INT,
+    in_staff_user_id            INT,
+    in_name                     VARCHAR(50)
 
 )  
 
@@ -95,12 +96,14 @@ END IF;
 INSERT INTO pig_farm_staff(
     account_id,
     pig_farm_id,
+    user_id,
     name,
     
     added_by_user_id
 ) VALUES (
     cur_user_account_id,
     in_pig_farm_id,
+    in_staff_user_id,
     in_name,
     
     in_user_id

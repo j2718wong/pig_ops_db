@@ -5,6 +5,7 @@ CREATE PROCEDURE pig_farm_staff_update(
     in_user_id                  INT,
     
     in_pig_farm_staff_id        INT,
+    in_staff_user_id            INT,
     
     in_name                     VARCHAR(50)
     
@@ -25,7 +26,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 
 
-DECLARE BUSINESS_OBJ_ID_PIG_FARM_STAFF          INT           	DEFAULT 6;
+DECLARE BUSINESS_OBJ_ID_PIG_FARM_STAFF          INT             DEFAULT 6;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
@@ -101,6 +102,8 @@ END IF;
 
 UPDATE pig_farm_staff SET
     name                = in_name,
+    
+    user_id             = in_staff_user_id,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
