@@ -132,47 +132,86 @@ END IF;
 
 IF in_sex = 'F' THEN 
     SET cur_pig_farm_last_sow_id = cur_pig_farm_last_sow_id + 1;
+    
+    INSERT INTO sow_boar(
+        account_id,
+        pig_farm_id,
+        farm_sow_id,
+        
+        farm_birth_prod_id,
+        line_id,
+        sow_status_id,
+        
+        sex,
+        
+        number,
+        name,
+        date_of_birth,
+        notes,
+        
+        added_by_user_id
+    ) VALUES (
+        cur_user_account_id,
+        in_pig_farm_id,
+        cur_pig_farm_last_sow_id,
+        
+        in_farm_birth_prod_id,
+        in_line_id,
+        in_sow_status_id,
+        
+        in_sex,
+        
+        in_number,
+        in_name,
+        in_date_of_birth,
+        in_notes,
+        
+        in_user_id
+    );
+
+
 ELSE
     SET cur_pig_farm_last_boar_id = cur_pig_farm_last_boar_id + 1;
+    
+    INSERT INTO sow_boar(
+        account_id,
+        pig_farm_id,
+        farm_boar_id,
+        
+        farm_birth_prod_id,
+        line_id,
+        sow_status_id,
+        
+        sex,
+        
+        number,
+        name,
+        date_of_birth,
+        notes,
+        
+        added_by_user_id
+    ) VALUES (
+        cur_user_account_id,
+        in_pig_farm_id,
+        cur_pig_farm_last_boar_id,
+        
+        in_farm_birth_prod_id,
+        in_line_id,
+        NULL,
+        
+        in_sex,
+        
+        in_number,
+        in_name,
+        in_date_of_birth,
+        in_notes,
+        
+        in_user_id
+    );
+    
+    
 END IF;
 
-INSERT INTO sow_boar(
-    account_id,
-    pig_farm_id,
-    farm_sow_id,
-    farm_boar_id,
-    
-    farm_birth_prod_id,
-    line_id,
-    sow_status_id,
-    
-    sex,
-    
-    number,
-    name,
-    date_of_birth,
-    notes,
-    
-    added_by_user_id
-) VALUES (
-    cur_user_account_id,
-    in_pig_farm_id,
-    cur_pig_farm_last_sow_id,
-    cur_pig_farm_last_boar_id,
-    
-    in_farm_birth_prod_id,
-    in_line_id,
-    in_sow_status_id,
-    
-    in_sex,
-    
-    in_number,
-    in_name,
-    in_date_of_birth,
-    in_notes,
-    
-    in_user_id
-);
 
 SELECT LAST_INSERT_ID() INTO cur_sow_boar_id;
 
