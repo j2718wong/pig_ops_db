@@ -5,9 +5,11 @@ CREATE PROCEDURE pig_prod_pig_dead_add(
     in_user_id              INT,
    
     in_pig_prod_id          INT,
+    in_pig_prod_group_id    INT,
+    
     in_date_dead            VARCHAR(10),
     in_dead_type_id         INT,
-    in_sex                  VARCHAR(2),
+    in_num_pigs_dead        INT,
     in_comments             VARCHAR(160)
 )  
 
@@ -53,7 +55,7 @@ DECLARE cur_pig_prod_ai_id                      INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
-DECLARE cur_pig_prod_num_pigs_current_m         INT             DEFAULT 0;
+DECLARE cur_pig_prod_num_pigs_current         INT             DEFAULT 0;
 DECLARE cur_pig_prod_num_pigs_current_f         INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_pig_dead_id                INT             DEFAULT 0;
@@ -68,24 +70,44 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  
-        account_id,
-        pig_farm_id,
-        prod_status_id,
-        
-        num_pigs_current_m,
-        num_pigs_current_f
-INTO    
-        cur_pig_prod_account_id,
-        cur_pig_prod_pig_farm_id,
-        cur_pig_prod_status_id,
-        
-        cur_pig_prod_num_pigs_current_m,
-        cur_pig_prod_num_pigs_current_f
-        
-FROM    pig_production 
-WHERE   id = in_pig_prod_id
-LIMIT   1;
+IF in_pig_prod_id > 0 THEN 
+    SELECT  
+            account_id,
+            pig_farm_id,
+            prod_status_id,
+            
+            num_pigs_current
+    INTO    
+            cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id,
+            cur_pig_prod_status_id,
+            
+            cur_pig_prod_num_pigs_current
+            
+    FROM    pig_production 
+    WHERE   id = in_pig_prod_id
+    LIMIT   1;
+
+ELSE
+    SELECT  
+            account_id,
+            pig_farm_id,
+            prod_status_id,
+            
+            num_pigs_current
+    INTO    
+            cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id,
+            cur_pig_prod_status_id,
+            
+            cur_pig_prod_num_pigs_current
+            
+    FROM    production_group 
+    WHERE   id = in_pig_prod_group_id
+    LIMIT   1;
+
+
+END IF;
 
 
 CALL basic_user_check(
@@ -129,7 +151,7 @@ INSERT INTO pig_prod_pig_dead (
     
     date_dead,
     dead_type_id,
-    sex,
+    num_pigs_dead,
     comments,
     
     added_by_user_id
@@ -141,7 +163,7 @@ INSERT INTO pig_prod_pig_dead (
     
     in_date_dead,
     in_dead_type_id,
-    in_sex,
+    in_num_pigs_dead,
     in_comments,
     
     in_user_id
@@ -149,22 +171,22 @@ INSERT INTO pig_prod_pig_dead (
 
 SELECT LAST_INSERT_ID() INTO cur_pig_prod_pig_dead_id;
 
-IF in_sex = 'F' THEN
-    IF cur_pig_prod_num_pigs_current_f > 0 THEN 
+
+IF in_pig_prod_id > 0 THEN 
+    IF cur_pig_prod_num_pigs_current >= in_num_pigs_dead THEN 
         UPDATE pig_production SET
-            num_pigs_current_f = num_pigs_current_f -1
+            num_pigs_current = num_pigs_current - in_num_pigs_dead
         WHERE id = in_pig_prod_id;
     END IF;
 
-ELSE 
-    
-    IF cur_pig_prod_num_pigs_current_m > 0 THEN 
-        UPDATE pig_production SET
-            num_pigs_current_m = num_pigs_current_m -1
-        WHERE id = in_pig_prod_id;
+ELSE
+    IF cur_pig_prod_num_pigs_current >= in_num_pigs_dead THEN 
+        UPDATE production_group SET
+            num_pigs_current = num_pigs_current - in_num_pigs_dead
+        WHERE id = in_pig_prod_group_id;
     END IF;
 
-END IF; 
+END IF;
 
 
 END process_user;

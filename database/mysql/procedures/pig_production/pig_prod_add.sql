@@ -212,7 +212,7 @@ ELSE
         
         sow_id,
         insemination_type,
-        semen_boar_id,
+        boar_id,
         semen_source_id,
         
         semen_cost,

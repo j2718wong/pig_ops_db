@@ -31,7 +31,7 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL       INT             DEFAULT 22
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL       INT             DEFAULT 22;
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
@@ -73,11 +73,11 @@ SET res_code    = "SUCCESS";
 IF in_pig_prod_id > 0 THEN 
     SELECT 
         account_id,
-        status
+        pig_prod_status_id
 
     INTO
         cur_pig_prod_account_id,
-        cur_pig_prod_status
+        cur_pig_prod_status_id
 
     FROM pig_production 
     WHERE id = in_pig_prod_id;
@@ -85,11 +85,11 @@ IF in_pig_prod_id > 0 THEN
 ELSE
     SELECT 
         account_id,
-        status
+        pig_prod_status_id
 
     INTO
         cur_pig_prod_account_id,
-        cur_pig_prod_status
+        cur_pig_prod_status_id
 
     FROM pig_production_group 
     WHERE id = in_pig_prod_group_id;
@@ -137,13 +137,6 @@ UPDATE pig_prod_feed_bal SET
 WHERE id = in_pig_prod_feed_bal_id;
 
 SELECT LAST_INSERT_ID() INTO cur_pig_prod_feed_bal_id;
-
-
-
-UPDATE pig_production SET
-    last_feed_balance_id = cur_pig_prod_feed_bal_id
-WHERE id = in_pig_prod_id;
-
 
 
 END process_user;

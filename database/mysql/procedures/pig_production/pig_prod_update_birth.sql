@@ -119,8 +119,7 @@ UPDATE pig_production SET
     num_pigs_live_m             = in_num_pigs_live_m,
     num_pigs_live_f             = in_num_pigs_live_f,
     
-    num_pigs_current_m          = in_num_pigs_live_m,
-    num_pigs_current_f          = in_num_pigs_live_f,
+    num_pigs_current            = in_num_pigs_live_m + in_num_pigs_live_f,
     
     birth_staff_id              = in_birth_staff_id,
     

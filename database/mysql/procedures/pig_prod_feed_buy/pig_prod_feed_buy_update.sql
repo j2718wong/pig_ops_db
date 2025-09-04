@@ -50,9 +50,12 @@ DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+DECLARE cur_pig_prod_feed_buy_pig_prod_id       INT             DEFAULT 0;
+DECLARE cur_pig_prod_feed_buy_pig_prod_group_id INT             DEFAULT 0;
+
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
-DECLARE cur_pig_prod_status                     INT             DEFAULT 0;
+DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 DECLARE cur_feed_quantity_lactating             INT             DEFAULT 0;
 DECLARE cur_feed_quantity_booster               INT             DEFAULT 0;
@@ -87,16 +90,40 @@ SET res_code    = "SUCCESS";
 
 
 SELECT 
-    b.account_id,
-    b.status
+    pig_prod_id,
+    pig_prod_group_id
+INTO 
+    cur_pig_prod_feed_buy_pig_prod_id,
+    cur_pig_prod_feed_buy_pig_prod_group_id
+FROM pig_prod_feed_buy
+WHERE id = in_pig_prod_feed_buy_id;
 
-INTO
-    cur_pig_prod_account_id,
-    cur_pig_prod_status
 
-FROM pig_prod_feed_buy a 
-LEFT OUTER JOIN pig_production b ON a.pig_prod_id = b.id 
-WHERE a.id = in_pig_prod_feed_buy_id;
+IF cur_pig_prod_feed_buy_pig_prod_id > 0 THEN 
+    SELECT 
+        account_id,
+        prod_status_id
+
+    INTO
+        cur_pig_prod_account_id,
+        cur_pig_prod_status_id
+
+    FROM pig_production  
+    WHERE id = cur_pig_prod_feed_buy_pig_prod_id;
+
+ELSE
+    SELECT 
+        account_id,
+        prod_status_id
+
+    INTO
+        cur_pig_prod_account_id,
+        cur_pig_prod_status_id
+
+    FROM production_group  
+    WHERE id = cur_pig_prod_feed_buy_pig_prod_group_id;
+    
+END IF;
 
 
 CALL basic_user_check(
@@ -275,7 +302,7 @@ ELSE
 
         
         
-    UPDATE pig_production_group SET 
+    UPDATE production_group SET 
         num_b_lactating     = cur_feed_quantity_lactating,
         num_b_booster       = cur_feed_quantity_booster,
         num_b_prestarter    = cur_feed_quantity_prestarter,
