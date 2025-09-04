@@ -1,30 +1,25 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_feed_bal_add $$
-CREATE PROCEDURE pig_prod_feed_bal_add(
+DROP PROCEDURE IF EXISTS pig_prod_harvest_add $$
+CREATE PROCEDURE pig_prod_harvest_add(
     in_user_id              INT,
     in_pig_prod_id          INT,
     in_pig_prod_group_id    INT,
     
-    in_date_balance         VARCHAR(10),
+    in_date_harvest         VARCHAR(10),
     
-    in_num_pigs             INT,
-    
-    in_num_lactating        DECIMAL(5,1),
-    in_num_booster          DECIMAL(5,1),
-    in_num_prestarter       DECIMAL(5,1),
-    in_num_starter          DECIMAL(5,1),
-    in_num_grower           DECIMAL(5,1),
-    in_num_finisher         DECIMAL(5,1)
+    in_num_pigs_harvest     INT,
+	in_live_weight			INT,
+	in_slaugther_weight		INT
 )  
 
 BEGIN
 
 /** 
- * Will add pig_prod_feed_bal entry.
+ * Will add pig_prod_harvest entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
- * @since August 25, 2025
+ * @since September 4, 2025
  *
  */
 
@@ -34,21 +29,12 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 
 
-DECLARE BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL       INT             DEFAULT 22
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_HARVEST       	INT             DEFAULT 26
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
-
-
-DECLARE FEED_TYPE_ID_GESTATING                  INT             DEFAULT 1;
-DECLARE FEED_TYPE_ID_LACTATING                  INT             DEFAULT 2;
-DECLARE FEED_TYPE_ID_BOOSTER                    INT             DEFAULT 3;
-DECLARE FEED_TYPE_ID_PRESTARTER                 INT             DEFAULT 4;
-DECLARE FEED_TYPE_ID_STARTER                    INT             DEFAULT 5;
-DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
-DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 
 
 
@@ -61,7 +47,7 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 
 
-DECLARE cur_pig_prod_feed_bal_id                INT             DEFAULT 0;
+DECLARE cur_pig_prod_harvest_id                	INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -105,7 +91,7 @@ CALL basic_user_check(
     1, /* user must have an account*/
     cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
     
-    BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL,
+    BUSINESS_OBJ_ID_PIG_PROD_HARVEST,
     FLAG_BIT_OPERATION_ADD,
     
     cur_user_account_id, 
@@ -125,23 +111,23 @@ END IF;
 /* Check for duplicate entry */
 IF in_pig_prod_id > 0 THEN 
     SELECT  id
-    INTO    cur_pig_prod_feed_bal_id
-    FROM    pig_prod_feed_bal
+    INTO    cur_pig_prod_harvest_id
+    FROM    pig_prod_harvest
     WHERE   pig_prod_id         = in_pig_prod_id    AND
-            date_balance        = in_date_balance
+            date_harvest        = in_date_harvest
     LIMIT   1;
     
 ELSE
     SELECT  id
-    INTO    cur_pig_prod_feed_bal_id
-    FROM    pig_prod_feed_bal
+    INTO    cur_pig_prod_harvest_id
+    FROM    pig_prod_harvest
     WHERE   pig_prod_group_id   = in_pig_prod_group_id    AND
-            date_balance        = in_date_balance
+            date_harvest        = in_date_harvest
     LIMIT   1;
     
 END IF;
 
-IF cur_pig_prod_feed_bal_id > 0 THEN 
+IF cur_pig_prod_harvest_id > 0 THEN 
     SET res_num     = RES_NUM_DUPLICATE_ENTRY;
     SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
     
@@ -149,47 +135,68 @@ IF cur_pig_prod_feed_bal_id > 0 THEN
 END IF;
 
 
-INSERT INTO pig_prod_feed_bal(
+INSERT INTO pig_prod_harvest(
     pig_prod_id,
-    pig_prod_group_id,
+	pig_prod_group_id,
     
-    date_balance,
+    date_harvest,
     
-    num_pigs,
+    num_pigs_harvest,
     
-    num_lactating,
-    num_booster,
-    num_prestarter,
-    num_starter,
-    num_grower,
-    num_finisher,
+    live_weight,
+	slaugther_weight
 
     added_by_user_id
 ) VALUES (
     in_pig_prod_id,
     in_pig_prod_group_id,
-    
-    in_date_balance,
 	
-	in_num_pigs,
+    in_date_harvest,
     
-    in_num_lactating,
-    in_num_booster,
-    in_num_prestarter,
-    in_num_starter,
-    in_num_grower,
-    in_num_finisher,
+	in_num_pigs,
+	
+    in_live_weight,
+	in_slaugther_weight,
 
     in_user_id
 );
 
-SELECT LAST_INSERT_ID() INTO cur_pig_prod_feed_bal_id;
+SELECT LAST_INSERT_ID() INTO cur_pig_prod_harvest_id;
 
 
+IF in_pig_prod_id > 0 THEN 
+	SELECT 	SUM(num_pigs_harvest)
+	INTO 	cur_num_pigs_harvest
+	FROM 	pig_prod_harvest
+	WHERE 	pig_prod_id = in_pig_prod_id;
+	
+	SELECT 	num_pigs_weaning_m + num_pigs_weaning_f
+	INTO	cur_num_pigs_weaning
+	FROM 	pig_production 
+	WHERE 	id = in_pig_prod_id;
+	
+	IF cur_num_pigs_weaning >= cur_num_pigs_harvest THEN
+		UPDATE 	pig_production SET
+			num_pigs_current = cur_num_pigs_weaning - cur_num_pigs_harvest
+		WHERE id = in_pig_prod_id;
+	ELSE
+		UPDATE 	pig_production SET
+			num_pigs_current = 0
+		WHERE id = in_pig_prod_id;
+	END IF;
 
-UPDATE pig_production SET
-    last_feed_balance_id = cur_pig_prod_feed_bal_id
-WHERE id = in_pig_prod_id;
+ELSE
+	SELECT 	SUM(num_pigs_harvest)
+	INTO 	cur_num_pigs_harvest
+	FROM 	pig_prod_harvest
+	WHERE 	pig_prod_group_id = in_pig_prod_group_id;
+	
+	SELECT 	SUM(num_pigs_weaning_m),
+			SUM(num_pigs_weaning_f)
+	INTO 	
+	FROM 	pig_production
+
+END IF;
 
 
 
@@ -202,7 +209,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_pig_prod_feed_bal_id            AS pig_prod_feed_bal_id;
+    cur_pig_prod_harvest_id            AS pig_prod_harvest_id;
 
 END $$
 

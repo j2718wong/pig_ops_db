@@ -115,8 +115,7 @@ UPDATE pig_production SET
     num_pigs_weaning_m          = in_num_pigs_male,
     num_pigs_weaning_f          = in_num_pigs_female,
 
-    num_pigs_current_m          = in_num_pigs_male, 
-    num_pigs_current_f          = in_num_pigs_female,
+    num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
     
     total_pigs_weight_weaning   = in_total_weight,
     
