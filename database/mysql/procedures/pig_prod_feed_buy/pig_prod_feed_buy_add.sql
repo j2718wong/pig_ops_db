@@ -62,7 +62,7 @@ DECLARE cur_total_cost                          DECIMAL(8,2)    DEFAULT 0;
 DECLARE cur_pig_prod_feed_buy_id                INT             DEFAULT 0;
 
 
-DECLARE cur_count								INT             DEFAULT 0;
+DECLARE cur_count                               INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;

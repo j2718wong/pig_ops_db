@@ -1,10 +1,10 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_feed_bal_add $$
-CREATE PROCEDURE pig_prod_feed_bal_add(
+DROP PROCEDURE IF EXISTS pig_prod_feed_bal_update $$
+CREATE PROCEDURE pig_prod_feed_bal_update(
     in_user_id              INT,
-    in_pig_prod_id          INT,
-    in_pig_prod_group_id    INT,
+    
+    in_pig_prod_feed_bal_id INT,
     
     in_date_balance         VARCHAR(10),
     
@@ -29,9 +29,6 @@ BEGIN
  */
 
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
-
-
-DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 
 
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL       INT             DEFAULT 22
@@ -106,7 +103,7 @@ CALL basic_user_check(
     cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL,
-    FLAG_BIT_OPERATION_ADD,
+    FLAG_BIT_OPERATION_UPDATE,
     
     cur_user_account_id, 
     cur_user_group_id,
@@ -122,62 +119,22 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-/* Check for duplicate entry */
-IF in_pig_prod_id > 0 THEN 
-    SELECT  id
-    INTO    cur_pig_prod_feed_bal_id
-    FROM    pig_prod_feed_bal
-    WHERE   pig_prod_id         = in_pig_prod_id    AND
-            date_balance        = in_date_balance
-    LIMIT   1;
+UPDATE pig_prod_feed_bal SET 
+    date_balance        = in_date_balance,
     
-ELSE
-    SELECT  id
-    INTO    cur_pig_prod_feed_bal_id
-    FROM    pig_prod_feed_bal
-    WHERE   pig_prod_group_id   = in_pig_prod_group_id    AND
-            date_balance        = in_date_balance
-    LIMIT   1;
+    num_pigs            = in_num_pigs,
     
-END IF;
+    num_l_lactating     = in_num_lactating,
+    num_l_booster       = in_num_booster,
+    num_l_prestarter    = in_num_prestarter,
+    num_l_starter       = in_num_starter,
+    num_l_grower        = in_num_grower,
+    num_l_finisher      = in_num_finisher,
+    
+    last_update_user_id = in_user_id,
+    dt_last_update      = CURRENT_TIMESTAMP
 
-IF cur_pig_prod_feed_bal_id > 0 THEN 
-    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
-    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
-    
-    LEAVE process_user;
-END IF;
-
-
-INSERT INTO pig_prod_feed_bal(
-    pig_prod_id,
-    
-    date_balance,
-    
-    num_pigs,
-    
-    num_lactating,
-    num_booster,
-    num_prestarter,
-    num_starter,
-    num_grower,
-    num_finisher,
-
-    added_by_user_id
-) VALUES (
-    in_pig_prod_id,
-    
-    in_date_balance,
-    
-    in_num_lactating,
-    in_num_booster,
-    in_num_prestarter,
-    in_num_starter,
-    in_num_grower,
-    in_num_finisher,
-
-    in_user_id
-);
+WHERE id = in_pig_prod_feed_bal_id;
 
 SELECT LAST_INSERT_ID() INTO cur_pig_prod_feed_bal_id;
 
