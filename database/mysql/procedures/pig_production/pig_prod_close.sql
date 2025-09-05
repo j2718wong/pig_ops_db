@@ -1,18 +1,10 @@
 DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_update_insem $$
-CREATE PROCEDURE pig_prod_update_insem(
+DROP PROCEDURE IF EXISTS pig_prod_close $$
+CREATE PROCEDURE pig_prod_close(
     in_user_id              INT,
     
-    in_pig_prod_id          INT,
-    
-    in_semen_cost           DECIMAL(6,2),
-    in_insemination_cost    DECIMAL(6,2),
-    in_insem_cost_comments  VARCHAR(200),
-    
-    in_insem_staff_id       INT,
-    in_date_insemination    VARCHAR(10)  /* in YYYY-MM-DD format*/
-
+    in_pig_prod_id          INT
 )
 
 BEGIN
@@ -20,7 +12,7 @@ BEGIN
 /** 
  * Will update pig_production entry.
  * @author Jack Wong
- * @since August 23, 2025
+ * @since September 5, 2025
  *
  */
  
@@ -28,14 +20,6 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
-DECLARE RES_NUM_CANNOT_UPDATE_INSEMINATION_DATA INT             DEFAULT 21;
-
-
-DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 19;
-
-DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
-DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
-DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
@@ -45,6 +29,12 @@ DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 10;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+
+DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 19;
+
+DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
+DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
+DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -72,13 +62,18 @@ SET res_code    = "SUCCESS";
 SELECT  
         account_id,
         prod_status_id
-INTO    
-        cur_pig_prod_account_id,
+INTO    cur_pig_prod_account_id,
         cur_pig_prod_status_id
 FROM    pig_production
 WHERE   id = in_pig_prod_id
 LIMIT   1;
 
+
+/* Operation pig_production.close will be treated as delete operation
+even if the actual row is not deleted; If the production_status is set close, 
+all new changes to the pig production will not be allowed.
+
+*/
 
 CALL basic_user_check(
     in_user_id, 
@@ -86,7 +81,7 @@ CALL basic_user_check(
     cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_PIG_PRODUCTION,
-    FLAG_BIT_OPERATION_UPDATE,
+    FLAG_BIT_OPERATION_DELETE,
     
     cur_user_account_id, 
     cur_user_group_id,
@@ -101,7 +96,6 @@ IF res_num != RES_NUM_SUCCESS THEN
     LEAVE process_user;
 END IF;
 
-
 IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
     SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
     SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
@@ -110,30 +104,8 @@ IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN
 END IF;
 
 
-SELECT  date_actual_birth
-INTO    cur_pig_prod_date_actual_birth
-FROM    pig_production
-WHERE   id = in_pig_prod_id;
-
-
-IF cur_pig_prod_date_actual_birth IS NOT NULL THEN 
-
-    SET res_num     = RES_NUM_CANNOT_UPDATE_INSEMINATION_DATA;
-    SET res_code    = "RES_NUM_CANNOT_UPDATE_INSEMINATION_DATA";
-    SET res_desc    = "Cannot update insemination data after birth.";
-    
-    LEAVE process_user;
-
-END IF;
-
-
 UPDATE pig_production SET
-    semen_cost          = in_semen_cost,
-    insemination_cost   = in_insemination_cost,
-    insem_cost_comments = in_insem_cost_comments,
-    
-    date_insemination   = in_date_insemination,
-    date_expected_birth = DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
+    prod_status_id      = PRODUCTION_STATUS_ID_CLOSED,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP

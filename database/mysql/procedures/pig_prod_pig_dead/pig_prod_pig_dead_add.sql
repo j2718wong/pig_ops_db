@@ -26,6 +26,7 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
+DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
 DECLARE RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD    INT             DEFAULT 22;
 
 
@@ -42,6 +43,11 @@ DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
 DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 10;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+
+
+DECLARE DEAD_AT_STAGE_LACTATING                 INT             DEFAULT 1;
+DECLARE DEAD_AT_STAGE_GROWING                   INT             DEFAULT 2;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -55,8 +61,10 @@ DECLARE cur_pig_prod_ai_id                      INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
-DECLARE cur_pig_prod_num_pigs_current         INT             DEFAULT 0;
-DECLARE cur_pig_prod_num_pigs_current_f         INT             DEFAULT 0;
+DECLARE cur_pig_prod_num_pigs_current           INT             DEFAULT 0;
+DECLARE cur_pig_prod_date_weaning               DATE            DEFAULT NULL;
+
+DECLARE cur_dead_at_stage                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_pig_dead_id                INT             DEFAULT 0;
 
@@ -76,12 +84,14 @@ IF in_pig_prod_id > 0 THEN
             pig_farm_id,
             prod_status_id,
             
+            date_weaning,
             num_pigs_current
     INTO    
             cur_pig_prod_account_id,
             cur_pig_prod_pig_farm_id,
             cur_pig_prod_status_id,
             
+            cur_pig_prod_date_weaning,
             cur_pig_prod_num_pigs_current
             
     FROM    pig_production 
@@ -94,12 +104,14 @@ ELSE
             pig_farm_id,
             prod_status_id,
             
+            date_weaning,
             num_pigs_current
     INTO    
             cur_pig_prod_account_id,
             cur_pig_prod_pig_farm_id,
             cur_pig_prod_status_id,
             
+            cur_pig_prod_date_weaning,
             cur_pig_prod_num_pigs_current
             
     FROM    production_group 
@@ -133,15 +145,31 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-IF  cur_pig_prod_status_id < PRODUCTION_STATUS_ID_LACTATING OR 
-    cur_pig_prod_status_id = PRODUCTION_STATUS_ID_HARVESTED THEN 
-    
-    SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD;
-    SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD";
-    SET res_desc    = "No pigs yet or already harvested";
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
+    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
+    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
     
     LEAVE process_user;
 END IF;
+
+
+IF  cur_pig_prod_status_id < PRODUCTION_STATUS_ID_LACTATING THEN 
+    
+    SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD;
+    SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD";
+    SET res_desc    = "No pigs yet";
+    
+    LEAVE process_user;
+END IF;
+
+
+IF cur_pig_prod_date_weaning IS NULL THEN 
+    SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
+ELSE
+    SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
+END IF;
+
+
 
 
 INSERT INTO pig_prod_pig_dead (
@@ -151,6 +179,7 @@ INSERT INTO pig_prod_pig_dead (
     
     date_dead,
     dead_type_id,
+    dead_at_stage,
     num_pigs_dead,
     comments,
     
@@ -163,6 +192,7 @@ INSERT INTO pig_prod_pig_dead (
     
     in_date_dead,
     in_dead_type_id,
+    cur_dead_at_stage,
     in_num_pigs_dead,
     in_comments,
     

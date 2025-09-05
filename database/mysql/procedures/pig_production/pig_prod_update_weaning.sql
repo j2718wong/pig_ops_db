@@ -42,7 +42,7 @@ DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
 DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 10;
-
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -102,8 +102,16 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
+    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
+    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+    
+    LEAVE process_user;
+END IF;
+
+
 IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_LACTATING THEN 
-    SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_LACTATING ;
+    SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_LACTATING;
     SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_LACTATING";
 END IF;
 

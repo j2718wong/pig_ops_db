@@ -21,12 +21,16 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
+DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
 
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
+
+
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -52,10 +56,12 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
-        pig_farm_id
+        pig_farm_id,
+		prod_status_id
 INTO    
         cur_pig_prod_account_id,
-        cur_pig_prod_pig_farm_id
+        cur_pig_prod_pig_farm_id,
+		cur_pig_prod_status_id
         
 FROM    pig_prod_notes
 WHERE   id = in_pig_prod_notes_id
@@ -81,6 +87,14 @@ process_user : BEGIN
 
 
 IF res_num != RES_NUM_SUCCESS THEN 
+    LEAVE process_user;
+END IF;
+
+
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
+    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
+    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+    
     LEAVE process_user;
 END IF;
 

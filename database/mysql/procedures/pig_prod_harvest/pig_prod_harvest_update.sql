@@ -1,22 +1,30 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_harvest_add $$
-CREATE PROCEDURE pig_prod_harvest_add(
-    in_user_id              INT,
-    in_pig_prod_id          INT,
-    in_pig_prod_group_id    INT,
+DROP PROCEDURE IF EXISTS pig_prod_harvest_update $$
+CREATE PROCEDURE pig_prod_harvest_update(
+    in_user_id              	INT,
+    in_pig_prod_harvest_id  	INT,
     
-    in_date_harvest         VARCHAR(10),
+    in_date_harvest         	VARCHAR(10),
     
-    in_num_pigs_harvest     INT,
-    in_live_weight          INT,
-    in_slaugther_weight     INT
+    in_num_pigs_harvest     	INT,
+    in_live_weight          	INT,
+    in_slaugther_weight     	INT,
+	
+	in_live_weight_price		INT,
+	in_slaugther_weight_price   INT,
+	
+	in_sales					DECIMAL(8,1),
+	in_harvest_cost				DECIMAL(5,1),
+	
+	in_cost_comments			VARCHAR(160)
+	
 )  
 
 BEGIN
 
 /** 
- * Will add pig_prod_harvest entry.
+ * Will update pig_prod_harvest entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since September 4, 2025
@@ -185,8 +193,6 @@ IF in_pig_prod_id > 0 THEN
         WHERE id = in_pig_prod_id;
     END IF;
 
-ELSE
-	/*TODO for production_group*/
 
 END IF;
 

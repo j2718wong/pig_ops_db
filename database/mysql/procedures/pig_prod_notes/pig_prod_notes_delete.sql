@@ -20,11 +20,16 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
+DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
+
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
+
+
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
 
 
 /* pig_prod_notes.flag bits*/
@@ -75,6 +80,13 @@ IF res_num != RES_NUM_SUCCESS THEN
     LEAVE process_user;
 END IF;
 
+
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
+    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
+    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+    
+    LEAVE process_user;
+END IF;
 
 
 UPDATE pig_prod_notes SET

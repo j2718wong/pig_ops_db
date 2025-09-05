@@ -29,7 +29,8 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
+DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
+DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_FEED_BUY       INT             DEFAULT 21;
@@ -45,6 +46,9 @@ DECLARE FEED_TYPE_ID_PRESTARTER                 INT             DEFAULT 4;
 DECLARE FEED_TYPE_ID_STARTER                    INT             DEFAULT 5;
 DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
 DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
+
+
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -147,6 +151,13 @@ IF res_num != RES_NUM_SUCCESS THEN
     LEAVE process_user;
 END IF;
 
+
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
+    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
+    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+    
+    LEAVE process_user;
+END IF;
 
 
 UPDATE pig_prod_feed_buy  SET
