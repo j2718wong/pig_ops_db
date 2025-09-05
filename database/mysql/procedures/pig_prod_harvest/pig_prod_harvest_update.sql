@@ -2,23 +2,23 @@
 
 DROP PROCEDURE IF EXISTS pig_prod_harvest_update $$
 CREATE PROCEDURE pig_prod_harvest_update(
-    in_user_id              	INT,
-    in_pig_prod_harvest_id  	INT,
+    in_user_id                  INT,
+    in_pig_prod_harvest_id      INT,
     
-    in_date_harvest         	VARCHAR(10),
+    in_date_harvest             VARCHAR(10),
     
-    in_num_pigs_harvest     	INT,
-    in_live_weight          	INT,
-    in_slaugther_weight     	INT,
-	
-	in_live_weight_price		INT,
-	in_slaugther_weight_price   INT,
-	
-	in_sales					DECIMAL(8,1),
-	in_harvest_cost				DECIMAL(5,1),
-	
-	in_cost_comments			VARCHAR(160)
-	
+    in_num_pigs_harvest         INT,
+    in_live_weight              INT,
+    in_slaugther_weight         INT,
+    
+    in_live_weight_price        INT,
+    in_slaugther_weight_price   INT,
+    
+    in_sales                    DECIMAL(8,1),
+    in_harvest_cost             DECIMAL(5,1),
+    
+    in_cost_comments            VARCHAR(160)
+    
 )  
 
 BEGIN
@@ -143,28 +143,22 @@ IF cur_pig_prod_harvest_id > 0 THEN
 END IF;
 
 
-INSERT INTO pig_prod_harvest(
-    pig_prod_id,
-    pig_prod_group_id,
-    
-    date_harvest,
-    
-    num_pigs_harvest,
-    
-    live_weight,
-    slaugther_weight
-
-    added_by_user_id
-) VALUES (
-    in_pig_prod_id,
-    in_pig_prod_group_id,
-    
-    in_date_harvest,
-    
-    in_num_pigs,
-    
-    in_live_weight,
-    in_slaugther_weight,
+UPDATE pig_prod_harvest(
+    date_harvest		= in_date_harvest,
+	
+	num_pigs_harvest	= in_num_pigs_harvest,
+	live_weight			= in_live_weight,
+	slaugther_weight	= in_slaugther_weight      
+	
+	in_live_weight_price     
+	in_slaugther_weight_price
+	
+	in_sales                 
+	in_harvest_cost          
+	
+	in_cost_comments         
+	
+	
 
     in_user_id
 );
