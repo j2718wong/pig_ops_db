@@ -50,7 +50,7 @@ DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
 DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;

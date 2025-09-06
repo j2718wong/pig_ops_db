@@ -48,7 +48,7 @@ DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
 DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -69,6 +69,16 @@ DECLARE cur_feed_quantity_grower                INT             DEFAULT 0;
 DECLARE cur_feed_quantity_finisher              INT             DEFAULT 0;
 
 
+DECLARE cur_feed_weight_kg_lactating            INT             DEFAULT 0;
+DECLARE cur_feed_weight_kg_booster              INT             DEFAULT 0;
+DECLARE cur_feed_weight_kg_prestarter           INT             DEFAULT 0;
+DECLARE cur_feed_weight_kg_starter              INT             DEFAULT 0;
+DECLARE cur_feed_weight_kg_grower               INT             DEFAULT 0;
+DECLARE cur_feed_weight_kg_finisher             INT             DEFAULT 0;
+
+
+
+
 DECLARE cur_total_cost_lactating                 DECIMAL(8,2)    DEFAULT 0;
 DECLARE cur_total_cost_booster                   DECIMAL(8,2)    DEFAULT 0;
 DECLARE cur_total_cost_prestarter                DECIMAL(8,2)    DEFAULT 0;
@@ -77,12 +87,7 @@ DECLARE cur_total_cost_grower                    DECIMAL(8,2)    DEFAULT 0;
 DECLARE cur_total_cost_finisher                  DECIMAL(8,2)    DEFAULT 0;
 
 
-
-
-DECLARE cur_pig_prod_feed_buy_id                    INT             DEFAULT 0;
-DECLARE cur_pig_prod_feed_buy_flag                  INT             DEFAULT 0;
-DECLARE cur_pig_prod_feed_buy_name                  VARCHAR(50)     DEFAULT '';
-
+DECLARE cur_pig_prod_feed_buy_id                INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -183,8 +188,11 @@ WHERE id = in_pig_prod_feed_buy_id;
 /* It is difficult to know which feed is updated; so update all;*/
 IF in_pig_prod_id > 0 THEN 
     SELECT  SUM(quantity),
+            SUM(kg_total),
             SUM(total_cost)
+            
     INTO    cur_feed_quantity_lactating,
+            cur_feed_weight_kg_lactating,
             cur_total_cost_lactating
     FROM    pig_prod_feed_buy
     WHERE   pig_prod_id     = in_pig_prod_id AND 
@@ -192,8 +200,11 @@ IF in_pig_prod_id > 0 THEN
         
         
     SELECT  SUM(quantity),
+            SUM(kg_total),
             SUM(total_cost)
+            
     INTO    cur_feed_quantity_booster,
+            cur_feed_weight_kg_booster,
             cur_total_cost_booster
     FROM    pig_prod_feed_buy
     WHERE   pig_prod_id     = in_pig_prod_id AND 
@@ -201,8 +212,11 @@ IF in_pig_prod_id > 0 THEN
         
         
     SELECT  SUM(quantity),
+            SUM(kg_total),
             SUM(total_cost)
+            
     INTO    cur_feed_quantity_prestarter,
+            cur_feed_weight_kg_prestarter,
             cur_total_cost_prestarter
     FROM    pig_prod_feed_buy
     WHERE   pig_prod_id     = in_pig_prod_id AND 
@@ -210,8 +224,11 @@ IF in_pig_prod_id > 0 THEN
         
 
     SELECT  SUM(quantity),
+            SUM(kg_total),
             SUM(total_cost)
+            
     INTO    cur_feed_quantity_starter,
+            cur_feed_weight_kg_starter,
             cur_total_cost_starter
     FROM    pig_prod_feed_buy
     WHERE   pig_prod_id     = in_pig_prod_id AND 
@@ -219,8 +236,11 @@ IF in_pig_prod_id > 0 THEN
 
 
     SELECT  SUM(quantity),
+            SUM(kg_total),
             SUM(total_cost)
+            
     INTO    cur_feed_quantity_grower,
+            cur_feed_weight_kg_grower,
             cur_total_cost_grower
     FROM    pig_prod_feed_buy
     WHERE   pig_prod_id     = in_pig_prod_id AND 
@@ -228,14 +248,54 @@ IF in_pig_prod_id > 0 THEN
 
 
     SELECT  SUM(quantity),
+            SUM(kg_total),
             SUM(total_cost)
+            
     INTO    cur_feed_quantity_finisher,
+            cur_feed_weight_kg_finisher,
             cur_total_cost_finisher
     FROM    pig_prod_feed_buy
     WHERE   pig_prod_id     = in_pig_prod_id AND 
             feed_type_id    = FEED_TYPE_ID_FINISHER;
 
-        
+    
+    /* Convert zero values to NULL*/
+    IF cur_feed_quantity_lactating = 0 THEN 
+        SET cur_feed_quantity_lactating     = NULL;
+        SET cur_feed_weight_kg_lactating    = NULL;
+        SET cur_total_cost_lactating        = NULL;
+    END IF;
+    
+    IF cur_feed_quantity_booster = 0 THEN 
+        SET cur_feed_quantity_booster       = NULL;
+        SET cur_feed_weight_kg_booster      = NULL;
+        SET cur_total_cost_booster          = NULL;
+    END IF;
+    
+    IF cur_feed_quantity_prestarter = 0 THEN 
+        SET cur_feed_quantity_prestarter    = NULL;
+        SET cur_feed_weight_kg_prestarter   = NULL;
+        SET cur_total_cost_prestarter       = NULL; 
+    END IF;
+    
+    IF cur_feed_quantity_starter = 0 THEN 
+        SET cur_feed_quantity_starter       = NULL;
+        SET cur_feed_weight_kg_starter      = NULL;
+        SET cur_total_cost_starter          = NULL;
+    END IF;
+    
+    IF cur_feed_quantity_grower = 0 THEN 
+        SET cur_feed_quantity_grower        = NULL;
+        SET cur_feed_weight_kg_grower       = NULL;
+        SET cur_total_cost_grower           = NULL;
+    END IF;
+    
+    IF cur_feed_quantity_finisher = 0 THEN 
+        SET cur_feed_quantity_finisher      = NULL;
+        SET cur_feed_weight_kg_finisher     = NULL;
+        SET cur_total_cost_finisher         = NULL;
+    END IF;
+    
         
     UPDATE pig_production SET 
         num_b_lactating     = cur_feed_quantity_lactating,
@@ -244,6 +304,15 @@ IF in_pig_prod_id > 0 THEN
         num_b_starter       = cur_feed_quantity_starter,
         num_b_grower        = cur_feed_quantity_grower,
         num_b_finisher      = cur_feed_quantity_finisher,
+        
+        
+        num_b_kg_lactating  = cur_feed_weight_kg_lactating,
+        num_b_kg_booster    = cur_feed_weight_kg_booster,
+        num_b_kg_prestarter = cur_feed_weight_kg_prestarter,
+        num_b_kg_starter    = cur_feed_weight_kg_starter,
+        num_b_kg_grower     = cur_feed_weight_kg_grower,
+        num_b_kg_finisher   = cur_feed_weight_kg_finisher,
+        
         
         cost_lactating      = cur_total_cost_lactating,
         cost_booster        = cur_total_cost_booster,
@@ -256,9 +325,12 @@ IF in_pig_prod_id > 0 THEN
         dt_last_update      = CURRENT_TIMESTAMP
     WHERE id = in_pig_prod_id;
 
+
 ELSE
 
+
     SELECT  SUM(quantity),
+			SUM(kg_total),
             SUM(total_cost)
     INTO    cur_feed_quantity_lactating,
             cur_total_cost_lactating
@@ -268,6 +340,7 @@ ELSE
         
         
     SELECT  SUM(quantity),
+			SUM(kg_total),
             SUM(total_cost)
     INTO    cur_feed_quantity_booster,
             cur_total_cost_booster
@@ -277,6 +350,7 @@ ELSE
         
         
     SELECT  SUM(quantity),
+			SUM(kg_total),
             SUM(total_cost)
     INTO    cur_feed_quantity_prestarter,
             cur_total_cost_prestarter
@@ -286,6 +360,7 @@ ELSE
         
 
     SELECT  SUM(quantity),
+			SUM(kg_total),
             SUM(total_cost)
     INTO    cur_feed_quantity_starter,
             cur_total_cost_starter
@@ -295,6 +370,7 @@ ELSE
 
 
     SELECT  SUM(quantity),
+			SUM(kg_total),
             SUM(total_cost)
     INTO    cur_feed_quantity_grower,
             cur_total_cost_grower
@@ -304,6 +380,7 @@ ELSE
 
 
     SELECT  SUM(quantity),
+			SUM(kg_total),
             SUM(total_cost)
     INTO    cur_feed_quantity_finisher,
             cur_total_cost_finisher

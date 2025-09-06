@@ -40,7 +40,7 @@ DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 3;
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;

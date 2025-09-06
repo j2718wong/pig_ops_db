@@ -5,6 +5,7 @@ CREATE PROCEDURE pig_prod_notes_update(
     in_user_id              INT,
    
     in_pig_prod_notes_id    INT,
+    in_date_notes           VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
 
@@ -30,7 +31,7 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -57,11 +58,11 @@ SET res_code    = "SUCCESS";
 SELECT  
         account_id,
         pig_farm_id,
-		prod_status_id
+        prod_status_id
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
-		cur_pig_prod_status_id
+        cur_pig_prod_status_id
         
 FROM    pig_prod_notes
 WHERE   id = in_pig_prod_notes_id
@@ -100,6 +101,7 @@ END IF;
 
 
 UPDATE pig_prod_notes SET
+    date_notes          = in_date_notes,
     notes               = in_notes,
     
     last_update_user_id = in_user_id,

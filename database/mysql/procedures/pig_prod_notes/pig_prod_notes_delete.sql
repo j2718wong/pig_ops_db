@@ -29,7 +29,7 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
 /* pig_prod_notes.flag bits*/

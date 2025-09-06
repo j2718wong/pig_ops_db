@@ -3,8 +3,9 @@
 DROP PROCEDURE IF EXISTS pig_prod_notes_add $$
 CREATE PROCEDURE pig_prod_notes_add(
     in_user_id              INT,
-   
+    
     in_pig_prod_id          INT,
+    in_date_notes           VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
 
@@ -30,7 +31,7 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -105,7 +106,7 @@ INSERT INTO pig_prod_notes (
     pig_prod_id,
     
     notes,
-    
+    date_notes,
     added_by_user_id
     
 ) VALUES (
@@ -114,7 +115,7 @@ INSERT INTO pig_prod_notes (
     in_pig_prod_id,
     
     in_notes,
-    
+    in_date_notes,
     in_user_id
 );
 

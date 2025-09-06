@@ -52,7 +52,7 @@ DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
 DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 11;
+DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
@@ -78,7 +78,7 @@ SET res_code    = "SUCCESS";
 IF in_pig_prod_id > 0 THEN 
     SELECT 
         account_id,
-        pig_prod_status_id
+        prod_status_id
 
     INTO
         cur_pig_prod_account_id,
@@ -157,6 +157,26 @@ IF cur_pig_prod_feed_bal_id > 0 THEN
     
     LEAVE process_user;
 END IF;
+
+
+/* Need to do a data input correction check
+1.) When this procedure is called from user, it will be like this
+CALL pig_prod_feed_bal_add(1,7,NULL, '2025-08-16', 11, 0, 0, 0,    9,    0, 0);
+
+The zero feed_numbers are already consumed. Users will not differentiate zero 
+feeds and null feeds.
+
+Any new feed_buy will be computed as consumed
+when doing feed_balance calculation. 
+
+2.) Need to convert zero inputs after non-zero to NULL.
+CALL pig_prod_feed_bal_add(1,7,NULL, '2025-08-16', 11, 0, 0, 0,    9,    NULL, NULL);
+
+*/
+
+/* Compute consumption*/
+
+SELECT 
 
 
 INSERT INTO pig_prod_feed_bal(
