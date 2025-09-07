@@ -1,10 +1,11 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_feed_bal_update $$
-CREATE PROCEDURE pig_prod_feed_bal_update(
+DROP PROCEDURE IF EXISTS feed_balance_add $$
+CREATE PROCEDURE feed_balance_add(
     in_user_id              INT,
     
-    in_pig_prod_feed_bal_id INT,
+    in_pig_prod_id          INT,
+    in_pig_prod_group_id    INT,
     
     in_date_balance         VARCHAR(10),
     
@@ -21,7 +22,7 @@ CREATE PROCEDURE pig_prod_feed_bal_update(
 BEGIN
 
 /** 
- * Will add pig_prod_feed_bal entry.
+ * Will add feed_balance entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 25, 2025
@@ -32,8 +33,10 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
+DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 21;
 
-DECLARE BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL       INT             DEFAULT 22;
+
+DECLARE BUSINESS_OBJ_ID_FEED_BALANCE            INT             DEFAULT 18;
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
@@ -61,7 +64,7 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 
 
-DECLARE cur_pig_prod_feed_bal_id                INT             DEFAULT 0;
+DECLARE cur_feed_balance_id                     INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -76,7 +79,7 @@ SET res_code    = "SUCCESS";
 IF in_pig_prod_id > 0 THEN 
     SELECT 
         account_id,
-        pig_prod_status_id
+        prod_status_id
 
     INTO
         cur_pig_prod_account_id,
@@ -86,17 +89,20 @@ IF in_pig_prod_id > 0 THEN
     WHERE id = in_pig_prod_id;
 
 ELSE
-    SELECT 
-        account_id,
-        pig_prod_status_id
+    IF in_prod_group_id > 0 THEN 
+        SELECT 
+            account_id,
+            pig_prod_status_id
 
-    INTO
-        cur_pig_prod_account_id,
-        cur_pig_prod_status_id
+        INTO
+            cur_pig_prod_account_id,
+            cur_pig_prod_status_id
 
-    FROM pig_production_group 
-    WHERE id = in_pig_prod_group_id;
-
+        FROM production_group 
+        WHERE id = in_pig_prod_group_id;
+ 
+    END IF;
+    
 END IF;
 
 
@@ -105,8 +111,8 @@ CALL basic_user_check(
     1, /* user must have an account*/
     cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
     
-    BUSINESS_OBJ_ID_PIG_PROD_FEED_BAL,
-    FLAG_BIT_OPERATION_UPDATE,
+    BUSINESS_OBJ_ID_FEED_BALANCE,
+    FLAG_BIT_OPERATION_ADD,
     
     cur_user_account_id, 
     cur_user_group_id,
@@ -130,24 +136,98 @@ IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN
 END IF;
 
 
-UPDATE pig_prod_feed_bal SET 
-    date_balance        = in_date_balance,
+/* Check for duplicate entry */
+IF in_pig_prod_id > 0 THEN 
+    SELECT  id
+    INTO    cur_feed_balance_id
+    FROM    feed_balance
+    WHERE   pig_prod_id         = in_pig_prod_id    AND
+            date_balance        = in_date_balance
+    LIMIT   1;
     
-    num_pigs            = in_num_pigs,
+ELSE
     
-    num_l_lactating     = in_num_lactating,
-    num_l_booster       = in_num_booster,
-    num_l_prestarter    = in_num_prestarter,
-    num_l_starter       = in_num_starter,
-    num_l_grower        = in_num_grower,
-    num_l_finisher      = in_num_finisher,
+    IF in_prod_group_id > 0 THEN 
+        SELECT  id
+        INTO    cur_feed_balance_id
+        FROM    feed_balance
+        WHERE   pig_prod_group_id   = in_pig_prod_group_id    AND
+                date_balance        = in_date_balance
+        LIMIT   1;
+    END IF;
     
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
+END IF;
 
-WHERE id = in_pig_prod_feed_bal_id;
+IF cur_feed_balance_id > 0 THEN 
+    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
+    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
+    
+    LEAVE process_user;
+END IF;
 
-SELECT LAST_INSERT_ID() INTO cur_pig_prod_feed_bal_id;
+
+/* Need to do a data input correction check
+1.) When this procedure is called from user, it will be like this
+CALL feed_balance_add(1,7,NULL, '2025-08-16', 11, 0, 0, 0,    9,    0, 0);
+
+The zero feed_numbers are already consumed. Users will not differentiate zero 
+feeds and null feeds.
+
+Any new feed_buy will be computed as consumed
+when doing feed_balance calculation. 
+
+2.) Need to convert zero inputs after non-zero to NULL.
+CALL feed_balance_add(1,7,NULL, '2025-08-16', 11, 0, 0, 0,    9,    NULL, NULL);
+
+*/
+
+/* Compute consumption*/
+
+
+
+
+INSERT INTO feed_balance(
+    pig_prod_id,
+    pig_prod_group_id,
+    
+    date_balance,
+    
+    num_pigs,
+    
+    num_lactating,
+    num_booster,
+    num_prestarter,
+    num_starter,
+    num_grower,
+    num_finisher,
+
+    added_by_user_id
+) VALUES (
+    in_pig_prod_id,
+    in_pig_prod_group_id,
+    
+    in_date_balance,
+    
+    in_num_pigs,
+    
+    in_num_lactating,
+    in_num_booster,
+    in_num_prestarter,
+    in_num_starter,
+    in_num_grower,
+    in_num_finisher,
+
+    in_user_id
+);
+
+SELECT LAST_INSERT_ID() INTO cur_feed_balance_id;
+
+
+IF in_pig_prod_id > 0 THEN 
+    UPDATE pig_production SET
+        last_feed_balance_id = cur_feed_balance_id
+    WHERE id = in_pig_prod_id;
+END IF;
 
 
 END process_user;
@@ -159,7 +239,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_pig_prod_feed_bal_id            AS pig_prod_feed_bal_id;
+    cur_feed_balance_id                 AS feed_balance_id;
 
 END $$
 
