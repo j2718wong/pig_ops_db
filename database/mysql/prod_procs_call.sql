@@ -108,34 +108,33 @@ CREATE PROCEDURE pig_prod_feed_bal_add(
     in_num_finisher         DECIMAL(5,1)
 ) 
 
-CALL feed_balance_add(1,NULL, 5,NULL, '2025-07-24',  3, 0, 0, 0, 1, NULL, NULL);
 
-CALL feed_balance_add(1,NULL, 5,NULL, '2025-08-09',  3, 0, 0, 0,    0, 4.5, NULL);
-CALL feed_balance_add(1,NULL, 7,NULL, '2025-08-09', 11, 0, 0, 0, 10.5,  NULL , NULL);
-CALL feed_balance_add(1,NULL, 9,NULL, '2025-08-09', 17, 0, 0, 1.5, 6,  NULL , NULL);
-CALL sow_boar_balance_add(1,1, '2025-08-09', 3.5, NULL);
+CALL feed_balance_add(1,  5, NULL, '2025-08-09',  3, 0,   0, 0,     0,  4.5,  NULL);
+CALL feed_balance_add(1,  7, NULL, '2025-08-09', 11, 0,   0, 0,  10.5,  NULL , NULL);
+CALL feed_balance_add(1,  9, NULL, '2025-08-09', 17, 0.1, 0, 1.5,   6,  NULL , NULL);
+CALL sow_boar_balance_add(1,  1,   '2025-08-09', 3.5, NULL);
 
-CALL feed_balance_add(1,NULL,5,NULL, '2025-08-16',  3, 0, 0, 0,    0,  4.0, NULL);
-CALL feed_balance_add(1,NULL,7,NULL, '2025-08-16', 11, 0, 0, 0,    9,    NULL, NULL);
-CALL feed_balance_add(1,NULL,9,NULL, '2025-08-16', 17, 0, 0, 1,    6,    NULL, NULL);
-CALL sow_boar_balance_add(1,1, '2025-08-16', 2, NULL);
+CALL feed_balance_add(1,  5, NULL, '2025-08-16',  3,  0,   0, 0,     0,  4.0,  NULL);
+CALL feed_balance_add(1,  7, NULL, '2025-08-16', 11,  0,   0, 0,     9,  NULL, NULL);
+CALL feed_balance_add(1,  9, NULL, '2025-08-16', 17,  0.5, 0, 1,     6,  NULL, NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-08-16', 2, NULL);
 
-CALL feed_balance_add(1,NULL,5,NULL, '2025-08-23',  3, 0, 0, 0,    0,  3.0, NULL);
-CALL feed_balance_add(1,NULL,7,NULL, '2025-08-23', 11, 0, 0, 0,    8,    NULL, NULL);
-CALL feed_balance_add(1,NULL,9,NULL, '2025-08-23', 16, 0, 0, 0,    6,    NULL, NULL);
-CALL sow_boar_balance_add(1,1, '2025-08-23', 2, NULL);
+CALL feed_balance_add(1,  5, NULL, '2025-08-23',  3,  0,   0, 0,     0,  3.0, NULL);
+CALL feed_balance_add(1,  7, NULL, '2025-08-23', 11,  0,   0, 0,     8,  NULL, NULL);
+CALL feed_balance_add(1,  9, NULL, '2025-08-23', 16,  0,   0, 0,     6,  NULL, NULL);
+CALL sow_boar_balance_add(1,  1,   '2025-08-23', 2, NULL);
 
-CALL feed_balance_add(1,NULL,5,NULL, '2025-08-30',  3, 0, 0, 0,    0,  2.0, NULL);
-CALL feed_balance_add(1,NULL,7,NULL, '2025-08-30', 11, 0, 0, 0,    6,    NULL, NULL);
-CALL feed_balance_add(1,NULL,9,NULL, '2025-08-30', 16, 0, 0, 0,    5,    NULL, NULL);
-CALL sow_boar_balance_add(1,1, '2025-08-30', 1, NULL);
+CALL feed_balance_add(1,  5, NULL, '2025-08-30',  3,  0,   0, 0,     0,  2.0, NULL);
+CALL feed_balance_add(1,  7, NULL, '2025-08-30', 11,  0,   0, 0,     6,  NULL, NULL);
+CALL feed_balance_add(1,  9, NULL, '2025-08-30', 16,  0,   0, 0,     5,  NULL, NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-08-30', 1, NULL);
 
 
-CALL feed_balance_add(1,NULL,5,NULL, '2025-09-06',  3, 0, 0, 0,    0,  0.5, 3);
-CALL feed_balance_add(1,NULL,7,NULL, '2025-09-06', 11, 0, 0, 0,    4,  4, NULL);
-CALL feed_balance_add(1,NULL,9,NULL, '2025-09-06', 16, 0, 0, 0,    3,    NULL, NULL);
-CALL feed_balance_add(1,NULL,13,NULL, '2025-09-06', 0, 2, NULL, NULL,  NULL,    NULL, NULL);
-
+CALL feed_balance_add(1,  5, NULL, '2025-09-06',  3,  0,   0, 0,     0,  0.5,  3);
+CALL feed_balance_add(1,  7, NULL, '2025-09-06', 11,  0,   0, 0,     4,  4,    NULL);
+CALL feed_balance_add(1,  9, NULL, '2025-09-06', 16,  0,   0, 0,     3,  NULL, NULL);
+CALL feed_balance_add(1, 13, NULL, '2025-09-06', 0,   2, NULL, NULL,  NULL, NULL, NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-09-06', 3.5, NULL);
 
 
 
