@@ -61,6 +61,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
+DECLARE cur_pig_prod_last_feed_balance_id       INT             DEFAULT 0;
 
 
 DECLARE cur_feed_balance_id                     INT             DEFAULT 0;
@@ -74,6 +75,12 @@ DECLARE cur_kg_total_prestarter                 INT             DEFAULT 0;
 DECLARE cur_kg_total_starter                    INT             DEFAULT 0;
 DECLARE cur_kg_total_grower                     INT             DEFAULT 0;
 DECLARE cur_kg_total_finisher                   INT             DEFAULT 0;
+
+DECLARE prev_consumed_kg_total                  INT             DEFAULT 0;
+DECLARE curr_consumed_kg_total                  INT             DEFAULT 0;
+DECLARE diff_consumed_kg_total                  INT             DEFAULT 0;
+
+DECLARE consumption_per_pig                     DECIMAL(5,2)    DEFAULT NULL;
 
 
 DECLARE cur_consumed_kg_lactating               INT             DEFAULT 0;
@@ -98,12 +105,14 @@ IF in_pig_prod_id > 0 THEN
     SELECT 
         account_id,
         prod_status_id,
-        date_actual_birth
+        date_actual_birth,
+        last_feed_balance_id
 
     INTO
         cur_pig_prod_account_id,
         cur_pig_prod_status_id,
-        cur_pig_prod_date_actual_birth
+        cur_pig_prod_date_actual_birth,
+        cur_pig_prod_last_feed_balance_id
 
     FROM pig_production 
     WHERE id = in_pig_prod_id;
@@ -250,95 +259,121 @@ IF in_pig_prod_id > 0 THEN
         SET cur_num_weeks_since_birth   = ROUND(cur_num_days_since_birth/7);
     END IF; 
     
+    IF cur_pig_prod_last_feed_balance_id IS NOT NULL THEN 
+        SELECT  consumed_kg_total
+        INTO    prev_consumed_kg_total
+        FROM    feed_balance
+        WHERE   id = cur_pig_prod_last_feed_balance_id;
+    END IF;
+    
 
     UPDATE pig_production SET
-        last_feed_balance_id = cur_feed_balance_id
+        last_feed_balance_m1_id     = cur_pig_prod_last_feed_balance_id,
+        last_feed_balance_id        = cur_feed_balance_id
     WHERE id = in_pig_prod_id;
     
     
     SELECT  SUM(kg_total)
     INTO    cur_kg_total_lactating
     FROM    feed_buy
-    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_LACTATING;
+    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_LACTATING AND date_buy <= in_date_balance;
     
     
     SELECT  SUM(kg_total)
     INTO    cur_kg_total_booster
     FROM    feed_buy
-    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_BOOSTER;
+    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_BOOSTER AND date_buy <= in_date_balance;
     
     
     SELECT  SUM(kg_total)
     INTO    cur_kg_total_prestarter
     FROM    feed_buy
-    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_PRESTARTER;
+    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_PRESTARTER AND date_buy <= in_date_balance;
     
     
     SELECT  SUM(kg_total)
     INTO    cur_kg_total_starter
     FROM    feed_buy
-    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_STARTER;
+    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_STARTER AND date_buy <= in_date_balance;
     
     
     SELECT  SUM(kg_total)
     INTO    cur_kg_total_grower
     FROM    feed_buy
-    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_GROWER;
+    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_GROWER AND date_buy <= in_date_balance;
     
     
     SELECT  SUM(kg_total)
     INTO    cur_kg_total_finisher
     FROM    feed_buy
-    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_FINISHER;
+    WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = FEED_TYPE_ID_FINISHER AND date_buy <= in_date_balance;
+    
     
     
     IF cur_kg_total_lactating IS NOT NULL THEN 
         IF in_num_lactating IS NOT NULL THEN
             SET cur_consumed_kg_lactating   = CEIL(cur_kg_total_lactating - in_num_lactating * 50);
+            SET curr_consumed_kg_total      = curr_consumed_kg_total + cur_consumed_kg_lactating; 
         END IF;
     END IF; 
     
     IF cur_kg_total_booster IS NOT NULL THEN 
         IF in_num_booster IS NOT NULL THEN
             SET cur_consumed_kg_booster     = CEIL(cur_kg_total_booster - in_num_booster * 1);
+            SET curr_consumed_kg_total      = curr_consumed_kg_total + cur_consumed_kg_booster;
         END IF;
     END IF;
     
     IF cur_kg_total_prestarter IS NOT NULL THEN 
         IF in_num_prestarter IS NOT NULL THEN
             SET cur_consumed_kg_prestarter  = CEIL(cur_kg_total_prestarter - in_num_prestarter * 25);
+            SET curr_consumed_kg_total      = curr_consumed_kg_total + cur_consumed_kg_prestarter;
         END IF;
     END IF;
     
     IF cur_kg_total_starter IS NOT NULL THEN 
         IF in_num_starter IS NOT NULL THEN
             SET cur_consumed_kg_starter     = CEIL(cur_kg_total_starter - in_num_starter * 50);
+            SET curr_consumed_kg_total      = curr_consumed_kg_total + cur_consumed_kg_starter;
         END IF;
     END IF;
     
     IF cur_kg_total_grower IS NOT NULL THEN 
         IF in_num_grower IS NOT NULL THEN
-            SET cur_consumed_kg_grower  = CEIL(cur_kg_total_grower - in_num_grower * 50);
+            SET cur_consumed_kg_grower      = CEIL(cur_kg_total_grower - in_num_grower * 50);
+            SET curr_consumed_kg_total      = curr_consumed_kg_total + cur_consumed_kg_grower;
         END IF;
     END IF;
     
     IF cur_kg_total_finisher IS NOT NULL THEN 
         IF in_num_finisher IS NOT NULL THEN
             SET cur_consumed_kg_finisher    = CEIL(cur_kg_total_finisher - in_num_finisher * 50);
+            SET curr_consumed_kg_total      = curr_consumed_kg_total + cur_consumed_kg_finisher;
         END IF;
     END IF;
     
+    
+    SET diff_consumed_kg_total = curr_consumed_kg_total - prev_consumed_kg_total;
+    
+    IF in_num_pigs > 0 THEN 
+        SET consumption_per_pig = diff_consumed_kg_total / in_num_pigs;
+    END IF;
     
     UPDATE feed_balance SET 
         num_days_since_birth    = cur_num_days_since_birth,
         num_weeks_since_birth   = cur_num_weeks_since_birth,
         
-		cons_kg_lactating       = cur_consumed_kg_lactating,
-        cons_kg_booster         = cur_consumed_kg_booster,
-        cons_kg_prestarter      = cur_consumed_kg_prestarter,
-        cons_kg_starter         = cur_consumed_kg_starter,
-        cons_kg_grower          = cur_consumed_kg_grower,
-        cons_kg_finisher        = cur_consumed_kg_finisher
+        consumed_kg_lactating   = cur_consumed_kg_lactating,
+        consumed_kg_booster     = cur_consumed_kg_booster,
+        consumed_kg_prestarter  = cur_consumed_kg_prestarter,
+        consumed_kg_starter     = cur_consumed_kg_starter,
+        consumed_kg_grower      = cur_consumed_kg_grower,
+        consumed_kg_finisher    = cur_consumed_kg_finisher,
+        
+        consumed_kg_total       = curr_consumed_kg_total,
+        diff_consumed_kg_total  = diff_consumed_kg_total,
+        diff_consumption_per_pig = consumption_per_pig
+        
     WHERE id = cur_feed_balance_id;
     
     

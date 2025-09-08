@@ -262,7 +262,7 @@ IF in_pig_prod_id > 0 THEN
             num_b_lactating     = cur_feed_quantity,
             num_b_kg_lactating  = cur_feed_weight_kg,
             cost_lactating      = cur_total_cost
-        WHERE id = in_pig_prod_id;      
+        WHERE id = in_pig_prod_id;
     END IF;
 
     
@@ -289,7 +289,7 @@ IF in_pig_prod_id > 0 THEN
             num_b_starter       = cur_feed_quantity,
             num_b_kg_starter    = cur_feed_weight_kg,
             cost_starter        = cur_total_cost
-        WHERE id = in_prod_group_id;
+        WHERE id = in_pig_prod_id;
     END IF;
     
     
