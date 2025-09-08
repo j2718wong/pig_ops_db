@@ -60,12 +60,13 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
-
+DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 
 
 DECLARE cur_feed_balance_id                     INT             DEFAULT 0;
 
-
+DECLARE cur_num_days_since_birth                INT             DEFAULT 0;
+DECLARE cur_num_weeks_since_birth               INT             DEFAULT 0;
 
 DECLARE cur_kg_total_lactating                  INT             DEFAULT 0;
 DECLARE cur_kg_total_booster                    INT             DEFAULT 0;
@@ -96,11 +97,13 @@ SET res_code    = "SUCCESS";
 IF in_pig_prod_id > 0 THEN 
     SELECT 
         account_id,
-        prod_status_id
+        prod_status_id,
+        date_actual_birth
 
     INTO
         cur_pig_prod_account_id,
-        cur_pig_prod_status_id
+        cur_pig_prod_status_id,
+        cur_pig_prod_date_actual_birth
 
     FROM pig_production 
     WHERE id = in_pig_prod_id;
@@ -241,6 +244,13 @@ SELECT LAST_INSERT_ID() INTO cur_feed_balance_id;
 
 
 IF in_pig_prod_id > 0 THEN 
+    /* Compute num_days_since_birth, num_weeks_since_birth*/
+    IF cur_pig_prod_date_actual_birth IS NOT NULL THEN
+        SET cur_num_days_since_birth    = DATEDIFF(in_date_balance, cur_pig_prod_date_actual_birth);
+        SET cur_num_weeks_since_birth   = ROUND(cur_num_days_since_birth/7);
+    END IF; 
+    
+
     UPDATE pig_production SET
         last_feed_balance_id = cur_feed_balance_id
     WHERE id = in_pig_prod_id;
@@ -320,6 +330,9 @@ IF in_pig_prod_id > 0 THEN
     
     
     UPDATE feed_balance SET 
+        num_days_since_birth    = cur_num_days_since_birth,
+        num_weeks_since_birth   = cur_num_weeks_since_birth,
+        
         num_cons_kg_lactating   = cur_consumed_kg_lactating,
         num_cons_kg_booster     = cur_consumed_kg_booster,
         num_cons_kg_prestarter  = cur_consumed_kg_prestarter,
