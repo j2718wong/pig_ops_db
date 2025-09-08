@@ -333,12 +333,12 @@ IF in_pig_prod_id > 0 THEN
         num_days_since_birth    = cur_num_days_since_birth,
         num_weeks_since_birth   = cur_num_weeks_since_birth,
         
-        num_cons_kg_lactating   = cur_consumed_kg_lactating,
-        num_cons_kg_booster     = cur_consumed_kg_booster,
-        num_cons_kg_prestarter  = cur_consumed_kg_prestarter,
-        num_cons_kg_starter     = cur_consumed_kg_starter,
-        num_cons_kg_grower      = cur_consumed_kg_grower,
-        num_cons_kg_finisher    = cur_consumed_kg_finisher
+		cons_kg_lactating       = cur_consumed_kg_lactating,
+        cons_kg_booster         = cur_consumed_kg_booster,
+        cons_kg_prestarter      = cur_consumed_kg_prestarter,
+        cons_kg_starter         = cur_consumed_kg_starter,
+        cons_kg_grower          = cur_consumed_kg_grower,
+        cons_kg_finisher        = cur_consumed_kg_finisher
     WHERE id = cur_feed_balance_id;
     
     
