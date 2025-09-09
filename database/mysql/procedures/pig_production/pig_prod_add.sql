@@ -19,7 +19,7 @@ CREATE PROCEDURE pig_prod_add(
 BEGIN
 
 /** 
- * Will create pig_production entriy.
+ * Will create pig_production entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 17, 2025
@@ -131,7 +131,8 @@ END IF;
 SELECT  id
 INTO    cur_pig_prod_id
 FROM    pig_production
-WHERE   sow_id              = in_sow_id     AND 
+WHERE   pig_farm_id         = cur_sow_boar_pig_farm_id AND
+        sow_id              = in_sow_id     AND 
         date_insemination   = in_date_insemination 
 LIMIT   1;
 

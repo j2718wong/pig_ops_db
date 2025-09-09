@@ -29,6 +29,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
 DECLARE RES_NUM_CANNOT_UPDATE_INSEMINATION_DATA INT             DEFAULT 21;
+DECLARE RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL   INT             DEFAULT 22;
 
 
 DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 21;
@@ -36,6 +37,10 @@ DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 21;
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
+
+
+/* pig_production.flag bits*/
+DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 2;
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
@@ -53,8 +58,8 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
-DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_date_actual_birth          DATE;
 
@@ -71,10 +76,12 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
-        prod_status_id
+        prod_status_id,
+        flag
 INTO    
         cur_pig_prod_account_id,
-        cur_pig_prod_status_id
+        cur_pig_prod_status_id,
+        cur_pig_prod_flag
 FROM    pig_production
 WHERE   id = in_pig_prod_id
 LIMIT   1;
@@ -105,6 +112,14 @@ END IF;
 IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
     SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
     SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+    
+    LEAVE process_user;
+END IF;
+
+
+IF cur_pig_prod_flag & FLAG_BIT_PIGLETS_ARE_EXTERNAL THEN 
+    SET res_num     = RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL;
+    SET res_code    = "RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL";
     
     LEAVE process_user;
 END IF;

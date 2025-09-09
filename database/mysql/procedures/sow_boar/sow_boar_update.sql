@@ -8,6 +8,7 @@ CREATE PROCEDURE sow_boar_update(
     in_farm_birth_prod_id   INT,
     in_line_id              INT,
     in_sow_status_id        INT,
+    in_is_external          INT,
     
     in_number               VARCHAR(10),
     in_name                 VARCHAR(20),
@@ -34,12 +35,18 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+/* sow_boar.flag bits*/
+DECLARE FLAG_BIT_SOW_BOAR_IS_DISPOSED           INT             DEFAULT 1;
+DECLARE FLAG_BIT_SOW_BOAR_IS_EXTERNAL           INT             DEFAULT 2;
+
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
+DECLARE cur_sow_boar_flag                       INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -50,8 +57,12 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  account_id
-INTO    cur_sow_boar_account_id
+SELECT  account_id,
+        flag
+        
+INTO    cur_sow_boar_account_id,
+        cur_sow_boar_flag
+        
 FROM    sow_boar
 WHERE   id = in_sow_boar_id
 LIMIT   1;
@@ -79,11 +90,19 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/* clear flag bif first*/
+SET cur_sow_boar_flag = cur_sow_boar_flag & ~FLAG_BIT_SOW_BOAR_IS_EXTERNAL;
+IF in_is_external > 0 THEN
+    /* then update*/
+    SET cur_sow_boar_flag = cur_sow_boar_flag | FLAG_BIT_SOW_BOAR_IS_EXTERNAL;
+END IF;
+
 
 UPDATE sow_boar SET
     farm_birth_prod_id  = in_farm_birth_prod_id,
     line_id             = in_line_id,
     sow_status_id       = in_sow_status_id,
+    flag                = cur_sow_boar_flag,
     
     number              = in_number,
     name                = in_name,

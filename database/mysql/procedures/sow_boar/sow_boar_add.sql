@@ -10,6 +10,7 @@ CREATE PROCEDURE sow_boar_add(
     in_sow_status_id        INT,
     
     in_sex                  CHAR(1),
+    in_is_external          INT,
     
     in_number               VARCHAR(10),
     in_name                 VARCHAR(20),
@@ -39,6 +40,7 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+/* sow_boar.flag bits*/
 DECLARE FLAG_BIT_SOW_BOAR_IS_DISPOSED           INT             DEFAULT 1;
 DECLARE FLAG_BIT_SOW_BOAR_IS_EXTERNAL           INT             DEFAULT 2;
 
@@ -52,7 +54,8 @@ DECLARE cur_pig_farm_last_sow_id                INT             DEFAULT 0;
 DECLARE cur_pig_farm_last_boar_id               INT             DEFAULT 0;
 
 
-DECLARE cur_sow_boar_id                          INT             DEFAULT 0;
+DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
+DECLARE cur_sow_boar_flag                       INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -137,6 +140,10 @@ END IF;
 IF in_sex = 'F' THEN 
     SET cur_pig_farm_last_sow_id = cur_pig_farm_last_sow_id + 1;
     
+    IF in_is_external > 0 THEN 
+        SET cur_sow_boar_flag = FLAG_BIT_SOW_BOAR_IS_EXTERNAL;
+    END IF;
+    
     INSERT INTO sow_boar(
         account_id,
         pig_farm_id,
@@ -145,6 +152,7 @@ IF in_sex = 'F' THEN
         farm_birth_prod_id,
         line_id,
         sow_status_id,
+        flag,
         
         sex,
         
@@ -162,6 +170,7 @@ IF in_sex = 'F' THEN
         in_farm_birth_prod_id,
         in_line_id,
         in_sow_status_id,
+        cur_sow_boar_flag,
         
         in_sex,
         
@@ -185,6 +194,7 @@ ELSE
         farm_birth_prod_id,
         line_id,
         sow_status_id,
+        flag,
         
         sex,
         
@@ -202,6 +212,7 @@ ELSE
         in_farm_birth_prod_id,
         in_line_id,
         NULL,
+        cur_sow_boar_flag,
         
         in_sex,
         

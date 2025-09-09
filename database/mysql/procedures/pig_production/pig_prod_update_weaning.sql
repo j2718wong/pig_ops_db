@@ -54,6 +54,7 @@ DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -68,11 +69,13 @@ SET res_code    = "SUCCESS";
 SELECT  
         account_id,
         pig_farm_id,
-        prod_status_id
+        prod_status_id,
+        flag
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
-        cur_pig_prod_status_id
+        cur_pig_prod_status_id,
+        cur_pig_prod_flag
         
 FROM    pig_production 
 WHERE   id = in_pig_prod_id
