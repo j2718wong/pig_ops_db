@@ -2,13 +2,11 @@
 
 DROP PROCEDURE IF EXISTS user_register $$
 CREATE PROCEDURE user_register(
-    in_username             VARCHAR(50),
     in_name_last            VARCHAR(50),
     in_name_first           VARCHAR(50),
     
     in_email                VARCHAR(50),
     in_mobile_num           VARCHAR(50),
-    in_password             VARCHAR(200)
 )  
 
 BEGIN
@@ -41,9 +39,7 @@ SET res_code    = "SUCCESS";
 SELECT  id
 INTO    cur_user_id
 FROM    user
-WHERE   UPPER(username)     = UPPER(in_username)    OR
-        UPPER(email)        = UPPER(in_email)       OR
-        mobile_num          = in_mobile_num 
+WHERE   UPPER(email)        = UPPER(in_email)
 LIMIT   1;
 
 
@@ -59,19 +55,13 @@ END IF;
 
 
 INSERT INTO user(
-    username,
     name_last,
     name_first,
-    email,
-    mobile_num,
-    password
+    email
 ) VALUES (
-    in_username,
     in_name_last,
     in_name_first,
-    in_email,
-    in_mobile_num,
-    in_password
+    in_email
 );
 
 SELECT LAST_INSERT_ID() INTO cur_user_id;
