@@ -126,7 +126,7 @@ DECLARE cur_user_grp_flag_priv_user_group       INT             DEFAULT 0;
 
 DECLARE cur_user_grp_flag_priv_acc_translation  INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_acc_billing      INT             DEFAULT 0;
-DECLARE cur_user_grp_flag_priv_acc_reserve     	INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_acc_pig_buyer     	INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_acc_pig_ops      INT             DEFAULT 0;
 
 
@@ -192,7 +192,7 @@ SELECT
     
     b.flag_priv_acc_translation,
     b.flag_priv_acc_billing,
-    b.flag_priv_acc_reserve,
+    b.flag_priv_acc_pig_buyer,
     b.flag_priv_acc_pig_ops,
     
     b.flag_priv_pig_farm,
@@ -236,7 +236,7 @@ INTO
     
     cur_user_grp_flag_priv_acc_translation,
     cur_user_grp_flag_priv_acc_billing,
-    cur_user_grp_flag_priv_acc_reserve,
+    cur_user_grp_flag_priv_acc_pig_buyer,
     cur_user_grp_flag_priv_acc_pig_ops,
     
     cur_user_grp_flag_priv_pig_farm,

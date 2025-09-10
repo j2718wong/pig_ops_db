@@ -29,7 +29,7 @@ DECLARE BUSINESS_OBJ_ID_USER_GROUP              INT             DEFAULT 4;
 
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_TRANSLATION     INT             DEFAULT 5;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_BILLING         INT             DEFAULT 6;
-DECLARE BUSINESS_OBJ_ID_ACCOUNT_RESERVE         INT             DEFAULT 7;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER      	INT             DEFAULT 7;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS         INT             DEFAULT 8;
 
 
@@ -64,6 +64,7 @@ DECLARE BUSINESS_OBJ_ID_PIG_PROD_RESERVED_2     INT             DEFAULT 28;
 
 DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 29;
 
+DECLARE BUSINESS_OBJ_ID_PIG_PEN        			INT             DEFAULT 31;
 
 
 
@@ -95,7 +96,7 @@ FROM (
                     
                     BUSINESS_OBJ_ID_ACCOUNT_TRANSLATION,
                     BUSINESS_OBJ_ID_ACCOUNT_BILLING,
-                    
+                    BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER,
                     BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS,
                     
                                         
@@ -170,7 +171,7 @@ INSERT INTO user_group(
     
     flag_priv_acc_translation,
     flag_priv_acc_billing,
-    flag_priv_acc_reserve,
+    flag_priv_acc_pig_buyer,
     flag_priv_acc_pig_ops,
     
     flag_priv_pig_farm,
@@ -255,7 +256,7 @@ INSERT INTO user_group(
     
     flag_priv_acc_translation,
     flag_priv_acc_billing,
-    flag_priv_acc_reserve,
+    flag_priv_acc_pig_buyer,
     flag_priv_acc_pig_ops,
     
     flag_priv_pig_farm,

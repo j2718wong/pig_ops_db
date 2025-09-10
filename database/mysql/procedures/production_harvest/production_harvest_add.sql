@@ -1,16 +1,20 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_harvest_add $$
-CREATE PROCEDURE pig_prod_harvest_add(
+DROP PROCEDURE IF EXISTS production_harvest_add $$
+CREATE PROCEDURE production_harvest_add(
     in_user_id              INT,
     in_pig_prod_id          INT,
-    in_pig_prod_group_id    INT,
+    in_production_group_id  INT,
+    in_acc_pig_buyer_id     INT,
     
     in_date_harvest         VARCHAR(10),
     
     in_num_pigs_harvest     INT,
     in_live_weight          INT,
-    in_slaugther_weight     INT
+    in_slaugther_weight     INT,
+    
+    in_sales                DECIMAL(8,1),
+    in_harvest_cost         DECIMAL(5,1)
 )  
 
 BEGIN
@@ -145,19 +149,24 @@ END IF;
 
 INSERT INTO pig_prod_harvest(
     pig_prod_id,
-    pig_prod_group_id,
+    production_group_id,
+    acc_pig_buyer_id,
     
     date_harvest,
     
     num_pigs_harvest,
     
     live_weight,
-    slaugther_weight
+    slaugther_weight,
+    
+    sales,
+    harvest_cost,
 
     added_by_user_id
 ) VALUES (
     in_pig_prod_id,
-    in_pig_prod_group_id,
+    in_production_group_id,
+    in_acc_pig_buyer_id,
     
     in_date_harvest,
     
@@ -165,6 +174,9 @@ INSERT INTO pig_prod_harvest(
     
     in_live_weight,
     in_slaugther_weight,
+    
+    in_sales,
+    in_harvest_cost,
 
     in_user_id
 );
@@ -181,7 +193,7 @@ IF in_pig_prod_id > 0 THEN
     
     SELECT  SUM(num_pigs_harvest)
     INTO    cur_num_pigs_harvest
-    FROM    pig_prod_harvest
+    FROM    production_harvest
     WHERE   pig_prod_id = in_pig_prod_id;
     
     
