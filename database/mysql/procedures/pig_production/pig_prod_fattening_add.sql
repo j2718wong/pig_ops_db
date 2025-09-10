@@ -173,8 +173,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_pig_prod_id                     AS pig_prod_id,
-    0                                   AS pig_prod_ai_id;
+    cur_pig_prod_id                     AS pig_prod_id;
     
 
 END $$

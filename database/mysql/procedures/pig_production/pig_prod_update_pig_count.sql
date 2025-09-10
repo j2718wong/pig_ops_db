@@ -1,46 +1,34 @@
 DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_update_insem $$
-CREATE PROCEDURE pig_prod_update_insem(
+DROP PROCEDURE IF EXISTS pig_prod_update_pig_count $$
+CREATE PROCEDURE pig_prod_update_pig_count(
     in_user_id              INT,
-    
     in_pig_prod_id          INT,
-    
-    in_semen_cost           DECIMAL(6,2),
-    in_insemination_cost    DECIMAL(6,2),
-    in_insem_cost_comments  VARCHAR(200),
-    
-    in_insem_staff_id       INT,
-    in_date_insemination    VARCHAR(10)  /* in YYYY-MM-DD format*/
 
-)
+    in_num_pigs             INT,
+    in_date_notes           VARCHAR(10),
+    in_notes                VARCHAR(160)
+)  
 
 BEGIN
 
 /** 
- * Will update pig_production entry.
- * @author Jack Wong
- * @since August 23, 2025
+ * Will update current pigs count data for pig_production entry.
+ * 
+ * @author Jack Wong (j2718wong@gmail.com) 
+ * @since August 27, 2025
  *
  */
- 
+
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_PIG_PROD_STATUS_NOT_GESTATING   INT             DEFAULT 20;
-DECLARE RES_NUM_CANNOT_UPDATE_INSEMINATION_DATA INT             DEFAULT 21;
-DECLARE RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL   INT             DEFAULT 22;
+DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 19;
 
-
-DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 21;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
-
-
-/* pig_production.flag bits*/
-DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 2;
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
@@ -58,12 +46,11 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
+
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
-DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
-
-DECLARE cur_pig_prod_date_actual_birth          DATE;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -71,22 +58,25 @@ DECLARE res_code                                VARCHAR(80)     DEFAULT '';
 DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
 
 
-
 SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
+
 SELECT  
         account_id,
-        prod_status_id,
-        flag
+        pig_farm_id,
+        status_id
+
 INTO    
         cur_pig_prod_account_id,
-        cur_pig_prod_status_id,
-        cur_pig_prod_flag
-FROM    pig_production
+        cur_pig_prod_pig_farm_id,
+        cur_pig_prod_status_id
+
+FROM    pig_production 
 WHERE   id = in_pig_prod_id
 LIMIT   1;
+
 
 
 CALL basic_user_check(
@@ -111,63 +101,63 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_GESTATING THEN 
-    SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_GESTATING;
-    SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_GESTATING";
+IF  cur_pig_prod_status_id NOT IN ( PRODUCTION_STATUS_ID_LACTATING,
+                                    PRODUCTION_STATUS_ID_WEANING,
+                                    PRODUCTION_STATUS_ID_GROWING) THEN 
+    
+    SET res_num     = RES_NUM_PIG_PROD_CANNOT_UPDATE_PIG_COUNT;
+    SET res_code    = "RES_NUM_PIG_PROD_CANNOT_UPDATE_PIG_COUNT";
+    SET res_desc    = "Production status not LACTATING, WEANING OR GROWING";
     
     LEAVE process_user;
-END IF;
-
-
-IF cur_pig_prod_flag & FLAG_BIT_PIGLETS_ARE_EXTERNAL THEN 
-    SET res_num     = RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL;
-    SET res_code    = "RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL";
-    
-    LEAVE process_user;
-END IF;
-
-
-SELECT  date_actual_birth
-INTO    cur_pig_prod_date_actual_birth
-FROM    pig_production
-WHERE   id = in_pig_prod_id;
-
-
-IF cur_pig_prod_date_actual_birth IS NOT NULL THEN 
-
-    SET res_num     = RES_NUM_CANNOT_UPDATE_INSEMINATION_DATA;
-    SET res_code    = "RES_NUM_CANNOT_UPDATE_INSEMINATION_DATA";
-    SET res_desc    = "Cannot update insemination data after birth.";
-    
-    LEAVE process_user;
-
 END IF;
 
 
 UPDATE pig_production SET
-    semen_cost          = in_semen_cost,
-    insemination_cost   = in_insemination_cost,
-    insem_cost_comments = in_insem_cost_comments,
+    num_pigs_current            = in_num_pigs,
+
+    last_update_user_id         = in_user_id,
+    dt_last_update              = CURRENT_TIMESTAMP
+WHERE id = in_pig_prod_id;
+
+
+IF in_notes IS NULL THEN 
+    SET in_notes = "Updated pig count";
+END IF;
+
+
+INSERT INTO pig_prod_notes (
+    account_id,
+    pig_farm_id,
+    pig_prod_id,
     
-    date_insemination   = in_date_insemination,
-    date_expected_birth = DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
+    notes,
+    date_notes,
+    added_by_user_id
     
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
+) VALUES (
+    cur_pig_prod_account_id,
+    cur_pig_prod_pig_farm_id,
+    in_pig_prod_id,
     
-WHERE id =  in_pig_prod_id;
+    in_notes,
+    in_date_notes,
+    in_user_id
+);
+
 
 END process_user;
 
 
 SELECT 
+
     res_num                             AS result_number,
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    in_pig_prod_id                      AS pig_production_id;
-    
+    in_pig_prod_id                      AS pig_prod_id;
 
+    
 
 END $$
 
