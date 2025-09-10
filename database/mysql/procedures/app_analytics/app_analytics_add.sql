@@ -18,6 +18,10 @@ BEGIN
  *
  */
 
+
+DECLARE cur_user_account_id                     INT             DEFAULT 0;
+
+
 SELECT  account_id
 INTO    cur_user_account_id
 FROM    user
@@ -26,7 +30,7 @@ WHERE   id = in_user_id;
 INSERT INTO app_analytics(
     account_id,
     user_id,
-    app_function_id
+    app_function_id,
     date_usage
 ) VALUES (
     cur_user_account_id,

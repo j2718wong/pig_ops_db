@@ -45,6 +45,9 @@ DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
+DECLARE SOW_STATUS_ID_LACTATING                 INT             DEFAULT 3;
+
+
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING            INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 3;
@@ -57,8 +60,9 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 
-DECLARE cur_count_pig_prod_pig_ops            INT             DEFAULT 0;
+DECLARE cur_count_pig_prod_pig_ops              INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -73,10 +77,12 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
-        prod_status_id
+        prod_status_id,
+        sow_id
 INTO    
         cur_pig_prod_account_id,
-        cur_pig_prod_status_id
+        cur_pig_prod_status_id,
+        cur_pig_prod_sow_id
         
 FROM    pig_production
 WHERE   id = in_pig_prod_id
@@ -128,6 +134,11 @@ UPDATE pig_production SET
     dt_last_update              = CURRENT_TIMESTAMP
     
 WHERE id =  in_pig_prod_id;
+
+
+UPDATE sow_boar SET 
+    sow_status_id   = SOW_STATUS_ID_LACTATING
+WHERE id = cur_pig_prod_sow_id;
 
 
 SELECT  COUNT(*)

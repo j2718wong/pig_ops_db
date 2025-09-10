@@ -5,8 +5,7 @@ CREATE PROCEDURE user_register(
     in_name_last            VARCHAR(50),
     in_name_first           VARCHAR(50),
     
-    in_email                VARCHAR(50),
-    in_mobile_num           VARCHAR(50),
+    in_email                VARCHAR(50)
 )  
 
 BEGIN

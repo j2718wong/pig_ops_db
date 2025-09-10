@@ -21,6 +21,9 @@ CALL sow_new_ai_entry(324478, 1, 2, '2025-01-09', 'AI PIC 337');
 CALL sow_new_ai_entry(324658, 1, 2, '2025-02-06', 'AI PIC 337');
 CALL sow_new_ai_entry(324658, 1, 2, '2025-02-24', 'AI PIC 337');
 
+CALL pig_prod_add(1, 5, NULL, 1, 1800, 360, "load Elmer + gasolina", 2, "2025-09-10")
+
+
 
 
 
@@ -28,6 +31,8 @@ CALL sow_update_actual_birth_date(1, '2025-01-05', 4, 3, 6);
 CALL sow_update_actual_birth_date(5, '2025-05-03', 1, 1, 2);
 CALL sow_update_actual_birth_date(7, '2025-06-19', 1, 9, 5);
 CALL sow_update_actual_birth_date(9, '2025-07-06', 2, 10, 10);
+
+CALL pig_prod_update_birth(1, 13, '2025-09-10', 0, 5, 6, 2)
 
 
 
@@ -89,6 +94,8 @@ CALL feed_buy_add(1, NULL, 9, NULL, '2025-07-31', 5, 1, 1, 6, 50, 1850, 11100);
 
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-09-02', 2, 1, 1, 2, 50, 1670, 3340);
 
+CALL feed_buy_add(1, NULL, 9, NULL,  '2025-09-10', 5, 1, 1, 5, 50, 1850, 9250);
+
 
 
 CREATE PROCEDURE pig_prod_feed_bal_add(
@@ -136,11 +143,14 @@ CALL feed_balance_add(1,  9, NULL, '2025-09-06', 16,  0,   0, 0,     3,  NULL, N
 CALL feed_balance_add(1, 13, NULL, '2025-09-06', 0,   2, NULL, NULL,  NULL, NULL, NULL);
 CALL sow_boar_balance_add(1,  1,  '2025-09-06', 3.5, NULL);
 
+/* to update number lactating sows */
+CALL sow_boar_balance_add(1,  1,  '2025-09-11', 3.5, NULL);
+
 
 
 
   
-
+CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
 
 
 
