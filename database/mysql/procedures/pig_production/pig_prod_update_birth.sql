@@ -27,7 +27,7 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_PIG_PROD_STATUS_NOT_GESTATING   INT             DEFAULT 20;
+DECLARE RES_NUM_PIG_PROD_STATUS_NOT_GESTATING_OR_LACTATING   INT  DEFAULT 20;
 
 DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 21;
 
@@ -49,8 +49,13 @@ DECLARE SOW_STATUS_ID_LACTATING                 INT             DEFAULT 3;
 
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
-DECLARE PIG_OPERATION_TYPE_LACTATING            INT             DEFAULT 2;
-DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
+
+
+/* account_pig_ops.flag bits*/
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -61,9 +66,13 @@ DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
+DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 
+DECLARE cur_count_account_pig_ops               INT             DEFAULT 0;
 DECLARE cur_count_pig_prod_pig_ops              INT             DEFAULT 0;
 
+DECLARE date_temp                               DATE            DEFAULT NULL;
+DECLARE detected_actual_date_birth_change       INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -78,11 +87,13 @@ SET res_code    = "SUCCESS";
 SELECT  
         account_id,
         prod_status_id,
-        sow_id
+        sow_id,
+        date_actual_birth
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_status_id,
-        cur_pig_prod_sow_id
+        cur_pig_prod_sow_id,
+        cur_pig_prod_date_actual_birth
         
 FROM    pig_production
 WHERE   id = in_pig_prod_id
@@ -110,11 +121,31 @@ IF res_num != RES_NUM_SUCCESS THEN
     LEAVE process_user;
 END IF;
 
-IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_GESTATING THEN 
-    SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_GESTATING;
-    SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_GESTATING";
+IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_GESTATING,
+                                    PRODUCTION_STATUS_ID_LACTATING) THEN 
+    SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_GESTATING_OR_LACTATING;
+    SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_GESTATING_OR_LACTATING";
 END IF;
 
+
+/*
+It is possible to change the date_actual_birth, but there is a series of operations
+to be done to the affected business objects. So That is why need to check if the 
+date_actual_birth has been modified.
+
+*/
+
+IF cur_pig_prod_date_actual_birth IS NULL THEN 
+    SET detected_actual_date_birth_change = 1;
+
+ELSE
+    SET date_temp = STR_TO_DATE(in_date_actual_birth, '%Y-%m-%d');
+    
+    IF date_temp != cur_pig_prod_date_actual_birth THEN 
+        SET detected_actual_date_birth_change = 1;
+    END IF;
+
+END IF;
 
 
 UPDATE pig_production SET 
@@ -141,10 +172,52 @@ UPDATE sow_boar SET
 WHERE id = cur_pig_prod_sow_id;
 
 
+/* Count if there are pig operations to be done for lactating sow set by account.*/
+SELECT  COUNT(*)
+INTO    cur_count_account_pig_ops
+FROM    account_pig_ops
+WHERE   account_id = in_account_id      AND 
+        operation_type = PIG_OPERATION_TYPE_LACTATING_SOW AND 
+        (flag & FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED) = 0;
+
+
+IF cur_count_account_pig_ops > 0 THEN 
+    SELECT  COUNT(*)
+    INTO    cur_count_pig_prod_pig_ops
+    FROM    pig_prod_pig_ops
+    WHERE   pig_prod_id = in_pig_prod_id AND 
+            operation_type = PIG_OPERATION_TYPE_LACTATING_SOW;
+
+    IF cur_count_pig_prod_pig_ops = 0 THEN 
+        /* Create pig_prod_pig_ops entry*/
+        CALL pig_prod_pig_ops_add(
+            in_user_id,
+            
+            cur_pig_prod_account_id, 
+            PIG_OPERATION_TYPE_LACTATING_SOW,
+            in_pig_prod_id,
+            in_date_actual_birth
+        );
+        
+    ELSE
+        IF detected_actual_date_birth_change > 0 THEN
+            UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since DAY)
+            WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                    a.operation_type = PIG_OPERATION_TYPE_LACTATING_SOW AND
+                    a.account_pig_ops_id = b.id;
+        END IF;
+
+    END IF;
+
+END IF;
+
+
 SELECT  COUNT(*)
 INTO    cur_count_pig_prod_pig_ops
 FROM    pig_prod_pig_ops
-WHERE   pig_prod_id = in_pig_prod_id AND operation_type = PIG_OPERATION_TYPE_LACTATING;
+WHERE   pig_prod_id = in_pig_prod_id AND 
+        operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS;
 
 IF cur_count_pig_prod_pig_ops = 0 THEN 
     /* Create pig_prod_pig_ops entry*/
@@ -152,11 +225,19 @@ IF cur_count_pig_prod_pig_ops = 0 THEN
         in_user_id,
         
         cur_pig_prod_account_id, 
-        PIG_OPERATION_TYPE_LACTATING,
+        PIG_OPERATION_TYPE_LACTATING_PIGLETS,
         in_pig_prod_id,
         in_date_actual_birth
     );
 
+ELSE
+    IF detected_actual_date_birth_change > 0 THEN
+        UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+            a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since DAY)
+        WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                a.operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS AND
+                a.account_pig_ops_id = b.id;
+    END IF;
 END IF;
 
 END process_user;

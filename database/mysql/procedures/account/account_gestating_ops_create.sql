@@ -16,8 +16,9 @@ BEGIN
 
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
-DECLARE PIG_OPERATION_TYPE_LACTATING            INT             DEFAULT 2;
-DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW    	INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 
 
 /* Default account gestating operation; numdays since insemination*/

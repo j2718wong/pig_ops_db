@@ -16,8 +16,8 @@ BEGIN
 
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
-DECLARE PIG_OPERATION_TYPE_LACTATING            INT             DEFAULT 2;
-DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS            INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 
 
 /* Default account gestating operation; numdays since birth*/
@@ -39,7 +39,7 @@ INSERT INTO account_pig_ops (
     name
 ) VALUES (
     in_account_id,
-    PIG_OPERATION_TYPE_LACTATING,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     LACTATING_OPS_NUM_DAYS_CUT_TEETH_AND_TAIL,
     "Cut teeth and tail"
 );
@@ -51,7 +51,7 @@ INSERT INTO account_pig_ops (
     name
 ) VALUES (
     in_account_id,
-    PIG_OPERATION_TYPE_LACTATING,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     LACTATING_OPS_NUM_DAYS_INJECT_IRON_1,
     "Inject Iron_1"
 );
@@ -63,7 +63,7 @@ INSERT INTO account_pig_ops (
     name
 ) VALUES (
     in_account_id,
-    PIG_OPERATION_TYPE_LACTATING,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     LACTATING_OPS_NUM_DAYS_INJECT_IRON_2,
     "Inject Iron_2"
 );
@@ -75,7 +75,7 @@ INSERT INTO account_pig_ops (
     name
 ) VALUES (
     in_account_id,
-    PIG_OPERATION_TYPE_LACTATING,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     LACTATING_OPS_NUM_DAYS_INJECT_VITA_2,
     "Inject Vitamins_2"
 );
@@ -88,7 +88,7 @@ INSERT INTO account_pig_ops (
     name
 ) VALUES (
     in_account_id,
-    PIG_OPERATION_TYPE_LACTATING,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     LACTATING_OPS_NUM_DAYS_INJECT_VITA_1,
     "Inject Vitamins_1"
 );
@@ -101,7 +101,7 @@ INSERT INTO account_pig_ops (
     name
 ) VALUES (
     in_account_id,
-    PIG_OPERATION_TYPE_LACTATING,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     LACTATING_OPS_NUM_DAYS_CASTRATION,
     "Castration"
 );
@@ -114,7 +114,7 @@ INSERT INTO account_pig_ops (
     name
 ) VALUES (
     in_account_id,
-    PIG_OPERATION_TYPE_LACTATING,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     LACTATING_OPS_NUM_DAYS_DEWORM,
     "Deworm"
 );
