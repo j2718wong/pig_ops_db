@@ -40,7 +40,8 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 DECLARE INSEMINATION_TYPE_BOAR                  VARCHAR(2)      DEFAULT 'B';
-DECLARE INSEMINATION_TYPE_ARTIFICIAL            VARCHAR(2)      DEFAULT 'AI';
+DECLARE INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL   VARCHAR(4)      DEFAULT 'AI_X';
+DECLARE INSEMINATION_TYPE_ARTIFICIAL_INTERNAL   VARCHAR(4)      DEFAULT 'AI_N';
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
@@ -54,8 +55,8 @@ DECLARE SOW_STATUS_ID_GESTATING                 INT             DEFAULT 2;
 
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
-DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS   	INT             DEFAULT 2;
-DECLARE PIG_OPERATION_TYPE_LACTATING_SOW   		INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
 DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 
 
@@ -69,6 +70,12 @@ DECLARE cur_sow_boar_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_sow_boar_farm_sow_id                INT             DEFAULT 0;
 DECLARE cur_sow_boar_last_prod_id               INT             DEFAULT 0;
 DECLARE cur_sow_boar_last_prod_status_id        INT             DEFAULT 0;
+
+
+DECLARE cur_semen_source_boar_id                INT             DEFAULT 0;
+DECLARE cur_semen_source_semen_supplier_id      INT             DEFAULT 0;
+
+DECLARE cur_insemination_type                   VARCHAR(4)      DEFAULT NULL;
 
 
 DECLARE cur_pig_farm_last_prod_id               INT             DEFAULT 0;
@@ -207,6 +214,26 @@ IF in_boar_id IS NOT NULL THEN
 ELSE
     /* artificial insemination */
     
+    /* Check if semen is coming from external supplier*/
+    SELECT  boar_id,
+            semen_suplier_id
+    
+    INTO    cur_semen_source_boar_id,
+            cur_semen_source_semen_supplier_id
+    FROM semen_source 
+    WHERE id = in_semen_source_id;
+    
+    IF cur_semen_source_semen_supplier_id > 0 THEN 
+        SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL;
+        
+    ELSE
+        IF cur_semen_source_boar_id > 0 THEN 
+            SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_INTERNAL;
+        END IF;
+        
+    END IF;
+    
+    
     INSERT INTO pig_production (
         account_id,
         pig_farm_id,
@@ -232,7 +259,7 @@ ELSE
         cur_pig_farm_last_prod_id,
         
         in_sow_id,
-        INSEMINATION_TYPE_ARTIFICIAL,
+        cur_insemination_type,
         NULL,
         in_semen_source_id,
         
