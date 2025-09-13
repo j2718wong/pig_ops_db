@@ -78,7 +78,7 @@ IF in_pig_prod_id > 0 THEN
 
     INTO
         cur_pig_prod_account_id,
-        cur_pig_prod_status
+        cur_pig_prod_status_id
 
     FROM pig_production 
     WHERE id = in_pig_prod_id;

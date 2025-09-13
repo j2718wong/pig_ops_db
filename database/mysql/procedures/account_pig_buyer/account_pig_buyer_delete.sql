@@ -1,44 +1,35 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS account_pig_buyer_update $$
-CREATE PROCEDURE account_pig_buyer_update(
+DROP PROCEDURE IF EXISTS account_pig_buyer_delete $$
+CREATE PROCEDURE account_pig_buyer_delete(
     in_user_id                  INT,
     
-    in_account_pig_buyer_id     INT,
-    in_country_id               INT,
-    in_adrs_level_1_id          INT,
-    in_adrs_level_2_id          INT,
-    in_adrs_level_3_id          INT,
-    
-    in_name                     VARCHAR(50),
-    in_contact_number           VARCHAR(20),
-    in_whatsapp                 VARCHAR(20),
-    in_messenger                VARCHAR(50)
+    in_account_pig_buyer_id     INT
 )  
 
 BEGIN
 
 /** 
- * Will add account_pig_buyer entry to the system.
- * 
+ * Will delete account_pig_buyer entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
- * @since September 10, 2025
+ * @since August 23, 2025
  *
  */
 
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
-
-
-DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER       INT             DEFAULT 7;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER      	INT             DEFAULT 12;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
+
+DECLARE AUDIT_ACTION_ADD                        VARCHAR(3)      DEFAULT "ADD";
+DECLARE AUDIT_ACTION_UPDATE                     VARCHAR(3)      DEFAULT "UPD";
+DECLARE AUDIT_ACTION_DELETE                     VARCHAR(3)      DEFAULT "DEL";
 
 /* account_pig_buyer.flag bits*/
 DECLARE FLAG_BIT_ACCOUNT_PIG_BUYER_IS_DELETED   INT             DEFAULT 1;
@@ -48,10 +39,9 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-DECLARE cur_account_pig_buyer_id                INT             DEFAULT 0;
 DECLARE cur_account_pig_buyer_account_id        INT             DEFAULT 0;
 DECLARE cur_account_pig_buyer_flag              INT             DEFAULT 0;
-DECLARE cur_account_pig_buyer_name              VARCHAR(50)     DEFAULT '';
+DECLARE cur_account_pig_buyer_name              VARCHAR(50)     DEFAULT NULL;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -76,7 +66,7 @@ CALL basic_user_check(
     cur_account_pig_buyer_account_id, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER,
-    FLAG_BIT_OPERATION_UPDATE,
+    FLAG_BIT_OPERATION_DELETE,
     
     cur_user_account_id, 
     cur_user_group_id,
@@ -92,22 +82,13 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-UPDATE account_pig_buyer SET 
-    country_id              = in_country_id,
-    adrs_level_1_id         = in_adrs_level_1_id,
-    adrs_level_2_id         = in_adrs_level_2_id,
-    adrs_level_3_id         = in_adrs_level_3_id,
-    
-    name                    = in_name,    
-    contact_number          = in_contact_number,
-    whatsapp                = in_whatsapp,
-    messenger               = in_messenger,
-    
-    last_update_user_id     = in_user_id,
-    dt_last_update          = CURRENT_TIMESTAMP
-    
-WHERE id =  in_account_pig_buyer_id;
 
+UPDATE account_pig_buyer SET
+    flag                = flag | FLAG_BIT_ACCOUNT_PIG_BUYER_IS_DELETED,
+    
+    last_update_user_id = in_user_id,
+    dt_last_update      = CURRENT_TIMESTAMP
+WHERE id =  in_account_pig_buyer_id;
 
 
 END process_user;
@@ -120,16 +101,17 @@ INTO
     cur_account_pig_buyer_flag,
     cur_account_pig_buyer_name
 FROM account_pig_buyer
-WHERE id = cur_account_pig_buyer_id;
+WHERE id = in_account_pig_buyer_id;
 
 SELECT 
     res_num                             AS result_number,
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_account_pig_buyer_id            AS account_pig_buyer_id,
+    in_account_pig_buyer_id             AS account_pig_buyer_id,
     cur_account_pig_buyer_flag          AS account_pig_buyer_flag,
     cur_account_pig_buyer_name          AS account_pig_buyer_name;
+    
 
 END $$
 

@@ -6,7 +6,7 @@ CREATE PROCEDURE production_group_create(
 
     in_pig_prod_id          INT,
     
-	in_date_added			INT
+    in_date_added           INT
 )  
 
 BEGIN
@@ -54,10 +54,10 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-DECLARE cur_pig_prod_pig_farm_id				INT             DEFAULT 0;
-DECLARE cur_pig_farm_last_production_group_id	INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
+DECLARE cur_pig_farm_last_production_group_id   INT             DEFAULT 0;
 
-DECLARE cur_production_group_id                	INT             DEFAULT 0;
+DECLARE cur_production_group_id                 INT             DEFAULT 0;
 DECLARE cur_production_group_flag               INT             DEFAULT 0;
 DECLARE cur_production_group_name               VARCHAR(50)     DEFAULT '';
 
@@ -111,28 +111,28 @@ END IF;
 
 
 /* Get the farm information of the in_pig_prod_id.*/
-SELECT 	a.pig_farm_id,
-		b.last_production_group_id
-INTO 	cur_pig_prod_pig_farm_id,
-		cur_pig_farm_last_production_group_id
-FROM 	pig_production a 
+SELECT  a.pig_farm_id,
+        b.last_production_group_id
+INTO    cur_pig_prod_pig_farm_id,
+        cur_pig_farm_last_production_group_id
+FROM    pig_production a 
 LEFT OUTER JOIN pig_farm b ON a.pig_farm_id = b.id
-WHERE 	a.id = in_pig_prod_id;
+WHERE   a.id = in_pig_prod_id;
 
 
 
 INSERT INTO production_group(
     account_id,
-	pig_farm_id,
-	farm_production_group_id,
-	
-	starting_pig_prod_id,
+    pig_farm_id,
+    farm_production_group_id,
+    
+    starting_pig_prod_id,
     added_by_user_id
 ) VALUES (
     cur_user_account_id,
-	cur_pig_prod_pig_farm_id,
-	cur_pig_farm_last_production_group_id,
-	
+    cur_pig_prod_pig_farm_id,
+    cur_pig_farm_last_production_group_id,
+    
     in_pig_prod_id,
     in_user_id
 );
@@ -141,9 +141,9 @@ SELECT LAST_INSERT_ID() INTO cur_production_group_id;
 
 
 UPDATE pig_production SET
-	prod_status_id 			= PRODUCTION_STATUS_ID_COMBINED,
-	production_group_id    	= cur_production_group_id,
-	production_group_date  	= in_date_added
+    prod_status_id          = PRODUCTION_STATUS_ID_COMBINED,
+    production_group_id     = cur_production_group_id,
+    production_group_date   = in_date_added
 WHERE id = in_pig_prod_id;
 
 END process_user;
@@ -156,7 +156,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_production_group_id           	AS production_group_id,
+    cur_production_group_id             AS production_group_id;
 
 END $$
 

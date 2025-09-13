@@ -5,8 +5,9 @@ CREATE PROCEDURE account_pig_buyer_add(
     in_user_id              INT,
     
     in_country_id           INT,
-    in_address_level_1_id   INT,
-    in_address_level_2_id   INT,
+    in_adrs_level_1_id      INT,
+    in_adrs_level_2_id      INT,
+    in_adrs_level_3_id      INT,
     
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
@@ -86,7 +87,7 @@ END IF;
 SELECT  id
 INTO    cur_account_pig_buyer_id
 FROM    account_pig_buyer
-WHERE   account_id          = cur_user_account_id
+WHERE   account_id          = cur_user_account_id AND
         UPPER(name)         = UPPER(in_name)
 LIMIT   1;
 
@@ -102,8 +103,9 @@ END IF;
 INSERT INTO account_pig_buyer(
     account_id,
     country_id,
-    address_level_1_id,
-    address_level_2_id,
+    adrs_level_1_id,
+    adrs_level_2_id,
+    adrs_level_3_id,
     
     name,
     
@@ -115,17 +117,18 @@ INSERT INTO account_pig_buyer(
     
 ) VALUES (
     cur_user_account_id,
-   in_country_id,
-   in_address_level_1_id,
-   in_address_level_2_id,
+    in_country_id,
+    in_adrs_level_1_id,
+    in_adrs_level_2_id,
+    in_adrs_level_3_id,
    
-   in_name,
+    in_name,
    
-   in_contact_number,
-   in_whatsapp,
-   in_messenger,
+    in_contact_number,
+    in_whatsapp,
+    in_messenger,
    
-   in_user_id
+    in_user_id
 );
 
 SELECT LAST_INSERT_ID() INTO cur_account_pig_buyer_id;
