@@ -45,6 +45,7 @@ DECLARE cur_feed_brand_id                       INT             DEFAULT 0;
 DECLARE cur_feed_brand_flag                     INT             DEFAULT 0;
 DECLARE cur_feed_brand_name                     VARCHAR(50)     DEFAULT '';
 
+DECLARE in_normalized_name                      VARCHAR(50)     DEFAULT '';
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -77,12 +78,14 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+SET in_normalized_name = UPPER(in_name);
+
 /* Check for duplicate entry */
 SELECT  id
 INTO    cur_feed_brand_id
 FROM    feed_brand
 WHERE   country_id          = in_country_id   AND
-        UPPER(name)         = UPPER(in_name)
+        name                = in_normalized_name
 LIMIT   1;
 
 IF cur_feed_brand_id > 0 THEN 
@@ -103,7 +106,7 @@ INSERT INTO feed_brand(
 ) VALUES (
    in_country_id,
   
-   in_name,
+   in_normalized_name,
    in_user_id
 );
 
@@ -128,9 +131,9 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_feed_brand_id               AS feed_brand_id,
-    cur_feed_brand_flag             AS feed_brand_flag,
-    cur_feed_brand_name             AS feed_brand_name;
+    cur_feed_brand_id                   AS feed_brand_id,
+    cur_feed_brand_flag                 AS feed_brand_flag,
+    cur_feed_brand_name                 AS feed_brand_name;
 
 END $$
 

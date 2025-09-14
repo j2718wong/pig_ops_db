@@ -2,18 +2,19 @@
 
 DROP PROCEDURE IF EXISTS account_pig_buyer_update $$
 CREATE PROCEDURE account_pig_buyer_update(
-    in_user_id                  INT,
+    in_user_id              INT,
     
-    in_account_pig_buyer_id     INT,
-    in_country_id               INT,
-    in_adrs_level_1_id          INT,
-    in_adrs_level_2_id          INT,
-    in_adrs_level_3_id          INT,
+    in_account_pig_buyer_id INT,
     
-    in_name                     VARCHAR(50),
-    in_contact_number           VARCHAR(20),
-    in_whatsapp                 VARCHAR(20),
-    in_messenger                VARCHAR(50)
+    in_country_id           INT,
+    in_adrs_level_1_id      INT,
+    in_adrs_level_2_id      INT,
+    in_adrs_level_3_id      INT,
+    
+    in_name                 VARCHAR(50),
+    in_contact_number       VARCHAR(20),
+    in_whatsapp             VARCHAR(20),
+    in_messenger            VARCHAR(50)
 )  
 
 BEGIN
