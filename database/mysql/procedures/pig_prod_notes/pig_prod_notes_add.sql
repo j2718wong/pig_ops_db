@@ -5,6 +5,8 @@ CREATE PROCEDURE pig_prod_notes_add(
     in_user_id              INT,
     
     in_pig_prod_id          INT,
+    in_prod_group_id        INT,
+    
     in_date_notes           VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
@@ -55,19 +57,34 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  
-        account_id,
-        pig_farm_id,
-        prod_status_id
-INTO    
-        cur_pig_prod_account_id,
-        cur_pig_prod_pig_farm_id,
-        cur_pig_prod_status_id
-        
-FROM    pig_production 
-WHERE   id = in_pig_prod_id
-LIMIT   1;
+IF in_pig_prod_id > 0 THEN 
+    SELECT  
+            account_id,
+            pig_farm_id,
+            prod_status_id
+    INTO    
+            cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id,
+            cur_pig_prod_status_id
+            
+    FROM    pig_production 
+    WHERE   id = in_pig_prod_id
+    LIMIT   1;
 
+ELSE
+    SELECT  
+            account_id,
+            pig_farm_id,
+            prod_status_id
+    INTO    
+            cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id,
+            cur_pig_prod_status_id
+            
+    FROM    production_group 
+    WHERE   id = in_prod_group_id
+    LIMIT   1;
+END IF;
 
 CALL basic_user_check(
     in_user_id, 
@@ -104,6 +121,7 @@ INSERT INTO pig_prod_notes (
     account_id,
     pig_farm_id,
     pig_prod_id,
+    prod_group_id,
     
     notes,
     date_notes,
@@ -113,6 +131,7 @@ INSERT INTO pig_prod_notes (
     cur_pig_prod_account_id,
     cur_pig_prod_pig_farm_id,
     in_pig_prod_id,
+    in_prod_group_id,
     
     in_notes,
     in_date_notes,

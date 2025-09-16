@@ -40,6 +40,12 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
+DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
+DECLARE cur_pig_prod_group_id                   INT             DEFAULT 0;
+
+DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+
 DECLARE cur_pig_prod_notes_account_id           INT             DEFAULT 0;
 
 
@@ -52,17 +58,51 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  account_id
-INTO    cur_pig_prod_notes_account_id
-FROM    pig_prod_notes
-WHERE   id = in_pig_prod_notes_id
-LIMIT   1;
+SELECT  pig_prod_id,
+        pig_prod_group_id
+
+INTO    cur_pig_prod_id,
+        cur_pig_prod_group_id
+
+FROM    pig_prod_notes 
+WHERE   id = in_pig_prod_notes_id;
+
+
+
+IF cur_pig_prod_id > 0 THEN 
+
+    SELECT  
+            account_id,
+            prod_status_id
+    INTO    
+            cur_pig_prod_account_id,
+            cur_pig_prod_status_id
+            
+    FROM    pig_production
+    WHERE   id = in_pig_prod_notes_id
+    LIMIT   1;
+
+ELSE
+
+    SELECT  
+            account_id,
+            prod_status_id
+    INTO    
+            cur_pig_prod_account_id,
+            cur_pig_prod_status_id
+            
+    FROM    production_group
+    WHERE   id = cur_pig_prod_group_id
+    LIMIT   1;
+
+END IF;
+
 
 
 CALL basic_user_check(
     in_user_id, 
     1, /* user must have an account*/
-    cur_pig_prod_notes_account_id, /* compare user.account_id to this account_id*/
+    cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_PIG_PROD_NOTES,
     FLAG_BIT_OPERATION_DELETE,

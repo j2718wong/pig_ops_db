@@ -38,10 +38,13 @@ DECLARE RES_NUM_USER_NO_USER_GROUP_SET          INT             DEFAULT 5;
 DECLARE RES_NUM_ACCOUNT_DISABLED                INT             DEFAULT 6;
 DECLARE RES_NUM_ACCOUNT_STATUS_TRIAL_EXPIRED    INT             DEFAULT 7;
 DECLARE RES_NUM_ACCOUNT_MISMATCH                INT             DEFAULT 8;
+DECLARE RES_NUM_ACCOUNT_STATUS_UNPAID_BILL      INT             DEFAULT 9;
 
 
-DECLARE RES_NUM_USER_GROUP_HAS_NO_ACCESS        INT             DEFAULT 9;
- 
+DECLARE RES_NUM_USER_GROUP_HAS_NO_ACCESS        INT             DEFAULT 12;
+DECLARE RES_NUM_USER_GROUP_NO_ADD_PRIVILEGE     INT             DEFAULT 13;
+DECLARE RES_NUM_USER_GROUP_NO_UPDATE_PRIVILEGE  INT             DEFAULT 14;
+DECLARE RES_NUM_USER_GROUP_NO_DELETE_PRIVILEGE  INT             DEFAULT 15;
 
 /* user.flag bits*/
 DECLARE FLAG_BIT_USER_IS_ACTIVE                 INT             DEFAULT 1;
@@ -53,10 +56,10 @@ DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 
 /* These system bits can be also embedded into user.flag*/
-DECLARE FLAG_BIT_SYSTEM_SUPPORT         		INT             DEFAULT 131072; /* 2^17*/
-DECLARE FLAG_BIT_SYSTEM_MARKETING         		INT             DEFAULT 262144; /* 2^18*/
-DECLARE FLAG_BIT_SYSTEM_RESERVE_1        		INT             DEFAULT 528288; /* 2^19*/
-DECLARE FLAG_BIT_SYSTEM_ADMIN        			INT             DEFAULT 1048576; /* 2^20*/
+DECLARE FLAG_BIT_SYSTEM_SUPPORT                 INT             DEFAULT 131072; /* 2^17*/
+DECLARE FLAG_BIT_SYSTEM_MARKETING               INT             DEFAULT 262144; /* 2^18*/
+DECLARE FLAG_BIT_SYSTEM_RESERVE_1               INT             DEFAULT 528288; /* 2^19*/
+DECLARE FLAG_BIT_SYSTEM_ADMIN                   INT             DEFAULT 1048576; /* 2^20*/
 
 /* reserved bits for future use*/
 DECLARE FLAG_BIT_SYSTEM_SUPER_USER              INT             DEFAULT 33554432; /* 2^25*/
@@ -121,7 +124,7 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-DECLARE SYS_USER_FLAG_MASK						INT             DEFAULT 0;
+DECLARE SYS_USER_FLAG_MASK                      INT             DEFAULT 0;
 
 DECLARE cur_user_flag                           INT             DEFAULT 0;
 DECLARE cur_user_is_system_super_user           INT             DEFAULT 0;

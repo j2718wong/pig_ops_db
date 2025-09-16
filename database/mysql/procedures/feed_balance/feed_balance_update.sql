@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS feed_balance_update $$
 CREATE PROCEDURE feed_balance_update(
     in_user_id              INT,
     
-    in_feed_balance_id 		INT,
+    in_feed_balance_id      INT,
     
     in_date_balance         VARCHAR(10),
     
@@ -21,7 +21,7 @@ CREATE PROCEDURE feed_balance_update(
 BEGIN
 
 /** 
- * Will add pig_prod_feed_bal entry.
+ * Will update feed_balance entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 25, 2025
@@ -55,6 +55,10 @@ DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+
+DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
+DECLARE cur_pig_prod_group_id                   INT             DEFAULT 0;
+
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
@@ -73,7 +77,17 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-IF in_pig_prod_id > 0 THEN 
+SELECT  pig_prod_id
+        pig_prod_group_id
+
+INTO    cur_pig_prod_id,
+        cur_pig_prod_group_id
+
+FROM    feed_balance 
+WHERE   id = in_feed_balance_id;
+
+
+IF cur_pig_prod_id > 0 THEN 
     SELECT 
         account_id,
         pig_prod_status_id
@@ -83,7 +97,7 @@ IF in_pig_prod_id > 0 THEN
         cur_pig_prod_status_id
 
     FROM pig_production 
-    WHERE id = in_pig_prod_id;
+    WHERE id = cur_pig_prod_id;
 
 ELSE
     SELECT 
@@ -95,7 +109,7 @@ ELSE
         cur_pig_prod_status_id
 
     FROM pig_production_group 
-    WHERE id = in_pig_prod_group_id;
+    WHERE id = cur_pig_prod_group_id;
 
 END IF;
 
