@@ -160,6 +160,7 @@ CALL sow_boar_balance_add(1,  1,  '2025-09-13', 2, NULL);
 
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
+CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
 
 
 

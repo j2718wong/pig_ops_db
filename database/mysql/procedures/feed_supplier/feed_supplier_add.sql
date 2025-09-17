@@ -5,9 +5,9 @@ CREATE PROCEDURE feed_supplier_add(
     in_user_id              INT,
 
     in_country_id           INT,
-    in_adrs_level_1_id      INT,
-    in_adrs_level_2_id      INT,
-    in_adrs_level_3_id      INT,
+    in_address_level_1_id   INT,
+    in_address_level_2_id   INT,
+    in_address_level_3_id   INT,
     
     in_name                 VARCHAR(50)
 )  
@@ -84,10 +84,10 @@ END IF;
 SELECT  id
 INTO    cur_feed_supplier_id
 FROM    feed_supplier
-WHERE   country_id          = in_country_id   AND
-        adrs_level_1_id     = in_adrs_level_1_id   AND
-        adrs_level_2_id     = in_adrs_level_2_id   AND
-        adrs_level_3_id     = in_adrs_level_3_id   AND
+WHERE   country_id          	= in_country_id   AND
+        address_level_1_id     	= in_address_level_1_id   AND
+        address_level_2_id     	= in_address_level_2_id   AND
+        address_level_3_id     	= in_address_level_3_id   AND
         UPPER(name)         = UPPER(in_name)
 LIMIT   1;
 
@@ -102,18 +102,18 @@ END IF;
 
 INSERT INTO feed_supplier(
     country_id,
-    adrs_level_1_id,
-    adrs_level_2_id,
-    adrs_level_3_id,
+    address_level_1_id,
+    address_level_2_id,
+    address_level_3_id,
     
     name,
     added_by_user_id
     
 ) VALUES (
    in_country_id,
-   in_adrs_level_1_id,
-   in_adrs_level_2_id,
-   in_adrs_level_3_id,
+   in_address_level_1_id,
+   in_address_level_2_id,
+   in_address_level_3_id,
    
    in_name,
    in_user_id
