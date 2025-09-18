@@ -122,6 +122,7 @@ END IF;
 IF cur_pig_prod_status_id < PRODUCTION_STATUS_ID_LACTATING THEN 
     SET res_num     = RES_NUM_PIG_PROD_CANNOT_UPDATE_FEED_TYPE;
     SET res_code    = "RES_NUM_PIG_PROD_CANNOT_UPDATE_FEED_TYPE";
+    SET res_desc    = "Production status is not yet LACTATING."
     
     LEAVE process_user;
 END IF;

@@ -122,6 +122,7 @@ END IF;
 IF cur_pig_prod_flag & FLAG_BIT_PIGLETS_ARE_EXTERNAL THEN 
     SET res_num     = RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL;
     SET res_code    = "RES_NUM_PIG_PROD_PIGLETS_ARE_EXTERNAL";
+    SET res_desc    = "Cannot update insemination data if piglets are external.";
     
     LEAVE process_user;
 END IF;

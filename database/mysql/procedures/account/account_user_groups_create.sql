@@ -29,7 +29,7 @@ DECLARE BUSINESS_OBJ_ID_USER_GROUP              INT             DEFAULT 4;
 
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_TRANSLATION     INT             DEFAULT 5;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_BILLING         INT             DEFAULT 6;
-DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER      	INT             DEFAULT 7;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER       INT             DEFAULT 7;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS         INT             DEFAULT 8;
 
 
@@ -58,13 +58,14 @@ DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_OPS        INT             DEFAULT 23;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD       INT             DEFAULT 24;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_HARVEST        INT             DEFAULT 26;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD        INT             DEFAULT 27;
 
-DECLARE BUSINESS_OBJ_ID_SOW_BOAR_FEED_BAL       INT             DEFAULT 27;
-DECLARE BUSINESS_OBJ_ID_PIG_PROD_RESERVED_2     INT             DEFAULT 28;
+DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 28;
+
 
 DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 29;
 
-DECLARE BUSINESS_OBJ_ID_PIG_PEN        			INT             DEFAULT 31;
+DECLARE BUSINESS_OBJ_ID_PIG_PEN                 INT             DEFAULT 31;
 
 
 
@@ -124,8 +125,9 @@ FROM (
                     BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD,
                     BUSINESS_OBJ_ID_PIG_PROD_NOTES,
                     BUSINESS_OBJ_ID_PIG_PROD_HARVEST,
+                    BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD,
                     
-                    BUSINESS_OBJ_ID_SOW_BOAR_FEED_BAL
+                    BUSINESS_OBJ_ID_SOW_BOAR_BALANCE
                     
                 )
     ) a;
@@ -149,7 +151,7 @@ FROM (
                     BUSINESS_OBJ_ID_PIG_PROD_NOTES,
                     BUSINESS_OBJ_ID_PIG_PROD_HARVEST,
                     
-                    BUSINESS_OBJ_ID_SOW_BOAR_FEED_BAL
+                    BUSINESS_OBJ_ID_SOW_BOAR_BALANCE
                 )
     ) a;
 
@@ -195,6 +197,7 @@ INSERT INTO user_group(
     flag_priv_pig_prod_pig_dead,
     flag_priv_pig_prod_notes,
     flag_priv_pig_prod_harvest,
+    flag_priv_pig_prod_pig_add,
     
     flag_priv_sow_boar_balance
     
@@ -234,6 +237,7 @@ INSERT INTO user_group(
     
 
     
+    OPERATION_ADD_UPDATE_DELETE,
     OPERATION_ADD_UPDATE_DELETE,
     OPERATION_ADD_UPDATE_DELETE,
     OPERATION_ADD_UPDATE_DELETE,
