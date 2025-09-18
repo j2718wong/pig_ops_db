@@ -9,7 +9,10 @@ CREATE PROCEDURE feed_supplier_add(
     in_address_level_2_id   INT,
     in_address_level_3_id   INT,
     
-    in_name                 VARCHAR(50)
+    in_name                 VARCHAR(50),
+    in_contact_number       VARCHAR(20),
+    in_whatsapp             VARCHAR(20),
+    in_messenger            VARCHAR(50)
 )  
 
 BEGIN
@@ -81,15 +84,26 @@ END IF;
 
 
 /* Check for duplicate entry */
-SELECT  id
-INTO    cur_feed_supplier_id
-FROM    feed_supplier
-WHERE   country_id              = in_country_id   AND
-        address_level_1_id      = in_address_level_1_id   AND
-        address_level_2_id      = in_address_level_2_id   AND
-        address_level_3_id      = in_address_level_3_id   AND
-        UPPER(name)         = UPPER(in_name)
-LIMIT   1;
+IF in_address_level_3_id IS NULL THEN
+    SELECT  id
+    INTO    cur_feed_supplier_id
+    FROM    feed_supplier
+    WHERE   country_id              = in_country_id   AND
+            address_level_1_id      = in_address_level_1_id     AND
+            address_level_2_id      = in_address_level_2_id     AND
+            UPPER(name)             = UPPER(in_name)
+    LIMIT   1;
+ELSE
+    SELECT  id
+    INTO    cur_feed_supplier_id
+    FROM    feed_supplier
+    WHERE   country_id              = in_country_id   AND
+            address_level_1_id      = in_address_level_1_id     AND
+            address_level_2_id      = in_address_level_2_id     AND
+            address_level_3_id      = in_address_level_3_id     AND
+            UPPER(name)             = UPPER(in_name)
+    LIMIT   1;
+END IF;
 
 IF cur_feed_supplier_id > 0 THEN 
     SET res_num     = RES_NUM_DUPLICATE_ENTRY;
