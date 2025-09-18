@@ -44,9 +44,9 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-DECLARE cur_feed_supplier_id                   	INT             DEFAULT 0;
-DECLARE cur_feed_supplier_flag                 	INT             DEFAULT 0;
-DECLARE cur_feed_supplier_name                 	VARCHAR(50)     DEFAULT '';
+DECLARE cur_feed_supplier_id                    INT             DEFAULT 0;
+DECLARE cur_feed_supplier_flag                  INT             DEFAULT 0;
+DECLARE cur_feed_supplier_name                  VARCHAR(50)     DEFAULT '';
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -84,10 +84,10 @@ END IF;
 SELECT  id
 INTO    cur_feed_supplier_id
 FROM    feed_supplier
-WHERE   country_id          	= in_country_id   AND
-        address_level_1_id     	= in_address_level_1_id   AND
-        address_level_2_id     	= in_address_level_2_id   AND
-        address_level_3_id     	= in_address_level_3_id   AND
+WHERE   country_id              = in_country_id   AND
+        address_level_1_id      = in_address_level_1_id   AND
+        address_level_2_id      = in_address_level_2_id   AND
+        address_level_3_id      = in_address_level_3_id   AND
         UPPER(name)         = UPPER(in_name)
 LIMIT   1;
 

@@ -7,6 +7,7 @@ CREATE PROCEDURE semen_supplier_add(
     in_country_id           INT,
     in_address_level_1_id   INT,
     in_address_level_2_id   INT,
+    in_address_level_3_id   INT,
     
     in_name                 VARCHAR(50)
 )  
@@ -80,14 +81,26 @@ END IF;
 
 
 /* Check for duplicate entry */
-SELECT  id
-INTO    cur_semen_supplier_id
-FROM    semen_supplier
-WHERE   country_id          = in_country_id   AND
-        address_level_1_id  = in_address_level_1_id   AND
-        address_level_2_id  = in_address_level_2_id   AND
-        UPPER(name)         = UPPER(in_name)
-LIMIT   1;
+IF in_address_level_3_id IS NULL THEN  
+    SELECT  id
+    INTO    cur_semen_supplier_id
+    FROM    semen_supplier
+    WHERE   country_id          = in_country_id   AND
+            address_level_1_id  = in_address_level_1_id   AND
+            address_level_2_id  = in_address_level_2_id   AND
+            UPPER(name)         = UPPER(in_name)
+    LIMIT   1;
+ELSE
+    SELECT  id
+    INTO    cur_semen_supplier_id
+    FROM    semen_supplier
+    WHERE   country_id          = in_country_id   AND
+            address_level_1_id  = in_address_level_1_id   AND
+            address_level_2_id  = in_address_level_2_id   AND
+            address_level_3_id  = in_address_level_3_id   AND
+            UPPER(name)         = UPPER(in_name)
+    LIMIT   1;
+END IF;
 
 IF cur_semen_supplier_id > 0 THEN 
     SET res_num     = RES_NUM_DUPLICATE_ENTRY;
@@ -102,6 +115,7 @@ INSERT INTO semen_supplier(
     country_id,
     address_level_1_id,
     address_level_2_id,
+    address_level_3_id,
     
     name,
     added_by_user_id
@@ -110,6 +124,7 @@ INSERT INTO semen_supplier(
    in_country_id,
    in_address_level_1_id,
    in_address_level_2_id,
+   in_address_level_3_id,
    
    in_name,
    in_user_id

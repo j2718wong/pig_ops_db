@@ -16,7 +16,7 @@ TRUNCATE TABLE feed_supplier;
 TRUNCATE TABLE semen_source;
 
 TRUNCATE TABLE pig_production;
-TRUNCATE TABLE pig_prod_notes;	
+TRUNCATE TABLE pig_prod_notes;
 TRUNCATE TABLE pig_prod_pig_dead;
 
 TRUNCATE TABLE pig_prod_pig_ops;
