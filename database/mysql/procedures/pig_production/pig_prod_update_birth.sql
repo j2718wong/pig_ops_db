@@ -125,7 +125,7 @@ IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_GESTATING,
                                     PRODUCTION_STATUS_ID_LACTATING) THEN 
     SET res_num     = RES_NUM_UPDATE_BIRTH_NOT_ALLOWED;
     SET res_code    = "RES_NUM_UPDATE_BIRTH_NOT_ALLOWED";
-    SET res_desc    = "Production status not GESTATING or LACTATING."
+    SET res_desc    = "Production status not GESTATING or LACTATING.";
 END IF;
 
 
