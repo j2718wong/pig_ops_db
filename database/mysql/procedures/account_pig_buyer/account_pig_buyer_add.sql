@@ -5,9 +5,9 @@ CREATE PROCEDURE account_pig_buyer_add(
     in_user_id              INT,
     
     in_country_id           INT,
-    in_adrs_level_1_id      INT,
-    in_adrs_level_2_id      INT,
-    in_adrs_level_3_id      INT,
+    in_address_level_1_id   INT,
+    in_address_level_2_id   INT,
+    in_address_level_3_id   INT,
     
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
@@ -103,9 +103,9 @@ END IF;
 INSERT INTO account_pig_buyer(
     account_id,
     country_id,
-    adrs_level_1_id,
-    adrs_level_2_id,
-    adrs_level_3_id,
+    address_level_1_id,
+    address_level_2_id,
+    address_level_3_id,
     
     name,
     
@@ -118,9 +118,9 @@ INSERT INTO account_pig_buyer(
 ) VALUES (
     cur_user_account_id,
     in_country_id,
-    in_adrs_level_1_id,
-    in_adrs_level_2_id,
-    in_adrs_level_3_id,
+    in_address_level_1_id,
+    in_address_level_2_id,
+    in_address_level_3_id,
    
     in_name,
    

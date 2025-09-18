@@ -7,9 +7,9 @@ CREATE PROCEDURE pig_farm_add(
     in_name                 VARCHAR(50),
     
     in_country_id           INT, 
-    in_adrs_level_1_id      INT,
-    in_adrs_level_2_id      INT,
-    in_adrs_level_3_id      INT,
+    in_address_level_1_id   INT,
+    in_address_level_2_id   INT,
+    in_address_level_3_id   INT,
     in_latitude             DECIMAL(10,5),
     in_longitude            DECIMAL(10,5)
     
@@ -143,9 +143,9 @@ INSERT INTO pig_farm(
     name,
     
     country_id,
-    adrs_level_1_id,
-    adrs_level_2_id,
-    adrs_level_3_id,
+    address_level_1_id,
+    address_level_2_id,
+    address_level_3_id,
     latitude,
     longitude,
     
@@ -156,9 +156,9 @@ INSERT INTO pig_farm(
     in_name,
     
     in_country_id,
-    in_adrs_level_1_id,
-    in_adrs_level_2_id,
-    in_adrs_level_3_id,
+    in_address_level_1_id,
+    in_address_level_2_id,
+    in_address_level_3_id,
     in_latitude,
     in_longitude,
     

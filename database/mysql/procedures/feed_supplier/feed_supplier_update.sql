@@ -6,7 +6,8 @@ CREATE PROCEDURE feed_supplier_update(
     
     in_feed_supplier_id     INT,
 
-    in_adrs_level_3_id      INT,
+    in_address_level_2_id   INT,
+    in_address_level_3_id   INT,
     
     in_name                 VARCHAR(50)
 )  
@@ -118,7 +119,9 @@ FROM    user
 WHERE   id = in_user_id;
 
 
-
+/* Only users of the account who added this entry can update.
+Or a SYSTEM_SUPER_USER.
+*/
 IF cur_user_orig_account_id != cur_user_account_id THEN 
     IF cur_user_flag & FLAG_BIT_SYSTEM_SUPER_USER = 0 THEN 
         SET res_num     = RES_NUM_NOT_ALLOWED_TO_UPDATE;
@@ -130,7 +133,8 @@ END IF;
 
 
 UPDATE feed_supplier  SET 
-    adrs_level_3_id     = in_adrs_level_3_id,
+    address_level_2_id  = in_address_level_2_id,
+    address_level_3_id  = in_address_level_3_id,
     name                = in_name,
     
     last_update_user_id = in_user_id,

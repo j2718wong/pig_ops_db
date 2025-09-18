@@ -1,14 +1,11 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS semen_supplier_add $$
-CREATE PROCEDURE semen_supplier_add(
+DROP PROCEDURE IF EXISTS semen_supplier_update $$
+CREATE PROCEDURE semen_supplier_update(
     in_user_id              INT,
-
-    in_country_id           INT,
-    in_address_level_1_id   INT,
-    in_address_level_2_id   INT,
-    in_address_level_3_id   INT,
     
+    in_semen_supplier_id    INT, 
+
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
     in_whatsapp             VARCHAR(20),
@@ -18,7 +15,7 @@ CREATE PROCEDURE semen_supplier_add(
 BEGIN
 
 /** 
- * Will add semen_supplier entry to the system.
+ * Will update semen_supplier entry to the system.
  * 
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
@@ -30,6 +27,8 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
+
+DECLARE RES_NUM_NOT_ALLOWED_TO_UPDATE           INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_SEMEN_SUPPLIER          INT             DEFAULT 13;
@@ -45,6 +44,11 @@ DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
+DECLARE cur_user_flag                           INT             DEFAULT 0;
+
+
+DECLARE cur_added_by_user_id                    INT             DEFAULT 0;
+DECLARE cur_user_orig_account_id                INT             DEFAULT 0;
 
 
 DECLARE cur_semen_supplier_id                   INT             DEFAULT 0;
@@ -67,7 +71,7 @@ CALL basic_user_check(
     0,
     
     BUSINESS_OBJ_ID_SEMEN_SUPPLIER,
-    FLAG_BIT_OPERATION_ADD,
+    FLAG_BIT_OPERATION_UPDATE,
     
     cur_user_account_id, 
     cur_user_group_id,
@@ -83,65 +87,48 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-/* Check for duplicate entry */
-IF in_address_level_3_id IS NULL THEN  
-    SELECT  id
-    INTO    cur_semen_supplier_id
-    FROM    semen_supplier
-    WHERE   country_id          = in_country_id   AND
-            address_level_1_id  = in_address_level_1_id   AND
-            address_level_2_id  = in_address_level_2_id   AND
-            UPPER(name)         = UPPER(in_name)
-    LIMIT   1;
-ELSE
-    SELECT  id
-    INTO    cur_semen_supplier_id
-    FROM    semen_supplier
-    WHERE   country_id          = in_country_id   AND
-            address_level_1_id  = in_address_level_1_id   AND
-            address_level_2_id  = in_address_level_2_id   AND
-            address_level_3_id  = in_address_level_3_id   AND
-            UPPER(name)         = UPPER(in_name)
-    LIMIT   1;
+/* Get the account_id of the user who originally entered this entry. */
+SELECT  added_by_user_id
+INTO    cur_added_by_user_id
+FROM    semen_supplier
+WHERE   id = in_semen_supplier_id;
+
+SELECT  account_id
+INTO    cur_user_orig_account_id
+FROM    user
+WHERE   id = cur_added_by_user_id;
+
+
+/* Get user flag*/
+SELECT  flag
+INTO    cur_user_flag
+FROM    user
+WHERE   id = in_user_id;
+
+
+/* Only users of the account who added this entry can update.
+Or a SYSTEM_SUPER_USER.
+*/
+IF cur_user_orig_account_id != cur_user_account_id THEN 
+    IF cur_user_flag & FLAG_BIT_SYSTEM_SUPER_USER = 0 THEN 
+        SET res_num     = RES_NUM_NOT_ALLOWED_TO_UPDATE;
+        SET res_code    = "RES_NUM_NOT_ALLOWED_TO_UPDATE";
+        
+        LEAVE process_user;
+    END IF;
 END IF;
 
-IF cur_semen_supplier_id > 0 THEN 
-    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
-    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
+
+
+UPDATE semen_supplier SET    
+    name                = in_name,
+    contact_number      = in_contact_number,
+    whatsapp            = in_whatsapp,
+    messenger           = in_messenger,
     
-    LEAVE process_user;
-END IF;
-
-
-
-INSERT INTO semen_supplier(
-    country_id,
-    address_level_1_id,
-    address_level_2_id,
-    address_level_3_id,
-    
-    name,
-    contact_number,
-    whatsapp,
-    messenger,
-    added_by_user_id
-    
-) VALUES (
-   in_country_id,
-   in_address_level_1_id,
-   in_address_level_2_id,
-   in_address_level_3_id,
-   
-   in_name,
-   in_contact_number,
-   in_whatsapp,
-   in_messenger,
-   
-   in_user_id
-);
-
-SELECT LAST_INSERT_ID() INTO cur_semen_supplier_id;
-
+    last_update_user_id = in_user_id,
+    dt_last_update      = CURRENT_TIMESTAMP
+WHERE id = in_semen_supplier_id;
 
 
 END process_user;
@@ -154,7 +141,7 @@ INTO
     cur_semen_supplier_flag,
     cur_semen_supplier_name
 FROM semen_supplier
-WHERE id = cur_semen_supplier_id;
+WHERE id = in_semen_supplier_id;
 
 SELECT 
     res_num                             AS result_number,
