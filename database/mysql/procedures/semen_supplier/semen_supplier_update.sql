@@ -42,6 +42,10 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
 
 
+/* user.flag bits*/
+DECLARE FLAG_BIT_SYSTEM_SUPER_USER              INT             DEFAULT 131072;
+
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_user_flag                           INT             DEFAULT 0;

@@ -31,6 +31,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
+DECLARE RES_NUM_PRODUCTION_ENTRY_ALREADY_CLOSED INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_HARVEST        INT             DEFAULT 26;
@@ -167,23 +168,23 @@ UPDATE pig_prod_harvest SET
 WHERE id = in_production_harvest_id;
 
 
-IF in_pig_prod_id > 0 THEN 
+IF cur_pig_prod_id > 0 THEN 
     SELECT  num_pigs_weaning_m + num_pigs_weaning_f
     INTO    cur_num_pigs_weaning
     FROM    pig_production 
-    WHERE   id = in_pig_prod_id;
+    WHERE   id = cur_pig_prod_id;
     
     
     SELECT  SUM(num_pigs_harvest)
     INTO    cur_num_pigs_harvest
     FROM    production_harvest
-    WHERE   pig_prod_id = in_pig_prod_id;
+    WHERE   pig_prod_id = cur_pig_prod_id;
     
     
     SELECT  SUM(num_pigs_dead)
     INTO    cur_num_dead_pigs
     FROM    pig_prod_pig_dead
-    WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
+    WHERE   pig_prod_id = cur_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
     
     
     SET cur_num_pigs_current = cur_num_pigs_weaning - cur_num_pigs_harvest - cur_num_dead_pigs;
