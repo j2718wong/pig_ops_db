@@ -9,10 +9,15 @@ CREATE PROCEDURE production_harvest_update(
     in_date_harvest         VARCHAR(10),
     
     in_num_pigs_harvest     INT,
-    in_live_weight          INT,
-    in_slaugther_weight     INT,
     
-    in_sales                DECIMAL(8,1),
+    in_live_weight          DECIMAL(6,1),
+    in_slaughter_weight     DECIMAL(6,1),
+    in_slaughter_net_weight DECIMAL(6,1),
+    
+    in_live_price_per_unit          DECIMAL(6,1),
+    in_slaughther_price_per_unit    DECIMAL(6,1),
+    
+    in_net_sales            DECIMAL(8,1),
     in_harvest_cost         DECIMAL(5,1),
     in_cost_comments        VARCHAR(160)
 )  
@@ -157,9 +162,13 @@ UPDATE pig_prod_harvest SET
     num_pigs_harvest    = in_num_pigs_harvest,
     
     live_weight         = in_live_weight,
-    slaugther_weight    = in_slaugther_weight,
+    slaughter_weight    = in_slaughter_weight,
+    slaughter_net_weight = in_slaughter_net_weight,
     
-    sales               = in_sales,
+    live_price_per_unit     = in_live_price_per_unit,
+    slaughter_price_per_unit = in_slaughter_price_per_unit,
+    
+    net_sales          	= in_net_sales,
     harvest_cost        = in_harvest_cost,
     cost_comments       = in_cost_comments,
     
@@ -187,8 +196,12 @@ IF cur_pig_prod_id > 0 THEN
     WHERE   pig_prod_id = cur_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
     
     
-    SET cur_num_pigs_current = cur_num_pigs_weaning - cur_num_pigs_harvest - cur_num_dead_pigs;
+    SET cur_num_pigs_current = cur_num_pigs_weaning - cur_num_pigs_harvest;
     
+    IF cur_num_dead_pigs > 0 THEN 
+        SET cur_num_pigs_current = cur_num_pigs_current - cur_num_dead_pigs;
+    END IF;
+	
     IF cur_num_pigs_current < 0 THEN
         /* Something is wrong*/
         SET cur_num_pigs_current = 0;
@@ -203,7 +216,7 @@ IF cur_pig_prod_id > 0 THEN
         
         UPDATE  pig_production SET
             num_pigs_current = 0,
-            pig_prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
+            prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
         WHERE id = cur_pig_prod_id;
     END IF;
 
