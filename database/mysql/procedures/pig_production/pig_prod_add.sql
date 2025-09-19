@@ -49,6 +49,8 @@ DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
 DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
 DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
+DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
+DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 
 DECLARE SOW_STATUS_ID_GESTATING                 INT             DEFAULT 2;
@@ -78,7 +80,7 @@ DECLARE cur_semen_source_semen_supplier_id      INT             DEFAULT 0;
 DECLARE cur_insemination_type                   VARCHAR(4)      DEFAULT NULL;
 
 
-DECLARE cur_pig_farm_last_prod_id               INT             DEFAULT 0;
+DECLARE cur_pig_farm_last_pig_production_id               INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
@@ -161,12 +163,12 @@ IF cur_sow_boar_last_prod_status_id = PRODUCTION_STATUS_ID_GESTATING THEN
 END IF;
 
 
-SELECT  last_prod_id
-INTO    cur_pig_farm_last_prod_id
+SELECT  last_pig_production_id
+INTO    cur_pig_farm_last_pig_production_id
 FROM    pig_farm
 WHERE   id = cur_sow_boar_pig_farm_id;
 
-SET cur_pig_farm_last_prod_id = cur_pig_farm_last_prod_id + 1;
+SET cur_pig_farm_last_pig_production_id = cur_pig_farm_last_pig_production_id + 1;
 
 IF in_boar_id IS NOT NULL THEN 
     INSERT INTO pig_production (
@@ -191,7 +193,7 @@ IF in_boar_id IS NOT NULL THEN
     ) VALUES (
         cur_user_account_id,
         cur_sow_boar_pig_farm_id,
-        cur_pig_farm_last_prod_id,
+        cur_pig_farm_last_pig_production_id,
         
         in_sow_id,
         INSEMINATION_TYPE_BOAR,
@@ -256,7 +258,7 @@ ELSE
     ) VALUES (
         cur_user_account_id,
         cur_sow_boar_pig_farm_id,
-        cur_pig_farm_last_prod_id,
+        cur_pig_farm_last_pig_production_id,
         
         in_sow_id,
         cur_insemination_type,
@@ -300,9 +302,9 @@ ELSE
 END IF; 
     
 
-/* Increment pig_farm.last_prod_id*/
+/* Increment pig_farm.last_pig_production_id*/
 UPDATE pig_farm SET 
-    last_prod_id    = cur_pig_farm_last_prod_id
+    last_pig_production_id    = cur_pig_farm_last_pig_production_id
 WHERE id = cur_sow_boar_pig_farm_id;
 
 

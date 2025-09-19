@@ -64,6 +64,7 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 
 DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
+DECLARE cur_num_pigs_added                      INT             DEFAULT 0;
 DECLARE cur_num_pigs_harvest                    INT             DEFAULT 0;
 DECLARE cur_num_dead_pigs                       INT             DEFAULT 0;
 DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
@@ -222,25 +223,45 @@ SELECT LAST_INSERT_ID() INTO cur_production_harvest_id;
 
 
 IF in_pig_prod_id > 0 THEN 
+    /* This can be NULL if the pigs are brought externally*/
     SELECT  num_pigs_weaning_m + num_pigs_weaning_f
     INTO    cur_num_pigs_weaning
     FROM    pig_production 
     WHERE   id = in_pig_prod_id;
     
     
+    /* This can be NULL.*/
+    SELECT  SUM(num_pigs_added)
+    INTO    cur_num_pigs_added
+    FROM    pig_prod_pig_add
+    WHERE   pig_prod_id = in_pig_prod_id;
+    
+    
+    /* This can be NULL*/
     SELECT  SUM(num_pigs_harvest)
     INTO    cur_num_pigs_harvest
     FROM    production_harvest
     WHERE   pig_prod_id = in_pig_prod_id;
     
-   
+	
+    /* This can be NULL.*/
     SELECT  SUM(num_pigs_dead)
     INTO    cur_num_dead_pigs
     FROM    pig_prod_pig_dead
     WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
     
-    SET cur_num_pigs_current = cur_num_pigs_weaning - cur_num_pigs_harvest;
+    IF cur_num_pigs_weaning > 0 THEN 
+        SET cur_num_pigs_current = cur_num_pigs_weaning;
+    END IF;
     
+    IF cur_num_pigs_added > 0 THEN 
+        SET cur_num_pigs_current = cur_num_pigs_current + cur_num_pigs_added;
+    END IF;
+    
+    IF cur_num_pigs_harvest > 0 THEN 
+        SET cur_num_pigs_current = cur_num_pigs_current - cur_num_pigs_harvest;
+    END IF;
+     
     IF cur_num_dead_pigs > 0 THEN 
         SET cur_num_pigs_current = cur_num_pigs_current - cur_num_dead_pigs;
     END IF;

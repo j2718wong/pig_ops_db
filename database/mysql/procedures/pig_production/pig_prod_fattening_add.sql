@@ -5,9 +5,10 @@ CREATE PROCEDURE pig_prod_fattening_add(
     in_user_id              INT,
     in_pig_farm_id          INT,
     
-    in_num_pigs             INT,
+    in_num_pigs_added       INT,
     
-    in_date_weaning         VARCHAR(10) /* in YYYY-MM-DD format*/
+    in_date_weaning         VARCHAR(10), /* in YYYY-MM-DD format*/
+    in_date_added           VARCHAR(10)
 )  
 
 BEGIN
@@ -136,6 +137,7 @@ WHERE   id = in_pig_farm_id;
 SET cur_pig_farm_last_prod_id = cur_pig_farm_last_prod_id + 1;
 
 
+
 INSERT INTO pig_production (
     account_id,
     pig_farm_id,
@@ -143,8 +145,12 @@ INSERT INTO pig_production (
     flag,
     prod_status_id,
     
+    num_pigs_weaning_m,
+    num_pigs_weaning_f,
     num_pigs_current,
-    date_weaning
+    date_weaning,
+    
+    added_by_user_id
     
 ) VALUES (
     cur_user_account_id,
@@ -153,11 +159,42 @@ INSERT INTO pig_production (
     FLAG_BIT_PIGLETS_ARE_EXTERNAL,
     PRODUCTION_STATUS_ID_GROWING,
     
+    0,
+    0,
     in_num_pigs,
-    in_date_weaning
+    in_date_weaning,
+    
+    in_user_id
 );
 
 SELECT LAST_INSERT_ID() INTO cur_pig_prod_id;
+
+
+/* Since the number of pigs at weaning is indeterminate as these are 
+external pigs, this will be treated as pigs added to production entry. 
+Note: The pig_production.num_pigs_current is a computed number
+
+num_pigs_current = number_of_weaning_pigs + SUM(added_external_pigs) -
+    SUM(pigs_dead_at_growing_stage) - SUM(pigs_already_harvested)
+
+Need to insert to pig_prod_pig_add table.*/
+
+INSERT INTO pig_prod_pig_add (
+    account_id,
+    pig_farm_id,
+    pig_prod_id,
+    date_added,
+    num_pigs_added,
+    added_by_user_id
+) VALUES (
+    cur_pig_farm_account_id,
+    in_pig_farm_id,
+    cur_pig_prod_id,
+    in_date_added,
+    in_num_pigs_added,
+    in_user_id
+);
+
 
 
 /* Increment pig_farm.last_prod_id*/

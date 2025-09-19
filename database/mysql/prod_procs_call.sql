@@ -161,7 +161,7 @@ CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
 CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
 
 
-  
+CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Meloy Requinto", NULL, NULL, NULL);
 
 CALL production_harvest_add(1,5,NULL,1, '2025-09-19', 1, NULL, 78.6, 77.6, NULL, 200, 15320,200, 'plete');
 
