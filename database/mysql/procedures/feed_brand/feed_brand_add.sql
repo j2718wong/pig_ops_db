@@ -24,6 +24,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
+DECLARE RES_NUM_CANNOT_ADD                      INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_FEED_BRAND              INT             DEFAULT 15;
@@ -35,7 +36,11 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 /* feed_brand.flag bits*/
 DECLARE FLAG_BIT_FEED_BRAND_IS_DELETED          INT             DEFAULT 1;
+DECLARE FLAG_BIT_FEED_BRAND_IS_VERIFIED         INT             DEFAULT 2;
 
+
+DECLARE MAX_UNVERIFIED_ENTRIES_PER_USER         INT             DEFAULT 3;
+DECLARE MAX_DELETED_INVALID_ENTRIES_PER_USER    INT             DEFAULT 3;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
@@ -45,7 +50,9 @@ DECLARE cur_feed_brand_id                       INT             DEFAULT 0;
 DECLARE cur_feed_brand_flag                     INT             DEFAULT 0;
 DECLARE cur_feed_brand_name                     VARCHAR(50)     DEFAULT '';
 
-DECLARE in_normalized_name                      VARCHAR(50)     DEFAULT '';
+DECLARE normalized_name                         VARCHAR(50)     DEFAULT '';
+
+DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -78,14 +85,14 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-SET in_normalized_name = UPPER(in_name);
+SET normalized_name = UPPER(in_name);
 
 /* Check for duplicate entry */
 SELECT  id
 INTO    cur_feed_brand_id
 FROM    feed_brand
 WHERE   country_id          = in_country_id   AND
-        name                = in_normalized_name
+        name                = normalized_name
 LIMIT   1;
 
 IF cur_feed_brand_id > 0 THEN 
@@ -96,6 +103,41 @@ IF cur_feed_brand_id > 0 THEN
 END IF;
 
 
+/* feed_brand can be added by any user. To prevent abuse of entering
+invalid feed_brand, unverified entries will be counted and 
+deleted entries against the user wil be counted.*/
+
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    feed_brand
+WHERE   added_by_user_id = in_user_id AND 
+        (flag & FLAG_BIT_FEED_BRAND_IS_VERIFIED) = 0;
+
+IF cur_count >= MAX_UNVERIFIED_ENTRIES_PER_USER THEN 
+    SET res_num     = RES_NUM_CANNOT_ADD;
+    SET res_code    = "RES_NUM_CANNOT_ADD";
+    SET res_desc    = "Too many unverified entries entered by user.";
+    
+    LEAVE process_user;
+
+END IF;
+
+
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    feed_brand
+WHERE   added_by_user_id = in_user_id AND 
+        (flag & FLAG_BIT_FEED_BRAND_IS_DELETED) > 0;
+        
+IF cur_count >= MAX_DELETED_INVALID_ENTRIES_PER_USER THEN 
+    SET res_num     = RES_NUM_CANNOT_ADD;
+    SET res_code    = "RES_NUM_CANNOT_ADD";
+    SET res_desc    = "Too many invalid entries entered by user.";
+    
+    LEAVE process_user;
+
+END IF;
+        
 
 INSERT INTO feed_brand(
     country_id,
@@ -106,7 +148,7 @@ INSERT INTO feed_brand(
 ) VALUES (
    in_country_id,
   
-   in_normalized_name,
+   normalized_name,
    in_user_id
 );
 

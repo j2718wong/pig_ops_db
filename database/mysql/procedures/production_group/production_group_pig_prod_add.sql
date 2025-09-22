@@ -54,14 +54,13 @@ DECLARE PRODUCTION_GRP_STATUS_ID_CLOSED         INT             DEFAULT 3;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
-DECLARE cur_production_group_account_id			INT             DEFAULT 0;
+DECLARE cur_production_group_account_id         INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_farm_last_production_group_id   INT             DEFAULT 0;
 
-DECLARE cur_production_group_id                 INT             DEFAULT 0;
-DECLARE cur_production_group_flag               INT             DEFAULT 0;
-DECLARE cur_production_group_name               VARCHAR(50)     DEFAULT '';
+DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
+
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -144,6 +143,13 @@ WHERE id = in_pig_prod_id;
 END process_user;
 
 
+/* Compute current total pigs in the production_group*/
+CALL production_calculate_current_pigs(0, in_production_group_id, cur_num_pigs_current);
+    
+
+UPDATE production_group SET 
+	num_pigs_current = cur_num_pigs_current
+WHERE id = in_production_group_id;
 
 
 SELECT 
@@ -151,7 +157,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_production_group_id             AS production_group_id;
+    in_production_group_id             	AS production_group_id;
 
 END $$
 

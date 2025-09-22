@@ -40,6 +40,7 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 /* semen_supplier.flag bits*/
 DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED     INT             DEFAULT 2;
 
 
 /* user.flag bits*/
@@ -92,8 +93,12 @@ END IF;
 
 
 /* Get the account_id of the user who originally entered this entry. */
-SELECT  added_by_user_id
-INTO    cur_added_by_user_id
+SELECT  flag,
+        added_by_user_id
+        
+INTO    cur_semen_supplier_flag,
+        cur_added_by_user_id
+        
 FROM    semen_supplier
 WHERE   id = in_semen_supplier_id;
 
@@ -120,6 +125,22 @@ IF cur_user_orig_account_id != cur_user_account_id THEN
         
         LEAVE process_user;
     END IF;
+    
+    /* Will allow update only if user.flag.FLAG_BIT_SYSTEM_SUPER_USER is SET*/
+
+ELSE
+    IF (cur_feed_supplier_flag & FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED) > 0 THEN 
+        SET res_num     = RES_NUM_NOT_ALLOWED_TO_UPDATE;
+        SET res_code    = "RES_NUM_NOT_ALLOWED_TO_UPDATE";
+        SET res_code    = "Feed supplier is already verified";
+        
+        LEAVE process_user;
+    END IF;
+    
+    /* Will allow update only if feed_supplier.flag.FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED 
+    is CLEAR*/
+
+
 END IF;
 
 

@@ -112,11 +112,13 @@ DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_OPS        INT             DEFAULT 23;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD       INT             DEFAULT 24;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_HARVEST        INT             DEFAULT 26;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD        INT             DEFAULT 27;
 
-DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 27;
+DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 30;
+
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_RESERVED_2     INT             DEFAULT 28;
 
-DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 29;
+DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 33;
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
@@ -131,7 +133,9 @@ DECLARE cur_user_is_system_super_user           INT             DEFAULT 0;
 
 DECLARE cur_biz_obj_flag_bit_num                INT             DEFAULT 0;
 
-DECLARE cur_user_grp_flag_business_obj          INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_business_obj_1        BIGINT          DEFAULT 0;
+DECLARE cur_user_grp_flag_business_obj_2        BIGINT          DEFAULT 0;
+
         
 DECLARE cur_user_grp_flag_priv_user             INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_account          INT             DEFAULT 0;
@@ -180,7 +184,7 @@ DECLARE cur_account_flag                        INT             DEFAULT 0;
 DECLARE cur_account_status_id                   INT             DEFAULT 0;
 
 
-DECLARE flag_bit                                INT             DEFAULT 0;
+DECLARE flag_bit                                BIGINT          DEFAULT 0;
 DECLARE cur_group_flag                          INT             DEFAULT 0;
 
 
@@ -198,7 +202,8 @@ SELECT
     a.account_id,
     a.user_group_id,
     
-    b.flag_business_obj,
+    b.flag_business_obj_1,
+    b.flag_business_obj_2,
     
     b.flag_priv_user,
     b.flag_priv_account,
@@ -242,7 +247,9 @@ INTO
     out_user_account_id,
     out_user_group_id,
         
-    cur_user_grp_flag_business_obj,
+    cur_user_grp_flag_business_obj_1,
+    cur_user_grp_flag_business_obj_2,
+    
         
     cur_user_grp_flag_priv_user,
     cur_user_grp_flag_priv_account,
@@ -380,13 +387,23 @@ IF cur_user_is_system_super_user = 0 THEN
 
     SET flag_bit = POWER(2, cur_biz_obj_flag_bit_num);
 
-    IF cur_user_grp_flag_business_obj & flag_bit =  0 THEN
-        SET res_num     = RES_NUM_USER_GROUP_HAS_NO_ACCESS;
-        SET res_code    = "RES_NUM_USER_GROUP_HAS_NO_ACCESS";
+    IF in_business_obj_id_to_access <= 32 THEN 
+        IF cur_user_grp_flag_business_obj_1 & flag_bit =  0 THEN
+            SET res_num     = RES_NUM_USER_GROUP_HAS_NO_ACCESS;
+            SET res_code    = "RES_NUM_USER_GROUP_HAS_NO_ACCESS";
 
-        LEAVE process_user;
+            LEAVE process_user;
+        END IF;
     END IF;
+    
+    IF in_business_obj_id_to_access > 32 AND in_business_obj_id_to_access <= 64 THEN
+        IF cur_user_grp_flag_business_obj_2 & flag_bit =  0 THEN
+            SET res_num     = RES_NUM_USER_GROUP_HAS_NO_ACCESS;
+            SET res_code    = "RES_NUM_USER_GROUP_HAS_NO_ACCESS";
 
+            LEAVE process_user;
+        END IF;
+    END IF;
 END IF;
 
 

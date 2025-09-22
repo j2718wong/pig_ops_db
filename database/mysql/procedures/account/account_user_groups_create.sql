@@ -21,7 +21,20 @@ DECLARE ACCOUNT_USER_GROUP_OPERATIONS           INT             DEFAULT 3;
 DECLARE ACCOUNT_USER_GROUP_FARM_STAFF           INT             DEFAULT 4;
 
 
-/* This is read from a02_business_object table. */
+/* These are the tables that are editable by users and need access restrictions; */
+
+/* This is read from a02_business_object table. 
+
+Business object with ids between 1 to 32 will have the access flags to be saved 
+in user_group.flag_business_obj_1ect_1;
+
+Business object with ids between 33 to 64 will have the access flags to be saved 
+in user_group.flag_business_obj_1ect_1;
+
+
+
+
+*/
 DECLARE BUSINESS_OBJ_ID_USER                    INT             DEFAULT 1;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT                 INT             DEFAULT 2;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_REQUEST         INT             DEFAULT 3;
@@ -60,19 +73,26 @@ DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_HARVEST        INT             DEFAULT 26;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD        INT             DEFAULT 27;
 
-DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 28;
+DECLARE BUSINESS_OBJ_ID_PIG_DEAD_TYPE           INT             DEFAULT 28;
+DECLARE BUSINESS_OBJ_ID_RESERVED_1              INT             DEFAULT 29;
+
+DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 30;
+DECLARE BUSINESS_OBJ_ID_RESERVED_2              INT             DEFAULT 31;
+DECLARE BUSINESS_OBJ_ID_PIG_PEN                 INT             DEFAULT 32;
+
+DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 33;
 
 
-DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 29;
-
-DECLARE BUSINESS_OBJ_ID_PIG_PEN                 INT             DEFAULT 31;
 
 
+/* Admin users can access all business objects, 2^32 -1 or 0xFFFF FFFF*/
+DECLARE FLAG_BUSINESS_OBJ_ADMIN                 BIGINT          DEFAULT 4294967295;
+DECLARE FLAG_BUSINESS_OBJ_MANAGEMENT_1          BIGINT          DEFAULT 0;
+DECLARE FLAG_BUSINESS_OBJ_OPERATIONS_1          BIGINT          DEFAULT 0;
 
-/* Admin users can access all business objects, 2^31 -1*/
-DECLARE FLAG_BUSINESS_OBJ_ADMIN                 BIGINT          DEFAULT 2147483647;
-DECLARE FLAG_BUSINESS_OBJ_MANAGEMENT            INT             DEFAULT 0;
-DECLARE FLAG_BUSINESS_OBJ_OPERATIONS            INT             DEFAULT 0;
+DECLARE FLAG_BUSINESS_OBJ_MANAGEMENT_2          BIGINT          DEFAULT 0;
+DECLARE FLAG_BUSINESS_OBJ_OPERATIONS_2          BIGINT          DEFAULT 0;
+
 
 
 
@@ -88,7 +108,7 @@ DECLARE OPERATION_ADD_UPDATE_ONLY               INT             DEFAULT 3;
 
 
 SELECT SUM(a.flag_val)
-INTO FLAG_BUSINESS_OBJ_MANAGEMENT
+INTO FLAG_BUSINESS_OBJ_MANAGEMENT_1
 FROM (
     SELECT  POWER(2, bit_num) AS flag_val
     FROM    a02_business_object
@@ -132,10 +152,23 @@ FROM (
                 )
     ) a;
     
+
+
+SELECT SUM(a.flag_val)
+INTO FLAG_BUSINESS_OBJ_MANAGEMENT_2
+FROM (
+    SELECT  POWER(2, bit_num) AS flag_val
+    FROM    a02_business_object
+    WHERE   id IN ( BUSINESS_OBJ_ID_PRODUCTION_GROUP,
+                    
+                )
+    ) a;
+
+
     
     
 SELECT SUM(a.flag_val)
-INTO FLAG_BUSINESS_OBJ_OPERATIONS
+INTO FLAG_BUSINESS_OBJ_OPERATIONS_1
 FROM (
     SELECT  POWER(2, bit_num) AS flag_val
     FROM    a02_business_object
@@ -156,6 +189,17 @@ FROM (
     ) a;
 
 
+SELECT SUM(a.flag_val)
+INTO FLAG_BUSINESS_OBJ_OPERATIONS_2
+FROM (
+    SELECT  POWER(2, bit_num) AS flag_val
+    FROM    a02_business_object
+    WHERE   id IN ( BUSINESS_OBJ_ID_PRODUCTION_GROUP
+                )
+    ) a;
+
+
+
 
 
 /* Create account default user_groups. Each account will have a fix 
@@ -163,7 +207,8 @@ number of user groups*/
 INSERT INTO user_group(
     account_id,
     group_num,
-    flag_business_obj,
+    flag_business_obj_1,
+    flag_business_obj_2,
     name,
     
     flag_priv_user,
@@ -205,6 +250,7 @@ INSERT INTO user_group(
 ) VALUES (
     in_account_id,
     ACCOUNT_USER_GROUP_ADMIN,
+    FLAG_BUSINESS_OBJ_ADMIN,
     FLAG_BUSINESS_OBJ_ADMIN,
     'Admin',
     
@@ -250,7 +296,8 @@ INSERT INTO user_group(
 INSERT INTO user_group(
     account_id,
     group_num,
-    flag_business_obj,
+    flag_business_obj_1,
+    flag_business_obj_2,
     name,
     
     flag_priv_user,
@@ -291,7 +338,8 @@ INSERT INTO user_group(
 ) VALUES (
     in_account_id,
     ACCOUNT_USER_GROUP_MANAGEMENT,
-    FLAG_BUSINESS_OBJ_MANAGEMENT,
+    FLAG_BUSINESS_OBJ_MANAGEMENT_1,
+    FLAG_BUSINESS_OBJ_MANAGEMENT_2,
     'Management',
     
     OPERATION_ADD_UPDATE_ONLY,
@@ -334,7 +382,7 @@ INSERT INTO user_group(
 INSERT INTO user_group(
     account_id,
     group_num,
-    flag_business_obj,
+    flag_business_obj_1,
     name,
     
     
@@ -353,7 +401,8 @@ INSERT INTO user_group(
 ) VALUES (
     in_account_id,
     ACCOUNT_USER_GROUP_OPERATIONS,
-    FLAG_BUSINESS_OBJ_OPERATIONS,
+    FLAG_BUSINESS_OBJ_OPERATIONS_1,
+    FLAG_BUSINESS_OBJ_OPERATIONS_2,
     'Operations',
     
    

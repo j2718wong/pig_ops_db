@@ -49,6 +49,12 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+/* semen_supplier.flag bits*/
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
+DECLARE FLAG_BIT_SEMEN_SUPLIER_IS_VERIFIED      INT             DEFAULT 2;
+
+DECLARE MIN_COUNT_ACCOUNT_SEMEN_SUPPLIER_IS_VERIFIED INT        DEFAULT 0;
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
@@ -176,6 +182,27 @@ IF cur_count = 0 THEN
         in_semen_supplier_id
     );
 END IF;
+
+
+/* Update semen_supplier counter*/
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    account_selection
+WHERE   semen_supplier_id = in_semen_supplier_id;
+
+UPDATE  semen_supplier SET
+    account_counter = cur_count
+WHERE id = in_semen_supplier_id;
+
+
+/* Update semen_supplier.flag.FLAG_BIT_SEMEN_SUPLIER_IS_VERIFIED*/
+IF cur_count >= MIN_COUNT_ACCOUNT_SEMEN_SUPPLIER_IS_VERIFIED THEN 
+    UPDATE semen_supplier SET
+        flag = flag | FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED
+    WHERE id = in_semen_supplier_id;
+
+END IF;
+
 
 
 END process_user;

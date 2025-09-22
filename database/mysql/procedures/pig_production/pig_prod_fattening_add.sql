@@ -183,6 +183,7 @@ INSERT INTO pig_prod_pig_add (
     account_id,
     pig_farm_id,
     pig_prod_id,
+	
     date_added,
     num_pigs_added,
     added_by_user_id
@@ -190,6 +191,7 @@ INSERT INTO pig_prod_pig_add (
     cur_pig_farm_account_id,
     in_pig_farm_id,
     cur_pig_prod_id,
+	
     in_date_added,
     in_num_pigs_added,
     in_user_id

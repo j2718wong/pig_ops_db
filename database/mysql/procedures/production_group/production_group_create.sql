@@ -14,7 +14,9 @@ BEGIN
 /** 
  * Will add production_group entry. Note the procedure name is purposely 
  * not production_group_add  so that it will not confuse with 
- * production_group_pig_prod_add procedure.
+ * production_group_pig_prod_add procedure. A production_group is formed
+ * when a pig_production in converted to production_group and more pig_production
+ * entries are added into the production_group.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 23, 2025
@@ -47,16 +49,16 @@ DECLARE PRODUCTION_STATUS_ID_CULLED             INT             DEFAULT 10;
 
 
 
-DECLARE PRODUCTION_GRP_STATUS_ID_GROWING        INT             DEFAULT 1;
-DECLARE PRODUCTION_GRP_STATUS_ID_HARVESTED      INT             DEFAULT 2;
-DECLARE PRODUCTION_GRP_STATUS_ID_CLOSED         INT             DEFAULT 3;
+DECLARE PRODUCTION_GROUP_STATUS_ID_GROWING      INT             DEFAULT 1;
+DECLARE PRODUCTION_GROUP_STATUS_ID_HARVESTED    INT             DEFAULT 2;
+DECLARE PRODUCTION_GROUP_STATUS_ID_CLOSED       INT             DEFAULT 3;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-DECLARE cur_pig_prod_production_group_id		INT             DEFAULT 0;
+DECLARE cur_pig_prod_production_group_id        INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_farm_last_production_group_id   INT             DEFAULT 0;
@@ -142,12 +144,14 @@ INSERT INTO production_group(
     account_id,
     pig_farm_id,
     farm_production_group_id,
+    prod_group_status_id,
     
     added_by_user_id
 ) VALUES (
     cur_user_account_id,
     cur_pig_prod_pig_farm_id,
     cur_pig_farm_last_production_group_id,
+    PRODUCTION_GROUP_STATUS_ID_GROWING,
     
     in_user_id
 );

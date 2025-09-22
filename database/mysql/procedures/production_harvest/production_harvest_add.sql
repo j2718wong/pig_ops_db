@@ -10,6 +10,7 @@ CREATE PROCEDURE production_harvest_add(
     in_date_harvest         VARCHAR(10),
     
     in_num_pigs_harvest     INT,
+    in_harvest_type_id      INT,
     
     in_live_weight          DECIMAL(6,1),
     in_slaughter_weight     DECIMAL(6,1),
@@ -20,7 +21,7 @@ CREATE PROCEDURE production_harvest_add(
     
     in_net_sales            DECIMAL(8,1),
     in_harvest_cost         DECIMAL(5,1),
-    in_cost_comments        VARCHAR(160)
+    in_comments             VARCHAR(160)
 )  
 
 BEGIN
@@ -52,8 +53,10 @@ DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
 DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 
-DECLARE DEAD_AT_STAGE_LACTATING                 INT             DEFAULT 1;
-DECLARE DEAD_AT_STAGE_GROWING                   INT             DEFAULT 2;
+
+DECLARE PRODUCTION_GROUP_STATUS_ID_GROWING      INT             DEFAULT 1;
+DECLARE PRODUCTION_GROUP_STATUS_ID_HARVESTED    INT             DEFAULT 2;
+DECLARE PRODUCTION_GROUP_STATUS_ID_CLOSED       INT             DEFAULT 3;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -61,15 +64,14 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 
+DECLARE cur_num_days_since_birth                INT             DEFAULT NULL;
 
-DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
-DECLARE cur_num_pigs_added                      INT             DEFAULT 0;
-DECLARE cur_num_pigs_harvest                    INT             DEFAULT 0;
-DECLARE cur_num_dead_pigs                       INT             DEFAULT 0;
-DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
 
 DECLARE cur_production_harvest_id               INT             DEFAULT 0;
+
+DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -82,28 +84,30 @@ SET res_code    = "SUCCESS";
 
 
 IF in_pig_prod_id > 0 THEN 
+    /* pig_production */
     SELECT 
         account_id,
-        prod_status_id
-
+        prod_status_id,
+        date_actual_birth
     INTO
         cur_pig_prod_account_id,
         cur_pig_prod_status_id
-
+        cur_pig_prod_date_actual_birth
     FROM pig_production 
     WHERE id = in_pig_prod_id;
 
 ELSE
+    /* production_group */
     SELECT 
         account_id,
-        prod_status_id
+        prod_group_status_id
 
     INTO
         cur_pig_prod_account_id,
         cur_pig_prod_status_id
 
     FROM production_group 
-    WHERE id = in_pig_prod_group_id;
+    WHERE id = in_production_group_id;
 
 END IF;
 
@@ -132,6 +136,7 @@ END IF;
 
 /* Check for duplicate entry */
 IF in_pig_prod_id > 0 THEN 
+    /* pig_production */
     SELECT  id
     INTO    cur_production_harvest_id
     FROM    production_harvest
@@ -140,10 +145,11 @@ IF in_pig_prod_id > 0 THEN
     LIMIT   1;
     
 ELSE
+    /* production_group */
     SELECT  id
     INTO    cur_production_harvest_id
     FROM    production_harvest
-    WHERE   pig_prod_group_id   = in_pig_prod_group_id    AND
+    WHERE   production_group_id = in_production_group_id    AND
             date_harvest        = in_date_harvest
     LIMIT   1;
     
@@ -157,7 +163,9 @@ IF cur_production_harvest_id > 0 THEN
 END IF;
 
 
+/* Check production status*/
 IF in_pig_prod_id > 0 THEN 
+    /* pig_production */
     IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_WEANING, 
                                         PRODUCTION_STATUS_ID_GROWING) THEN
         SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
@@ -167,6 +175,26 @@ IF in_pig_prod_id > 0 THEN
         LEAVE process_user;
     
     END IF;
+
+ELSE 
+    /* production_group */
+    IF cur_pig_prod_status_id != PRODUCTION_GROUP_STATUS_ID_GROWING THEN
+        SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
+        SET res_code    = "RES_NUM_HARVEST_ENTRY_NOT_ALLOWED";
+        SET res_desc    = "Production group status not GROWING.";
+    
+        LEAVE process_user;
+    
+    END IF;
+    
+END IF;
+
+
+IF cur_pig_prod_date_actual_birth IS NOT NULL THEN 
+    SET cur_num_days_since_birth = DATEDIFF(in_date_harvest, 
+            cur_pig_prod_date_actual_birth); 
+ELSE
+    SET cur_num_days_since_birth = NULL;
 END IF;
 
 
@@ -178,8 +206,10 @@ INSERT INTO production_harvest(
     acc_pig_buyer_id,
     
     date_harvest,
+    num_days_since_birth,
     
     num_pigs_harvest,
+    harvest_type_id,
     
     live_weight,
     slaughter_weight,
@@ -190,7 +220,7 @@ INSERT INTO production_harvest(
     
     net_sales,
     harvest_cost,
-    cost_comments,
+    comments,
 
     added_by_user_id
     
@@ -202,8 +232,10 @@ INSERT INTO production_harvest(
     in_acc_pig_buyer_id,
     
     in_date_harvest,
+    cur_num_days_since_birth,
     
     in_num_pigs_harvest,
+    in_harvest_type_id,
     
     in_live_weight,
     in_slaughter_weight,
@@ -214,7 +246,7 @@ INSERT INTO production_harvest(
     
     in_net_sales,
     in_harvest_cost,
-    in_cost_comments,
+    in_comments,
 
     in_user_id
 );
@@ -222,49 +254,9 @@ INSERT INTO production_harvest(
 SELECT LAST_INSERT_ID() INTO cur_production_harvest_id;
 
 
+/* Calculate current number of pigs.*/
 IF in_pig_prod_id > 0 THEN 
-    /* This can be NULL if the pigs are brought externally*/
-    SELECT  num_pigs_weaning_m + num_pigs_weaning_f
-    INTO    cur_num_pigs_weaning
-    FROM    pig_production 
-    WHERE   id = in_pig_prod_id;
-    
-    
-    /* This can be NULL.*/
-    SELECT  SUM(num_pigs_added)
-    INTO    cur_num_pigs_added
-    FROM    pig_prod_pig_add
-    WHERE   pig_prod_id = in_pig_prod_id;
-    
-    
-    /* This can be NULL*/
-    SELECT  SUM(num_pigs_harvest)
-    INTO    cur_num_pigs_harvest
-    FROM    production_harvest
-    WHERE   pig_prod_id = in_pig_prod_id;
-    
-	
-    /* This can be NULL.*/
-    SELECT  SUM(num_pigs_dead)
-    INTO    cur_num_dead_pigs
-    FROM    pig_prod_pig_dead
-    WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
-    
-    IF cur_num_pigs_weaning > 0 THEN 
-        SET cur_num_pigs_current = cur_num_pigs_weaning;
-    END IF;
-    
-    IF cur_num_pigs_added > 0 THEN 
-        SET cur_num_pigs_current = cur_num_pigs_current + cur_num_pigs_added;
-    END IF;
-    
-    IF cur_num_pigs_harvest > 0 THEN 
-        SET cur_num_pigs_current = cur_num_pigs_current - cur_num_pigs_harvest;
-    END IF;
-     
-    IF cur_num_dead_pigs > 0 THEN 
-        SET cur_num_pigs_current = cur_num_pigs_current - cur_num_dead_pigs;
-    END IF;
+    CALL production_calculate_current_pigs(in_pig_prod_id, 0, cur_num_pigs_current);
     
     IF cur_num_pigs_current < 0 THEN
         /* Something is wrong*/
@@ -284,20 +276,26 @@ IF in_pig_prod_id > 0 THEN
         WHERE id = in_pig_prod_id;
     END IF;
 
-    
 ELSE
-    /*TODO for production_group*/
+    CALL production_calculate_current_pigs(0, in_production_group_id, cur_num_pigs_current);
     
-    SELECT  SUM(num_pigs_harvest)
-    INTO    cur_num_pigs_harvest
-    FROM    pig_prod_harvest
-    WHERE   pig_prod_group_id = in_pig_prod_group_id;
+    IF cur_num_pigs_current < 0 THEN
+        /* Something is wrong*/
+        SET cur_num_pigs_current = 0;
+    END IF;
     
-    
-    SELECT  SUM(num_pigs_dead)
-    INTO    cur_num_dead_pigs
-    FROM    pig_prod_pig_dead
-    WHERE   pig_prod_group_id = in_pig_prod_group_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
+
+    IF cur_num_pigs_current > 0 THEN 
+        UPDATE  production_group SET
+            num_pigs_current = cur_num_pigs_current
+        WHERE id = in_production_group_id;
+    ELSE
+        
+        UPDATE  production_group SET
+            num_pigs_current = 0,
+            prod_status_id = PRODUCTION_GROUP_STATUS_ID_HARVESTED
+        WHERE id = in_production_group_id;
+    END IF;
     
 END IF;
 

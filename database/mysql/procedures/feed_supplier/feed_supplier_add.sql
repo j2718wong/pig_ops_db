@@ -30,6 +30,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
+DECLARE RES_NUM_CANNOT_ADD                      INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_FEED_SUPPLIER           INT             DEFAULT 14;
@@ -41,6 +42,11 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 /* feed_supplier.flag bits*/
 DECLARE FLAG_BIT_FEED_SUPPLIER_IS_DELETED       INT             DEFAULT 1;
+DECLARE FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED      INT             DEFAULT 2;
+
+
+DECLARE MAX_UNVERIFIED_ENTRIES_PER_USER         INT             DEFAULT 3;
+DECLARE MAX_DELETED_INVALID_ENTRIES_PER_USER    INT             DEFAULT 3;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -51,6 +57,7 @@ DECLARE cur_feed_supplier_id                    INT             DEFAULT 0;
 DECLARE cur_feed_supplier_flag                  INT             DEFAULT 0;
 DECLARE cur_feed_supplier_name                  VARCHAR(50)     DEFAULT '';
 
+DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -110,6 +117,42 @@ IF cur_feed_supplier_id > 0 THEN
     SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
     
     LEAVE process_user;
+END IF;
+
+
+/* feed_supplier can be added by any user. To prevent abuse of entering
+invalid feed_supplier, unverified entries will be counted and 
+deleted entries against the user wil be counted.*/
+
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    feed_supplier
+WHERE   added_by_user_id = in_user_id AND 
+        (flag & FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED) = 0;
+
+IF cur_count >= MAX_UNVERIFIED_ENTRIES_PER_USER THEN 
+    SET res_num     = RES_NUM_CANNOT_ADD;
+    SET res_code    = "RES_NUM_CANNOT_ADD";
+    SET res_desc    = "Too many unverified entries entered by user.";
+    
+    LEAVE process_user;
+
+END IF;
+
+
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    feed_supplier
+WHERE   added_by_user_id = in_user_id AND 
+        (flag & FLAG_BIT_FEED_SUPPLIER_IS_DELETED) > 0;
+        
+IF cur_count >= MAX_DELETED_INVALID_ENTRIES_PER_USER THEN 
+    SET res_num     = RES_NUM_CANNOT_ADD;
+    SET res_code    = "RES_NUM_CANNOT_ADD";
+    SET res_desc    = "Too many invalid entries entered by user.";
+    
+    LEAVE process_user;
+
 END IF;
 
 

@@ -1,25 +1,26 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_pig_dead_add $$
-CREATE PROCEDURE pig_prod_pig_dead_add(
+DROP PROCEDURE IF EXISTS pig_prod_pig_add_add $$
+CREATE PROCEDURE pig_prod_pig_add_add(
     in_user_id              INT,
    
     in_pig_prod_id          INT,
     in_production_group_id  INT,
     
-    in_date_dead            VARCHAR(10),
-    in_dead_type_id         INT,
-    in_num_pigs_dead        INT,
+    in_date_added           VARCHAR(10)
+    in_num_pigs_added       INT,
+    
     in_comments             VARCHAR(160)
 )  
 
 BEGIN
 
 /** 
- * Will create pig_prod_pig_dead entry.
+ * Will add pigs (which is assumed to be external) to a pig_production OR
+ * production_group entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
- * @since August 27, 2025
+ * @since September 21, 2025
  *
  */
 
@@ -27,10 +28,10 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
-DECLARE RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD    INT             DEFAULT 22;
+DECLARE RES_NUM_PIG_PROD_CANNOT_ADD_PIG    INT             DEFAULT 22;
 
 
-DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD       INT             DEFAULT 24;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD        INT             DEFAULT 27;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
@@ -59,9 +60,6 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-
-
-DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
@@ -74,7 +72,7 @@ DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
 
 DECLARE cur_dead_at_stage                       INT             DEFAULT 0;
 
-DECLARE cur_pig_prod_pig_dead_id                INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_add_id                INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -91,15 +89,11 @@ IF in_pig_prod_id > 0 THEN
     SELECT  
             account_id,
             pig_farm_id,
-            prod_status_id,
-            
-            date_weaning
+            prod_status_id
     INTO    
             cur_pig_prod_account_id,
             cur_pig_prod_pig_farm_id,
-            cur_pig_prod_status_id,
-            
-            cur_pig_prod_date_weaning
+            cur_pig_prod_status_id
             
     FROM    pig_production 
     WHERE   id = in_pig_prod_id;
@@ -127,7 +121,7 @@ CALL basic_user_check(
     1, /* user must have an account*/
     cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
     
-    BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD,
+    BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD,
     FLAG_BIT_OPERATION_ADD,
     
     cur_user_account_id, 
@@ -160,8 +154,8 @@ IF in_pig_prod_id > 0 THEN
 
     IF  cur_pig_prod_status_id < PRODUCTION_STATUS_ID_LACTATING THEN 
         
-        SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD;
-        SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD";
+        SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG;
+        SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG";
         SET res_desc    = "No pigs yet";
         
         LEAVE process_user;
@@ -170,8 +164,8 @@ IF in_pig_prod_id > 0 THEN
 ELSE
     /* production_group */
     IF cur_pig_prod_status_id != PRODUCTION_GROUP_STATUS_ID_GROWING THEN
-        SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD;
-        SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD";
+        SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG;
+        SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG";
         SET res_desc    = "Production group status not GROWING.";
     
         LEAVE process_user;
@@ -182,30 +176,14 @@ ELSE
 END IF;
 
 
-/* Compute dead_at_stage*/
-IF in_pig_prod_id > 0 THEN 
-
-    IF cur_pig_prod_date_weaning IS NULL THEN 
-        SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
-    ELSE
-        SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
-    END IF;
-
-ELSE
-    SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
-END IF;
-
-
-INSERT INTO pig_prod_pig_dead (
+INSERT INTO pig_prod_pig_add (
     account_id,
     pig_farm_id,
     pig_prod_id,
     production_group_id,
     
-    date_dead,
-    dead_type_id,
-    dead_at_stage,
-    num_pigs_dead,
+    date_added,
+    num_pigs_added,
     comments,
     
     added_by_user_id
@@ -216,16 +194,14 @@ INSERT INTO pig_prod_pig_dead (
     in_pig_prod_id,
     in_production_group_id,
     
-    in_date_dead,
-    in_dead_type_id,
-    cur_dead_at_stage,
-    in_num_pigs_dead,
+    in_date_added,
+    in_num_pigs_added,
     in_comments,
     
     in_user_id
 );
 
-SELECT LAST_INSERT_ID() INTO cur_pig_prod_pig_dead_id;
+SELECT LAST_INSERT_ID() INTO cur_pig_prod_pig_add_id;
 
 
 /* Calculate current number of pigs.*/
@@ -266,7 +242,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_pig_prod_pig_dead_id            AS pig_prod_pig_dead_id;
+    cur_pig_prod_pig_add_id             AS pig_prod_pig_add_id;
     
 
 END $$

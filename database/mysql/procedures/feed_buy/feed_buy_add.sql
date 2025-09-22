@@ -54,6 +54,20 @@ DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
+/* feed_brand.flag bits*/
+DECLARE FLAG_BIT_FEED_BRAND_IS_DELETED          INT             DEFAULT 1;
+DECLARE FLAG_BIT_FEED_BRAND_IS_VERIFIED         INT             DEFAULT 2;
+
+
+/* feed_supplier.flag bits*/
+DECLARE FLAG_BIT_FEED_SUPPLIER_IS_DELETED       INT             DEFAULT 1;
+DECLARE FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED      INT             DEFAULT 2;
+
+
+DECLARE MIN_COUNT_ACCOUNT_FEED_BRAND_IS_VERIFIED  	INT       	DEFAULT 3;
+DECLARE MIN_COUNT_ACCOUNT_FEED_SUPPLIER_IS_VERIFIED INT        	DEFAULT 3;
+
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
@@ -450,6 +464,44 @@ IF cur_count = 0 THEN
 END IF;
 
 
+/* Update feed_brand counter. */
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    account_selection
+WHERE   feed_brand_id = in_feed_brand_id;
+
+UPDATE  feed_brand SET
+    account_counter = cur_count
+WHERE id = in_feed_brand_id;
+
+
+/* Update feed_brand.flag.FLAG_BIT_FEED_BRAND_IS_VERIFIED*/
+IF cur_count >= MIN_COUNT_ACCOUNT_FEED_BRAND_IS_VERIFIED THEN 
+    UPDATE feed_brand SET
+        flag = flag | FLAG_BIT_FEED_BRAND_IS_VERIFIED
+    WHERE id = in_feed_brand_id;
+
+END IF;
+
+
+/* Update feed_supplier counter*/
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    account_selection
+WHERE   feed_supplier_id = in_feed_supplier_id;
+
+UPDATE  feed_supplier SET
+    account_counter = cur_count
+WHERE id = in_feed_supplier_id;
+
+
+/* Update feed_supplier.flag.FLAG_BIT_FEED_SUPLIER_IS_VERIFIED*/
+IF cur_count >= MIN_COUNT_ACCOUNT_FEED_SUPPLIER_IS_VERIFIED THEN 
+    UPDATE feed_supplier SET
+        flag = flag | FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED
+    WHERE id = in_feed_supplier_id;
+
+END IF;
 
 
 

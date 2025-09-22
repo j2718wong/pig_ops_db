@@ -27,7 +27,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 21;
 
 
-DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE       	INT             DEFAULT 28;
+DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 30;
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
@@ -61,7 +61,7 @@ DECLARE cur_sows_gestating                      INT             DEFAULT 0;
 
 
 
-DECLARE cur_sow_boar_balance_id                INT             DEFAULT 0;
+DECLARE cur_sow_boar_balance_id                 INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
