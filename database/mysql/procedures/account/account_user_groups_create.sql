@@ -165,6 +165,11 @@ FROM (
     ) a;
 
 
+IF FLAG_BUSINESS_OBJ_MANAGEMENT_2 IS NULL THEN 
+    SET FLAG_BUSINESS_OBJ_MANAGEMENT_2 = 0;
+END IF;
+
+
     
     
 SELECT SUM(a.flag_val)
@@ -198,6 +203,9 @@ FROM (
                 )
     ) a;
 
+IF FLAG_BUSINESS_OBJ_OPERATIONS_2 IS NULL THEN 
+    SET FLAG_BUSINESS_OBJ_OPERATIONS_2 = 0;
+END IF;
 
 
 
@@ -383,6 +391,7 @@ INSERT INTO user_group(
     account_id,
     group_num,
     flag_business_obj_1,
+    flag_business_obj_2,
     name,
     
     
