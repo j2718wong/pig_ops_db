@@ -7,7 +7,7 @@ CREATE PROCEDURE pig_prod_pig_add_add(
     in_pig_prod_id          INT,
     in_production_group_id  INT,
     
-    in_date_added           VARCHAR(10)
+    in_date_added           VARCHAR(10),
     in_num_pigs_added       INT,
     
     in_comments             VARCHAR(160)

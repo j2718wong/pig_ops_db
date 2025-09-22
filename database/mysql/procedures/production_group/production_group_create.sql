@@ -106,9 +106,9 @@ SELECT  a.production_group_id,
         a.prod_status_id,
         b.last_production_group_id
 
-INTO    cur_pig_prod_production_group_id
+INTO    cur_pig_prod_production_group_id,
         cur_pig_prod_pig_farm_id,
-        cur_pig_prod_status_id
+        cur_pig_prod_status_id,
         cur_pig_farm_last_production_group_id
 FROM    pig_production a 
 LEFT OUTER JOIN pig_farm b ON a.pig_farm_id = b.id
@@ -131,7 +131,7 @@ IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_WEANING,
                                     PRODUCTION_STATUS_ID_GROWING) THEN 
     SET res_num     = RES_NUM_CANNOT_BE_ADDED_TO_GROUP;
     SET res_code    = "RES_NUM_CANNOT_BE_ADDED_TO_GROUP";
-    SET res_desc    = "Production status not WEANING or GROWING."
+    SET res_desc    = "Production status not WEANING or GROWING.";
     
     LEAVE process_user;
 END IF;

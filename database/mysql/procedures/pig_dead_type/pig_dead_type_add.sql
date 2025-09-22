@@ -79,7 +79,8 @@ DECLARE cur_pig_dead_type_id                    INT             DEFAULT 0;
 DECLARE cur_pig_dead_type_flag                  INT             DEFAULT 0;
 DECLARE cur_pig_dead_type_name                  VARCHAR(50)     DEFAULT '';
 
-DECLARE normalized_name                         VARCHAR(50)     DEFAULT '';
+
+DECLARE cur_translation_id                      INT             DEFAULT 0;
 
 DECLARE cur_count                               INT             DEFAULT 0;
 
@@ -134,7 +135,7 @@ IF language_id = LANGUAGE_ID_ENGLISH THEN
 ELSE
     SELECT  id
     INTO    cur_translation_id
-    FROM    a02_look_up_translation
+    FROM    a02_lookup_translation
     WHERE   business_object_id = BUSINESS_OBJ_ID_PIG_DEAD_TYPE AND
             account_id      = cur_user_account_id AND
             language_id     = in_language_id AND 
@@ -219,18 +220,22 @@ ELSE
     SELECT LAST_INSERT_ID() INTO cur_pig_dead_type_id;
     
     
-    INSERT INTO a02_look_up_translation VALUES(
-        business_object_id,
-        table_row_id
+    INSERT INTO a02_lookup_translation (
+        business_obj_id,
+        table_row_id,
         account_id,
         language_id,
-        translated_text
+        translated_text,
+        
+        added_by_user_id
     ) VALUES (  
         BUSINESS_OBJ_ID_PIG_DEAD_TYPE,
         cur_pig_dead_type_id,
         cur_user_account_id,
         in_language_id, 
-        in_name
+        in_name,
+        
+        in_user_id
     );
     
     

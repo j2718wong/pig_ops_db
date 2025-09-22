@@ -159,7 +159,7 @@ INTO FLAG_BUSINESS_OBJ_MANAGEMENT_2
 FROM (
     SELECT  POWER(2, bit_num) AS flag_val
     FROM    a02_business_object
-    WHERE   id IN ( BUSINESS_OBJ_ID_PRODUCTION_GROUP,
+    WHERE   id IN ( BUSINESS_OBJ_ID_PRODUCTION_GROUP
                     
                 )
     ) a;

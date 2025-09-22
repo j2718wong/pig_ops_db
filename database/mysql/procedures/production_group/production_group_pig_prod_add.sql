@@ -56,8 +56,10 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_production_group_account_id         INT             DEFAULT 0;
 
-DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
-DECLARE cur_pig_farm_last_production_group_id   INT             DEFAULT 0;
+
+DECLARE cur_pig_prod_production_group_id		INT             DEFAULT 0;
+DECLARE cur_pig_prod_status_id					INT             DEFAULT 0;
+
 
 DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
 
@@ -148,7 +150,7 @@ CALL production_calculate_current_pigs(0, in_production_group_id, cur_num_pigs_c
     
 
 UPDATE production_group SET 
-	num_pigs_current = cur_num_pigs_current
+    num_pigs_current = cur_num_pigs_current
 WHERE id = in_production_group_id;
 
 

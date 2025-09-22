@@ -91,7 +91,7 @@ IF in_pig_prod_id > 0 THEN
         date_actual_birth
     INTO
         cur_pig_prod_account_id,
-        cur_pig_prod_status_id
+        cur_pig_prod_status_id,
         cur_pig_prod_date_actual_birth
     FROM pig_production 
     WHERE id = in_pig_prod_id;
