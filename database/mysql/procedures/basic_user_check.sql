@@ -114,11 +114,14 @@ DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_HARVEST        INT             DEFAULT 26;
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD        INT             DEFAULT 27;
 
+DECLARE BUSINESS_OBJ_ID_PIG_DEAD_TYPE           INT             DEFAULT 28;
+
 DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 30;
 
-DECLARE BUSINESS_OBJ_ID_PIG_PROD_RESERVED_2     INT             DEFAULT 28;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_RESERVED_2     INT             DEFAULT 32;
 
-DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 33;
+DECLARE BUSINESS_OBJ_ID_PIG_PEN                 INT             DEFAULT 33;
+DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 34;
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
@@ -176,8 +179,11 @@ DECLARE cur_user_grp_flag_priv_pig_prod_pig_ops INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_pig_prod_pig_dead INT            DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_pig_prod_notes   INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_pig_prod_harvest INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_prod_pig_add INT             DEFAULT 0;
 
 DECLARE cur_user_grp_flag_priv_sow_boar_balance INT             DEFAULT 0;
+
+DECLARE cur_user_grp_flag_priv_pig_pen			INT             DEFAULT 0;
 
 
 DECLARE cur_account_flag                        INT             DEFAULT 0;
@@ -238,8 +244,11 @@ SELECT
     b.flag_priv_pig_prod_pig_dead,
     b.flag_priv_pig_prod_notes,
     b.flag_priv_pig_prod_harvest,
+	b.flag_priv_pig_prod_pig_add,
     
-    b.flag_priv_sow_boar_balance
+    b.flag_priv_sow_boar_balance,
+	
+	b.flag_priv_pig_pen
     
 
 INTO    
@@ -285,8 +294,11 @@ INTO
     cur_user_grp_flag_priv_pig_prod_pig_dead,
     cur_user_grp_flag_priv_pig_prod_notes,
     cur_user_grp_flag_priv_pig_prod_harvest,
+	cur_user_grp_flag_priv_pig_prod_pig_add,
     
-    cur_user_grp_flag_priv_sow_boar_balance
+    cur_user_grp_flag_priv_sow_boar_balance,
+	
+	cur_user_grp_flag_priv_pig_pen
     
 FROM  user a 
 LEFT OUTER JOIN  user_group b ON  a.user_group_id = b.id
@@ -496,9 +508,18 @@ WHEN BUSINESS_OBJ_ID_PIG_PROD_NOTES THEN
 WHEN BUSINESS_OBJ_ID_PIG_PROD_HARVEST THEN
     SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_harvest;
     
+WHEN BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_pig_add;
+	
 
 WHEN BUSINESS_OBJ_ID_SOW_BOAR_BALANCE THEN
     SET cur_group_flag = cur_user_grp_flag_priv_sow_boar_balance;
+
+
+WHEN BUSINESS_OBJ_ID_PIG_PEN THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_pen;
+
+
 
 END CASE;
 

@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS production_group_create $$
 CREATE PROCEDURE production_group_create(
     in_user_id              INT,
 
-    in_pig_prod_id          INT,
+    in_pig_prod_id          INT, /*initial pig_production in the production_group*/
     
     in_date_added           INT
 )  
@@ -29,7 +29,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 DECLARE RES_NUM_CANNOT_BE_ADDED_TO_GROUP        INT             DEFAULT 20;
 
 
-DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 29;
+DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 34;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;

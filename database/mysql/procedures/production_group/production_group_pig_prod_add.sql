@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS production_group_pig_prod_add $$
 CREATE PROCEDURE production_group_pig_prod_add(
     in_user_id              INT,
 
-	in_production_group_id 	INT,
+    in_production_group_id  INT,
     in_pig_prod_id          INT,
     
     in_date_added           INT
@@ -26,7 +26,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 
 
-DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 29;
+DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 34;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
@@ -57,8 +57,8 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_production_group_account_id         INT             DEFAULT 0;
 
 
-DECLARE cur_pig_prod_production_group_id		INT             DEFAULT 0;
-DECLARE cur_pig_prod_status_id					INT             DEFAULT 0;
+DECLARE cur_pig_prod_production_group_id        INT             DEFAULT 0;
+DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 
 DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
@@ -73,10 +73,10 @@ DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
 SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
-SELECT 	account_id
-INTO 	cur_production_group_account_id
-FROM 	production_group
-WHERE 	id = in_production_group_id;
+SELECT  account_id
+INTO    cur_production_group_account_id
+FROM    production_group
+WHERE   id = in_production_group_id;
 
 
 CALL basic_user_check(
@@ -159,7 +159,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    in_production_group_id             	AS production_group_id;
+    in_production_group_id              AS production_group_id;
 
 END $$
 

@@ -78,9 +78,11 @@ DECLARE BUSINESS_OBJ_ID_RESERVED_1              INT             DEFAULT 29;
 
 DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 30;
 DECLARE BUSINESS_OBJ_ID_RESERVED_2              INT             DEFAULT 31;
-DECLARE BUSINESS_OBJ_ID_PIG_PEN                 INT             DEFAULT 32;
+DECLARE BUSINESS_OBJ_ID_RESERVED_3              INT             DEFAULT 32;
 
-DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 33;
+
+DECLARE BUSINESS_OBJ_ID_PIG_PEN                 INT             DEFAULT 33;
+DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 34;
 
 
 
@@ -159,7 +161,8 @@ INTO FLAG_BUSINESS_OBJ_MANAGEMENT_2
 FROM (
     SELECT  POWER(2, bit_num) AS flag_val
     FROM    a02_business_object
-    WHERE   id IN ( BUSINESS_OBJ_ID_PRODUCTION_GROUP
+    WHERE   id IN ( BUSINESS_OBJ_ID_PIG_PEN,
+                    BUSINESS_OBJ_ID_PRODUCTION_GROUP
                     
                 )
     ) a;
@@ -252,7 +255,9 @@ INSERT INTO user_group(
     flag_priv_pig_prod_harvest,
     flag_priv_pig_prod_pig_add,
     
-    flag_priv_sow_boar_balance
+    flag_priv_sow_boar_balance,
+    
+    flag_priv_pig_pen
     
 
 ) VALUES (
@@ -295,6 +300,8 @@ INSERT INTO user_group(
     OPERATION_ADD_UPDATE_DELETE,
     OPERATION_ADD_UPDATE_DELETE,
     OPERATION_ADD_UPDATE_DELETE,
+    OPERATION_ADD_UPDATE_DELETE,
+    
     OPERATION_ADD_UPDATE_DELETE,
     
     OPERATION_ADD_UPDATE_DELETE
@@ -340,8 +347,11 @@ INSERT INTO user_group(
     flag_priv_pig_prod_pig_dead,
     flag_priv_pig_prod_notes,
     flag_priv_pig_prod_harvest,
+    flag_priv_pig_prod_pig_add,
     
-    flag_priv_sow_boar_balance
+    flag_priv_sow_boar_balance,
+    
+    flag_priv_pig_pen
     
 ) VALUES (
     in_account_id,
@@ -381,6 +391,9 @@ INSERT INTO user_group(
     OPERATION_ADD_UPDATE_DELETE,
     OPERATION_ADD_UPDATE_DELETE,
     OPERATION_ADD_UPDATE_DELETE,
+    OPERATION_ADD_UPDATE_DELETE,
+    OPERATION_ADD_UPDATE_DELETE,
+    
     OPERATION_ADD_UPDATE_DELETE,
     
     OPERATION_ADD_UPDATE_DELETE
