@@ -111,7 +111,7 @@ END IF;
 UPDATE pig_pig_pen SET
     pig_pen_type_id     = in_pig_pen_type_id,
     
-    name                = in_name
+    name                = in_name,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP

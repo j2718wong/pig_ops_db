@@ -96,7 +96,7 @@ INSERT INTO pig_pen(
     pig_farm_id,
     pig_pen_type_id,
     
-    name
+    name,
     
     added_by_user_id
 ) VALUES (

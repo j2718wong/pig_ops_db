@@ -89,15 +89,6 @@ WHERE id =  in_pig_pen_id;
 END process_user;
 
 
-SELECT
-    flag,
-    name
-INTO 
-    cur_pig_pen_flag,
-    cur_pig_pen_name
-FROM pig_pen
-WHERE id = in_pig_pen_id;
-
 SELECT 
     res_num                             AS result_number,
     res_code                            AS result_code,
