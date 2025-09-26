@@ -129,15 +129,15 @@ IF cur_user_orig_account_id != cur_user_account_id THEN
     /* Will allow update only if user.flag.FLAG_BIT_SYSTEM_SUPER_USER is SET*/
 
 ELSE
-    IF (cur_feed_supplier_flag & FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED) > 0 THEN 
+    IF (cur_semen_supplier_flag & FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED) > 0 THEN 
         SET res_num     = RES_NUM_NOT_ALLOWED_TO_UPDATE;
         SET res_code    = "RES_NUM_NOT_ALLOWED_TO_UPDATE";
-        SET res_code    = "Feed supplier is already verified";
+        SET res_code    = "Semen supplier is already verified";
         
         LEAVE process_user;
     END IF;
     
-    /* Will allow update only if feed_supplier.flag.FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED 
+    /* Will allow update only if feed_supplier.flag.FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED 
     is CLEAR*/
 
 

@@ -164,6 +164,9 @@ INSERT INTO feed_supplier(
     address_level_3_id,
     
     name,
+    contact_number,
+    whatsapp,
+    messenger,
     added_by_user_id
     
 ) VALUES (
@@ -173,6 +176,10 @@ INSERT INTO feed_supplier(
    in_address_level_3_id,
    
    in_name,
+   in_contact_number,
+   in_whatsapp,
+   in_messenger,
+   
    in_user_id
 );
 

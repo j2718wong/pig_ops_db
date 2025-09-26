@@ -6,10 +6,12 @@ CREATE PROCEDURE feed_supplier_update(
     
     in_feed_supplier_id     INT,
 
-    in_address_level_2_id   INT,
     in_address_level_3_id   INT,
     
-    in_name                 VARCHAR(50)
+    in_name                 VARCHAR(50),
+    in_contact_number       VARCHAR(20),
+    in_whatsapp             VARCHAR(20),
+    in_messenger            VARCHAR(50)
 )  
 
 BEGIN
@@ -158,9 +160,12 @@ END IF;
 
 
 UPDATE feed_supplier  SET 
-    address_level_2_id  = in_address_level_2_id,
     address_level_3_id  = in_address_level_3_id,
     name                = in_name,
+    
+    contact_number      = in_contact_number,
+    whatsapp            = in_whatsapp,
+    messenger           = in_messenger,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
