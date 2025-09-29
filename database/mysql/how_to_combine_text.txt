@@ -1,0 +1,5 @@
+# Windows
+for /r %i in (*.sql) do type "%i" >> combined.txt
+
+# replace NBSP
+Search \uFEFF in notepad++; use extended search; replace with zero length string
