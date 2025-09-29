@@ -29,7 +29,6 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
-DECLARE RES_NUM_ACCOUNT_EXCEED_MAX_FARMS        INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_PIG_FARM                INT             DEFAULT 9;
@@ -43,14 +42,6 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
-
-DECLARE cur_account_farm_01_id                  INT             DEFAULT 0;
-DECLARE cur_account_farm_02_id                  INT             DEFAULT 0;
-DECLARE cur_account_farm_03_id                  INT             DEFAULT 0;
-DECLARE cur_account_farm_04_id                  INT             DEFAULT 0;
-DECLARE cur_account_farm_05_id                  INT             DEFAULT 0;
-
-DECLARE is_added_to_account                     INT             DEFAULT 0;
 
 DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
 DECLARE cur_pig_farm_flag                       INT             DEFAULT 0;
@@ -88,37 +79,6 @@ IF res_num != RES_NUM_SUCCESS THEN
     LEAVE process_user;
 END IF;
 
-
-/* Check account*/
-SELECT 
-    farm_01_id,
-    farm_02_id,
-    farm_03_id,
-    farm_04_id,
-    farm_05_id
-INTO
-    cur_account_farm_01_id,
-    cur_account_farm_02_id,
-    cur_account_farm_03_id,
-    cur_account_farm_04_id,
-    cur_account_farm_05_id
-    
-FROM account
-WHERE id = cur_user_account_id;
-
-
-IF  cur_account_farm_01_id > 0 AND 
-    cur_account_farm_02_id > 0 AND 
-    cur_account_farm_03_id > 0 AND 
-    cur_account_farm_04_id > 0 AND 
-    cur_account_farm_05_id > 0 THEN 
-    
-    
-    SET res_num     = RES_NUM_ACCOUNT_EXCEED_MAX_FARMS;
-    SET res_code    = "RES_NUM_ACCOUNT_EXCEED_MAX_FARMS";
-    
-    LEAVE process_user;
-END IF;
 
 
 /* Check for duplicate entry */
@@ -167,47 +127,6 @@ INSERT INTO pig_farm(
 
 SELECT LAST_INSERT_ID() INTO cur_pig_farm_id;
 
-
-
-IF is_added_to_account = 0 AND cur_account_farm_01_id = 0 THEN
-    UPDATE account SET 
-        farm_01_id = cur_pig_farm_id
-    WHERE id = cur_user_account_id;
-    
-    SET is_added_to_account = 1;
-END IF;
-
-IF is_added_to_account = 0 AND  cur_account_farm_02_id = 0 THEN
-    UPDATE account SET 
-        farm_02_id = cur_pig_farm_id
-    WHERE id = cur_user_account_id;
-
-    SET is_added_to_account = 1;
-END IF;
-
-IF is_added_to_account = 0 AND  cur_account_farm_03_id = 0 THEN
-    UPDATE account SET 
-        farm_03_id = cur_pig_farm_id
-    WHERE id = cur_user_account_id;
-
-    SET is_added_to_account = 1;
-END IF;
-
-IF is_added_to_account = 0 AND  cur_account_farm_04_id = 0 THEN
-    UPDATE account SET 
-        farm_04_id = cur_pig_farm_id
-    WHERE id = cur_user_account_id;
-
-    SET is_added_to_account = 1;
-END IF;
-
-IF is_added_to_account = 0 AND  cur_account_farm_05_id = 0 THEN
-    UPDATE account SET 
-        farm_05_id = cur_pig_farm_id
-    WHERE id = cur_user_account_id;
-
-    SET is_added_to_account = 1;
-END IF;
 
 
 

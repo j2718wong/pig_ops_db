@@ -4,7 +4,9 @@ DROP PROCEDURE IF EXISTS account_update_settings $$
 CREATE PROCEDURE account_update_settings(
     in_user_id                  INT,
     
-    in_day_1_on_dob             INT
+    in_day_1_on_dob             INT,
+    in_num_days_weaning         INT,
+    in_num_days_harvest         INT
     
 )
 
@@ -96,6 +98,8 @@ END IF;
 
 UPDATE account SET
     flag_settings       = cur_account_flag_settings,
+    num_days_weaning    = in_num_days_weaning,
+    num_days_harvest    = in_num_days_harvest,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
