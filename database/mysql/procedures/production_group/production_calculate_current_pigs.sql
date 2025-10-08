@@ -16,7 +16,12 @@ BEGIN
  * @since September 19, 2025
  *
  */
- 
+
+
+DECLARE DEAD_AT_STAGE_LACTATING                 INT             DEFAULT 1;
+DECLARE DEAD_AT_STAGE_GROWING                   INT             DEFAULT 2;
+
+
  
 DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
 DECLARE cur_num_pigs_added                      INT             DEFAULT 0;

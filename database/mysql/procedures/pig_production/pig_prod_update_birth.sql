@@ -177,7 +177,7 @@ WHERE id = cur_pig_prod_sow_id;
 SELECT  COUNT(*)
 INTO    cur_count_account_pig_ops
 FROM    account_pig_ops
-WHERE   account_id = in_account_id      AND 
+WHERE   account_id = cur_pig_prod_account_id  AND 
         operation_type = PIG_OPERATION_TYPE_LACTATING_SOW AND 
         (flag & FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED) = 0;
 

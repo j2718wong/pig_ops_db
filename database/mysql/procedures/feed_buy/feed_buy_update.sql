@@ -205,7 +205,7 @@ WHERE id = in_feed_buy_id;
 
 
 /* It is difficult to know which feed is updated; so update all;*/
-IF in_pig_prod_id > 0 THEN 
+IF cur_feed_buy_pig_prod_id > 0 THEN 
     SELECT  SUM(quantity),
             SUM(kg_total),
             SUM(total_cost)
@@ -214,7 +214,7 @@ IF in_pig_prod_id > 0 THEN
             cur_feed_weight_kg_lactating,
             cur_total_cost_lactating
     FROM    feed_buy
-    WHERE   pig_prod_id     = in_pig_prod_id AND 
+    WHERE   pig_prod_id     = cur_feed_buy_pig_prod_id AND 
             feed_type_id    = FEED_TYPE_ID_LACTATING;
         
         
@@ -226,7 +226,7 @@ IF in_pig_prod_id > 0 THEN
             cur_feed_weight_kg_booster,
             cur_total_cost_booster
     FROM    feed_buy
-    WHERE   pig_prod_id     = in_pig_prod_id AND 
+    WHERE   pig_prod_id     = cur_feed_buy_pig_prod_id AND 
             feed_type_id    = FEED_TYPE_ID_BOOSTER;
         
         
@@ -238,7 +238,7 @@ IF in_pig_prod_id > 0 THEN
             cur_feed_weight_kg_prestarter,
             cur_total_cost_prestarter
     FROM    feed_buy
-    WHERE   pig_prod_id     = in_pig_prod_id AND 
+    WHERE   pig_prod_id     = cur_feed_buy_pig_prod_id AND 
             feed_type_id    = FEED_TYPE_ID_PRESTARTER;
         
 
@@ -250,7 +250,7 @@ IF in_pig_prod_id > 0 THEN
             cur_feed_weight_kg_starter,
             cur_total_cost_starter
     FROM    feed_buy
-    WHERE   pig_prod_id     = in_pig_prod_id AND 
+    WHERE   pig_prod_id     = cur_feed_buy_pig_prod_id AND 
             feed_type_id    = FEED_TYPE_ID_STARTER;
 
 
@@ -262,7 +262,7 @@ IF in_pig_prod_id > 0 THEN
             cur_feed_weight_kg_grower,
             cur_total_cost_grower
     FROM    feed_buy
-    WHERE   pig_prod_id     = in_pig_prod_id AND 
+    WHERE   pig_prod_id     = cur_feed_buy_pig_prod_id AND 
             feed_type_id    = FEED_TYPE_ID_GROWER;
 
 
@@ -274,7 +274,7 @@ IF in_pig_prod_id > 0 THEN
             cur_feed_weight_kg_finisher,
             cur_total_cost_finisher
     FROM    feed_buy
-    WHERE   pig_prod_id     = in_pig_prod_id AND 
+    WHERE   pig_prod_id     = cur_feed_buy_pig_prod_id AND 
             feed_type_id    = FEED_TYPE_ID_FINISHER;
 
     
@@ -342,7 +342,7 @@ IF in_pig_prod_id > 0 THEN
         
         last_update_user_id = in_user_id,
         dt_last_update      = CURRENT_TIMESTAMP
-    WHERE id = in_pig_prod_id;
+    WHERE id = cur_feed_buy_pig_prod_id;
 
 END IF;
 
