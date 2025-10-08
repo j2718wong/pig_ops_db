@@ -52,7 +52,7 @@ CALL pig_prod_notes_add(1, 1, "2025-01-08", "Inject iron baktin");
 
 CREATE PROCEDURE feed_buy_add(
     in_user_id              INT,
-	
+
     in_pig_farm_id          INT,
     in_pig_prod_id          INT,
     in_prod_group_id        INT,
