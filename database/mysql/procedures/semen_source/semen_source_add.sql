@@ -51,7 +51,7 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 /* semen_supplier.flag bits*/
 DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
-DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED    	INT             DEFAULT 2;
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED     INT             DEFAULT 2;
 
 DECLARE MIN_COUNT_ACCOUNT_SEMEN_SUPPLIER_IS_VERIFIED INT        DEFAULT 0;
 
@@ -121,6 +121,7 @@ ELSE
     INTO    cur_semen_source_id
     FROM    semen_source
     WHERE   account_id  = cur_user_account_id   AND 
+            semen_supplier_id = in_semen_supplier_id AND
             UPPER(name) = UPPER(in_name)
     LIMIT   1;
 

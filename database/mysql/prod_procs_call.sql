@@ -22,7 +22,7 @@ CALL sow_new_ai_entry(324658, 1, 2, '2025-02-06', 'AI PIC 337');
 CALL sow_new_ai_entry(324658, 1, 2, '2025-02-24', 'AI PIC 337');
 
 CALL pig_prod_add(1, 5, NULL, 1, 1800, 360, "load Elmer + gasolina", 2, "2025-09-10")
-
+CALL pig_prod_add(1, 5, NULL, 2, 1800, 0, "", 2, "2025-10-08")
 
 
 
@@ -202,7 +202,9 @@ CALL production_harvest_add(1,5,NULL,1, '2025-09-19', 1, NULL, 78.6, 77.6, NULL,
 CALL production_harvest_add(1,5,NULL,NULL,'2025-09-27', 2, NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 
+CALL semen_supplier_add(1,1,49,1013,27033, "Primary", NULL, NULL, NULL);
 
+CALL semen_source_add(1,1,NULL, 2,2, "PIC337", "Semen AI from Primary")
 
 
 

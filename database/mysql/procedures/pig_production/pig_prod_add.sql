@@ -218,7 +218,7 @@ ELSE
     
     /* Check if semen is coming from external supplier*/
     SELECT  boar_id,
-            semen_suplier_id
+            semen_supplier_id
     
     INTO    cur_semen_source_boar_id,
             cur_semen_source_semen_supplier_id
