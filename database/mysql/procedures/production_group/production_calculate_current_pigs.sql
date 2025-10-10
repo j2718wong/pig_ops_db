@@ -17,12 +17,14 @@ BEGIN
  *
  */
 
+DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 
 DECLARE DEAD_AT_STAGE_LACTATING                 INT             DEFAULT 1;
 DECLARE DEAD_AT_STAGE_GROWING                   INT             DEFAULT 2;
 
+DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
- 
+DECLARE cur_num_pigs_at_birth                   INT             DEFAULT 0;
 DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
 DECLARE cur_num_pigs_added                      INT             DEFAULT 0;
 DECLARE cur_num_pigs_harvest                    INT             DEFAULT 0;
@@ -32,11 +34,25 @@ DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
 
 
 IF in_pig_prod_id > 0 THEN 
-    /* This can be NULL if the pigs are brought externally*/
-    SELECT  num_pigs_weaning_m + num_pigs_weaning_f
-    INTO    cur_num_pigs_weaning
-    FROM    pig_production 
+    SELECT  prod_status_id
+    INTO    cur_pig_prod_status_id
+    FROM    pig_production
     WHERE   id = in_pig_prod_id;
+    
+    IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_LACTATING THEN 
+        SELECT  num_pigs_live_m + num_pigs_live_f
+        INTO    cur_num_pigs_at_birth
+        FROM    pig_production 
+        WHERE   id = in_pig_prod_id;
+
+    ELSE
+    
+        /* This can be NULL if the pigs are brought externally*/
+        SELECT  num_pigs_weaning_m + num_pigs_weaning_f
+        INTO    cur_num_pigs_weaning
+        FROM    pig_production 
+        WHERE   id = in_pig_prod_id;
+    END IF;
     
     
     /* This can be NULL.*/
@@ -53,12 +69,23 @@ IF in_pig_prod_id > 0 THEN
     WHERE   pig_prod_id = in_pig_prod_id;
     
     
-    /* This can be NULL.*/
-    SELECT  SUM(num_pigs_dead)
-    INTO    cur_num_dead_pigs
-    FROM    pig_prod_pig_dead
-    WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
-
+    IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_LACTATING THEN 
+        /* This can be NULL.*/
+        SELECT  SUM(num_pigs_dead)
+        INTO    cur_num_dead_pigs
+        FROM    pig_prod_pig_dead
+        WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_LACTATING;
+    
+    ELSE
+        /* This can be NULL.*/
+        SELECT  SUM(num_pigs_dead)
+        INTO    cur_num_dead_pigs
+        FROM    pig_prod_pig_dead
+        WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
+    
+    END IF;
+    
+    
 ELSE
     /*  Get of all weaning pigs in the group*/
     /* This can be NULL if the pigs are brought externally*/
@@ -91,6 +118,10 @@ ELSE
 
 END IF;
     
+
+IF cur_num_pigs_at_birth > 0 THEN 
+    SET cur_num_pigs_current = cur_num_pigs_at_birth;
+END IF;
 
 IF cur_num_pigs_weaning > 0 THEN 
     SET cur_num_pigs_current = cur_num_pigs_weaning;

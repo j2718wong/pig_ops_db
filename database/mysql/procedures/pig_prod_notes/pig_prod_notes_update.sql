@@ -39,7 +39,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
-DECLARE cur_pig_prod_group_id                   INT             DEFAULT 0;
+DECLARE cur_production_group_id                   INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
@@ -58,10 +58,10 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  pig_prod_id,
-        pig_prod_group_id
+        production_group_id
 
 INTO    cur_pig_prod_id,
-        cur_pig_prod_group_id
+        cur_production_group_id
 
 FROM    pig_prod_notes 
 WHERE   id = in_pig_prod_notes_id;
@@ -90,7 +90,7 @@ ELSE
             cur_pig_prod_status_id
             
     FROM    production_group
-    WHERE   id = cur_pig_prod_group_id
+    WHERE   id = cur_production_group_id
     LIMIT   1;
 
 END IF;

@@ -85,6 +85,7 @@ CALL feed_buy_add(1, NULL, 7, NULL, '2025-07-31', 5, 1, 1, 11, 50, 1850, 20350);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-09-02', 6, 1, 1, 4, 50, 1700, 6800);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-09-24', 6, 1, 1, 6, 50, 1700, 10200);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-03', 6, 1, 1, 4, 50, 1700, 6800);
+CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-10', 6, 1, 1, 8, 50, 1700, 13600);
 
 
 CALL feed_buy_add(1, NULL, 9, NULL, '2025-06-23', 2, 1, 1, 1, 50, 1670, 1670);
@@ -98,6 +99,7 @@ CALL feed_buy_add(1, NULL, 9, NULL,  '2025-09-10', 5, 1, 1, 5, 50, 1850, 9250);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-09-12', 5, 1, 1, 1, 50, 1850, 1850);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-09-24', 5, 1, 1, 4, 50, 1850, 7400);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-03', 6, 1, 1, 4, 50, 1700, 6800);
+CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-10', 6, 1, 1, 6, 50, 1700, 10200);
 
 
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-09-02', 2, 1, 1, 2, 50, 1670, 3340);
@@ -205,6 +207,8 @@ CALL production_harvest_add(1,5,NULL,NULL,'2025-09-27', 2, NULL,NULL, NULL, NULL
 CALL semen_supplier_add(1,1,49,1013,27033, "Primary", NULL, NULL, NULL);
 
 CALL semen_source_add(1,1,NULL, 2,2, "PIC337", "Semen AI from Primary")
+
+CALL pig_prod_pig_dead_add(1, 13, NULL, "2025-10-01", 1, 1, "Nalisang anay sa linog, nadat ugan baktin")
 
 
 
