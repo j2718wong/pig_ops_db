@@ -77,7 +77,7 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  pig_prod_id
+SELECT  pig_prod_id,
         pig_prod_group_id
 
 INTO    cur_pig_prod_id,
@@ -90,7 +90,7 @@ WHERE   id = in_feed_balance_id;
 IF cur_pig_prod_id > 0 THEN 
     SELECT 
         account_id,
-        pig_prod_status_id
+        prod_status_id
 
     INTO
         cur_pig_prod_account_id,
@@ -144,7 +144,7 @@ IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN
 END IF;
 
 
-UPDATE pig_prod_feed_bal SET 
+UPDATE feed_balance SET 
     date_balance        = in_date_balance,
     
     num_pigs            = in_num_pigs,
