@@ -5,6 +5,7 @@ CREATE PROCEDURE pig_prod_notes_add(
     in_user_id              INT,
     
     in_pig_prod_id          INT,
+    in_sow_boar_id          INT,
     in_production_group_id  INT,
     
     in_date_notes           VARCHAR(10),
@@ -71,7 +72,22 @@ IF in_pig_prod_id > 0 THEN
     WHERE   id = in_pig_prod_id
     LIMIT   1;
 
-ELSE
+END IF;
+
+
+IF in_sow_boar_id > 0 THEN 
+    SELECT  
+            account_id,
+            pig_farm_id
+    INTO 
+            cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id
+    WHERE   id = in_sow_boar_id;
+
+END IF;
+
+
+IF in_production_group_id > 0 THEN 
     SELECT  
             account_id,
             pig_farm_id,
@@ -85,6 +101,7 @@ ELSE
     WHERE   id = in_production_group_id
     LIMIT   1;
 END IF;
+
 
 CALL basic_user_check(
     in_user_id, 
@@ -109,11 +126,15 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
-    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
-    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
-    
-    LEAVE process_user;
+IF in_pig_prod_id > 0 THEN 
+
+    IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
+        SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
+        SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+        
+        LEAVE process_user;
+    END IF;
+
 END IF;
 
 
@@ -121,6 +142,7 @@ INSERT INTO pig_prod_notes (
     account_id,
     pig_farm_id,
     pig_prod_id,
+    sow_boar_id,
     production_group_id,
     
     notes,
@@ -131,6 +153,7 @@ INSERT INTO pig_prod_notes (
     cur_pig_prod_account_id,
     cur_pig_prod_pig_farm_id,
     in_pig_prod_id,
+    in_sow_boar_id,
     in_production_group_id,
     
     in_notes,
