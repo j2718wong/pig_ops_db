@@ -193,9 +193,14 @@ CALL sow_boar_balance_add(1,  1,  '2025-10-04', 5, 1);
 
 CALL feed_balance_add(1,  7, NULL, '2025-10-11', 11,  0,   0, 0,     0,  7,    NULL);
 CALL feed_balance_add(1,  9, NULL, '2025-10-11', 16,  0,   0, 0,     0,  6,    NULL);
-CALL feed_balance_add(1, 13, NULL, '2025-10-11', 10,   0.5, 1, NULL,  NULL, NULL, NULL);
+CALL feed_balance_add(1, 13, NULL, '2025-10-11', 10,   0.5, 0, 1,  NULL, NULL, NULL);
 CALL sow_boar_balance_add(1,  1,  '2025-10-11', 4, 2);
 
+
+CALL feed_balance_add(1,  7, NULL, '2025-10-18', 11,  0,   0, 0,     0,  5,    NULL);
+CALL feed_balance_add(1,  9, NULL, '2025-10-18', 16,  0,   0, 0,     0,  9,    NULL);
+CALL feed_balance_add(1, 13, NULL, '2025-10-18', 10,  0,   0, 0.5,  NULL, NULL, NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-10-18', 3, 1);
 
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
