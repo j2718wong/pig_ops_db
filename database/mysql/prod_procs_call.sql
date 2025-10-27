@@ -87,6 +87,7 @@ CALL feed_buy_add(1, NULL, 7, NULL, '2025-09-24', 6, 1, 1, 6, 50, 1700, 10200);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-03', 6, 1, 1, 4, 50, 1700, 6800);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-10', 6, 1, 1, 8, 50, 1700, 13600);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-13', 7, 1, 1, 4, 50, 1575, 6300);
+CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-27', 7, 1, 2, 6, 50, 1555, 9330);
 
 
 CALL feed_buy_add(1, NULL, 9, NULL, '2025-06-23', 2, 1, 1, 1, 50, 1670, 1670);
@@ -102,6 +103,7 @@ CALL feed_buy_add(1, NULL, 9, NULL,  '2025-09-24', 5, 1, 1, 4, 50, 1850, 7400);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-03', 6, 1, 1, 4, 50, 1700, 6800);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-10', 6, 1, 1, 6, 50, 1700, 10200);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-13', 6, 1, 1, 8, 50, 1700, 13600);
+CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-27', 6, 1, 2, 1, 50, 1680, 1680);
 
 
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-09-02', 2, 1, 1, 2, 50, 1670, 3340);
@@ -201,6 +203,16 @@ CALL feed_balance_add(1,  7, NULL, '2025-10-18', 11,  0,   0, 0,     0,  5,    N
 CALL feed_balance_add(1,  9, NULL, '2025-10-18', 16,  0,   0, 0,     0,  9,    NULL);
 CALL feed_balance_add(1, 13, NULL, '2025-10-18', 10,  0,   0, 0.5,  NULL, NULL, NULL);
 CALL sow_boar_balance_add(1,  1,  '2025-10-18', 3, 1);
+
+
+CALL pig_prod_update_weaning(1,13,'2025-10-24',5,5,NULL);
+CALL production_harvest_add(1,13,NULL,NULL,'2025-10-23', 1, NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, "Bayad Butakal");
+
+CALL feed_balance_add(1,  7, NULL, '2025-10-25', 11,  0,   0, 0,     0,  0,    4);
+CALL feed_balance_add(1,  9, NULL, '2025-10-25', 16,  0,   0, 0,     0,  4,    NULL);
+CALL feed_balance_add(1, 13, NULL, '2025-10-25',  9,  0,   0, 0,     2,  NULL, NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-10-25', 2, 0);
+
 
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
