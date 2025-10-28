@@ -87,7 +87,7 @@ CALL feed_buy_add(1, NULL, 7, NULL, '2025-09-24', 6, 1, 1, 6, 50, 1700, 10200);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-03', 6, 1, 1, 4, 50, 1700, 6800);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-10', 6, 1, 1, 8, 50, 1700, 13600);
 CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-13', 7, 1, 1, 4, 50, 1575, 6300);
-CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-27', 7, 1, 2, 6, 50, 1555, 9330);
+CALL feed_buy_add(1, NULL, 7, NULL, '2025-10-27', 7, 1, 2, 7, 50, 1555, 10885);
 
 
 CALL feed_buy_add(1, NULL, 9, NULL, '2025-06-23', 2, 1, 1, 1, 50, 1670, 1670);
@@ -221,6 +221,7 @@ CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
 
 CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Meloy Requinto", NULL, NULL, NULL);
 
+/* Harvested bayad sa butakal; harvest_type to be updated later*/
 CALL production_harvest_add(1,5,NULL,1, '2025-09-19', 1, NULL, 78.6, 77.6, NULL, 200, 15320,200, 'plete');
 
 /* Harvested as SOW/BOAR; harvest_type to be updated later*/
