@@ -26,7 +26,13 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 
 
-DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS       INT             DEFAULT 8;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS         INT             DEFAULT 8;
+
+
+DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
@@ -36,6 +42,8 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+
+DECLARE cur_account_ver_num_gestating_ops       INT             DEFAULT 0;
 
 DECLARE cur_account_pig_ops_id                  INT             DEFAULT 0;
 DECLARE cur_account_pig_ops_flag                INT             DEFAULT 0;
@@ -90,11 +98,20 @@ IF cur_account_pig_ops_id > 0 THEN
 END IF;
 
 
+/* Get the version number of the account_pig_ops_gestating*/
+SELECT  ver_num_gestating_ops
+INTO    cur_account_ver_num_gestating_ops
+FROM    account 
+WHERE   id = cur_user_account_id;
+
+SET cur_account_ver_num_gestating_ops = cur_account_ver_num_gestating_ops + 1;
+
 
 INSERT INTO account_pig_ops(
     account_id,
     operation_type,
     num_days_since,
+    version_num,
     
     name,
     description,
@@ -104,6 +121,7 @@ INSERT INTO account_pig_ops(
     cur_user_account_id,
     in_operation_type,
     in_num_days_since,
+    cur_account_ver_num_gestating_ops,
     
     in_name,
     in_description,
@@ -112,6 +130,11 @@ INSERT INTO account_pig_ops(
 );
 
 SELECT LAST_INSERT_ID() INTO cur_account_pig_ops_id;
+
+
+UPDATE account SET 
+    ver_num_gestating_ops = cur_account_ver_num_gestating_ops
+WHERE id = cur_user_account_id;
 
 
 END process_user;

@@ -24,21 +24,28 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS   INT             DEFAULT 10;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS   INT                   DEFAULT 10;
+
+
+DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-DECLARE AUDIT_ACTION_ADD                        VARCHAR(3)      DEFAULT "ADD";
-DECLARE AUDIT_ACTION_UPDATE                     VARCHAR(3)      DEFAULT "UPD";
-DECLARE AUDIT_ACTION_DELETE                     VARCHAR(3)      DEFAULT "DEL";
-
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+
+DECLARE cur_account_ver_num_gestating_ops       INT             DEFAULT 0;
+
+DECLARE cur_pig_ops_operation_type              INT             DEFAULT 0;
+DECLARE cur_pig_ops_num_days_since              INT             DEFAULT 0;
         
 DECLARE cur_account_pig_ops_account_id          INT             DEFAULT 0;
 DECLARE cur_account_pig_ops_flag                INT             DEFAULT 0;
@@ -84,9 +91,41 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+SELECT  operation_type,
+        num_days_since,
+        version_num
+        
+INTO    cur_pig_ops_operation_type,
+        cur_pig_ops_num_days_since,
+        cur_account_ver_num_gestating_ops
+
+FROM    account_pig_ops
+WHERE   id = in_account_pig_ops_id;
+
+
+/* Get the version number of the cur_pig_ops_operation_type*/
+IF cur_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+    SELECT  ver_num_gestating_ops
+    INTO    cur_account_ver_num_gestating_ops
+    FROM    account 
+    WHERE   id = cur_user_account_id;
+
+    /* Only track the change of account_pig_ops.num_days_since */
+    IF cur_pig_ops_num_days_since != in_num_days_since THEN 
+        SET cur_account_ver_num_gestating_ops = cur_account_ver_num_gestating_ops + 1;
+    END IF;
+    
+    /* Update account.ver_num_gestating_ops*/
+    UPDATE account SET 
+        ver_num_gestating_ops = cur_account_ver_num_gestating_ops
+    WHERE   id = cur_user_account_id;
+
+END IF;
+
 
 UPDATE account_pig_ops SET
     num_days_since      = in_num_days_since,
+    version_num         = cur_account_ver_num_gestating_ops,
     
     name                = in_name,
     description         = in_description,

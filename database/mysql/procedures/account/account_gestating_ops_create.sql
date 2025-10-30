@@ -28,15 +28,19 @@ DECLARE GESTATING_OPS_NUM_DAYS_DEWORM           INT             DEFAULT 100;
 
 
 
+
+
 /* Create default gestating_operation for the account.*/
 INSERT INTO account_pig_ops (
     account_id,
     operation_type,
+    version_num,
     num_days_since,
     name
 ) VALUES (
     in_account_id,
     PIG_OPERATION_TYPE_GESTATING,
+    1,
     GESTATING_OPS_NUM_DAYS_CHECK_PREGNANT,
     "Check if pregnant"
 );
@@ -44,11 +48,13 @@ INSERT INTO account_pig_ops (
 INSERT INTO account_pig_ops (
     account_id,
     operation_type,
+    version_num,
     num_days_since,
     name
 ) VALUES (
     in_account_id,
     PIG_OPERATION_TYPE_GESTATING,
+    1,
     GESTATING_OPS_NUM_DAYS_INJECT_IRON,
     "Inject Iron"
 );
@@ -56,11 +62,13 @@ INSERT INTO account_pig_ops (
 INSERT INTO account_pig_ops (
     account_id,
     operation_type,
+    version_num,
     num_days_since,
     name
 ) VALUES (
     in_account_id,
     PIG_OPERATION_TYPE_GESTATING,
+    1,
     GESTATING_OPS_NUM_DAYS_DEWORM,
     "Deworm"
 );
