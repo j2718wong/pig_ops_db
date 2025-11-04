@@ -27,6 +27,12 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
+
+
 /* account_pig_ops.flag bits*/
 DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
 
@@ -36,6 +42,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_account_pig_ops_account_id          INT             DEFAULT 0;
+DECLARE cur_account_pig_ops_operation_type      INT             DEFAULT 0;
 DECLARE cur_account_pig_ops_flag                INT             DEFAULT 0;
 DECLARE cur_account_pig_ops_name                VARCHAR(50)     DEFAULT NULL;
 
@@ -52,8 +59,11 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  account_id
-INTO    cur_account_pig_ops_account_id
+SELECT  account_id,
+        operation_type
+        
+INTO    cur_account_pig_ops_account_id,
+        cur_account_pig_ops_operation_type
 FROM    account_pig_ops
 WHERE   id = in_account_pig_ops_id
 LIMIT   1;
@@ -88,6 +98,23 @@ UPDATE account_pig_ops SET
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
 WHERE id =  in_account_pig_ops_id;
+
+
+IF cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+    CALL account_pig_ops_delete_update_prod_gestating(
+        cur_user_account_id,
+        cur_account_pig_ops_id
+    );
+END IF;
+
+IF  cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
+    cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+    
+    CALL account_pig_ops_delete_update_prod_lactating(
+        cur_user_account_id,
+        cur_account_pig_ops_id
+    );
+END IF;
 
 
 

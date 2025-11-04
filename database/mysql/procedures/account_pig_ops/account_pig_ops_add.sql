@@ -137,6 +137,29 @@ UPDATE account SET
 WHERE id = cur_user_account_id;
 
 
+IF in_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+    CALL account_pig_ops_add_update_prod_gestating(
+        cur_user_account_id,
+        in_operation_type,
+        cur_account_pig_ops_id,
+        in_num_days_since
+    );
+END IF;
+
+IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
+    in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+    
+    CALL account_pig_ops_add_update_prod_lactating(
+        cur_user_account_id,
+        in_operation_type,
+        cur_account_pig_ops_id,
+        in_num_days_since
+    );
+END IF;
+
+
+ 
+
 END process_user;
 
 

@@ -104,6 +104,7 @@ CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-03', 6, 1, 1, 4, 50, 1700, 6800);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-10', 6, 1, 1, 6, 50, 1700, 10200);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-13', 6, 1, 1, 8, 50, 1700, 13600);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-27', 6, 1, 2, 1, 50, 1680, 1680);
+CALL feed_buy_add(1, NULL, 9, NULL,  '2025-11-01', 6, 1, 1, 13, 50, 1700, 22100);
 
 
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-09-02', 2, 1, 1, 2, 50, 1670, 3340);
@@ -111,7 +112,8 @@ CALL feed_buy_add(1, NULL, 13, NULL, '2025-09-20', 3, 1, 1, 10, 1, 75, 750);
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-10-03', 4, 1, 1, 1, 25, 1350, 1350);
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-10-03', 2, 1, 1, 1, 50, 1670, 1670);
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-10-13', 5, 1, 1, 2, 50, 1865, 3730);
-
+CALL feed_buy_add(1, NULL, 13, NULL, '2025-10-13', 5, 1, 1, 2, 50, 1865, 3730);
+CALL feed_buy_add(1, NULL, 13, NULL, '2025-11-01', 5, 1, 1, 7, 50, 1865, 13055);
 
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-09-17', 7, 1, 1, 2, 50, 1575, 3150);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-01', 1, 1, 1, 5, 50, 1480, 7400);
@@ -213,6 +215,11 @@ CALL feed_balance_add(1,  9, NULL, '2025-10-25', 16,  0,   0, 0,     0,  4,    N
 CALL feed_balance_add(1, 13, NULL, '2025-10-25',  9,  0,   0, 0,     2,  NULL, NULL);
 CALL sow_boar_balance_add(1,  1,  '2025-10-25', 2, 0);
 
+
+CALL feed_balance_add(1,  7, NULL, '2025-11-01', 11,  0,   0, 0,     0,  0,    5);
+CALL feed_balance_add(1,  9, NULL, '2025-11-01', 16,  0,   0, 0,     0,  0.5,    NULL);
+CALL feed_balance_add(1,  13, NULL, '2025-11-01', 9,  0,   0, 0,     1.5, NULL,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-11-01', 6, 10);
 
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')

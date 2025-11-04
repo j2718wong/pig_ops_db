@@ -113,13 +113,15 @@ IF cur_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN
     /* Only track the change of account_pig_ops.num_days_since */
     IF cur_pig_ops_num_days_since != in_num_days_since THEN 
         SET cur_account_ver_num_gestating_ops = cur_account_ver_num_gestating_ops + 1;
+    
+        /* Update account.ver_num_gestating_ops*/
+        UPDATE account SET 
+            ver_num_gestating_ops = cur_account_ver_num_gestating_ops
+        WHERE   id = cur_user_account_id;
+    
     END IF;
     
-    /* Update account.ver_num_gestating_ops*/
-    UPDATE account SET 
-        ver_num_gestating_ops = cur_account_ver_num_gestating_ops
-    WHERE   id = cur_user_account_id;
-
+    
 END IF;
 
 
@@ -134,6 +136,28 @@ UPDATE account_pig_ops SET
     dt_last_update      = CURRENT_TIMESTAMP
     
 WHERE id =  in_account_pig_ops_id;
+
+
+IF cur_pig_ops_num_days_since != in_num_days_since THEN 
+    IF in_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+        CALL account_pig_ops_update_update_prod_gestating(
+            cur_user_account_id,
+            cur_account_pig_ops_id,
+            in_num_days_since
+        );
+    END IF;
+
+    IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
+        in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+        
+        CALL account_pig_ops_update_update_prod_lactating(
+            cur_user_account_id,
+            cur_account_pig_ops_id,
+            in_num_days_since
+        );
+    END IF;
+END IF;
+
 
 END process_user;
 
