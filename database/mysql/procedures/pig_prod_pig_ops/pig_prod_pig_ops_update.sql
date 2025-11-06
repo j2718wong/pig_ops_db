@@ -54,6 +54,8 @@ DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_ops_operation_type     INT             DEFAULT 0;
 
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
 DECLARE cur_prod_pig_ops_id                     INT             DEFAULT 0;
 
 
@@ -124,10 +126,38 @@ IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN
     END IF;
 END IF;
 
+IF in_notes IS NOT NULL THEN 
+    INSERT INTO pig_prod_notes (
+        account_id,
+        pig_farm_id,
+        pig_prod_id,
+        sow_boar_id,
+        production_group_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        cur_pig_prod_account_id,
+        NULL,
+        cur_pig_prod_id,
+        NULL,
+        NULL,
+        
+        in_notes,
+        CURRENT_DATE,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+
+END IF;
+
 
 UPDATE pig_prod_pig_ops SET
     date_actual         = in_date,
-    notes               = in_notes,
+    notes_id            = cur_pig_prod_notes_id,
     staff_id            = in_staff_id,
     
     last_update_user_id = in_user_id,
