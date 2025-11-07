@@ -24,7 +24,7 @@ CALL sow_new_ai_entry(324658, 1, 2, '2025-02-24', 'AI PIC 337');
 CALL pig_prod_add(1, 5, NULL, 1, 1800, 360, "load Elmer + gasolina", 2, "2025-09-10")
 CALL pig_prod_add(1, 5, NULL, 2, 1800, 0, "", 2, "2025-10-08");
 CALL pig_prod_add(1, 1, 6, NULL, 0, 0, "", 2, "2025-11-06");
-
+CALL pig_prod_add(1, 3, 6, NULL, 0, 0, "", 2, "2025-11-06");
 
 
 
