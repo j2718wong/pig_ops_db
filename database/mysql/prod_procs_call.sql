@@ -222,12 +222,22 @@ CALL feed_balance_add(1,  9, NULL, '2025-11-01', 16,  0,   0, 0,     0,  0.5,   
 CALL feed_balance_add(1,  13, NULL, '2025-11-01', 9,  0,   0, 0,     1.5, NULL,    NULL);
 CALL sow_boar_balance_add(1,  1,  '2025-11-01', 6, 10);
 
+
+CALL feed_balance_add(1,  7, NULL, '2025-11-08', 11,  0,   0, 0,     0,  0,    0);
+CALL feed_balance_add(1,  9, NULL, '2025-11-08', 16,  0,   0, 0,     0,  6,    NULL);
+CALL feed_balance_add(1,  13, NULL, '2025-11-08', 9,  0,   0, 0,     8, NULL,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-11-08', 5, 10);
+CALL sow_boar_balance_add(1,  1,  '2025-11-10', 5, 9);
+
+
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
 CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
 
 
 CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Meloy Requinto", NULL, NULL, NULL);
+CALL account_pig_buyer_add(1, 1, 49, 1011, 0, "Mingla Lamesa Mangrasyon", NULL, NULL, NULL);
+
 
 /* Harvested bayad sa butakal; harvest_type to be updated later*/
 CALL production_harvest_add(1,5,NULL,1, '2025-09-19', 1, NULL, 78.6, 77.6, NULL, 200, 15320,200, 'plete');
@@ -235,12 +245,111 @@ CALL production_harvest_add(1,5,NULL,1, '2025-09-19', 1, NULL, 78.6, 77.6, NULL,
 /* Harvested as SOW/BOAR; harvest_type to be updated later*/
 CALL production_harvest_add(1,5,NULL,NULL,'2025-09-27', 2, NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
+/* Harvested rasyon mIngla*/
+CALL production_harvest_add(1,7,NULL,2,'2025-11-10', 6, NULL,NULL,487,481,NULL,215,101615,NULL,NULL);
+
+/* Harvested as 3 SOW, 2 Boar*/
+CALL production_harvest_add(1,7,NULL,NULL,'2025-11-11', 5, NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+
+/* Harvested as internla cosumo kay nibuto ang posod; gitiwasan*/
+CALL production_harvest_add(1,13,NULL,NULL,'2025-11-10', 1, NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+
 
 CALL semen_supplier_add(1,1,49,1013,27033, "Primary", NULL, NULL, NULL);
 
 CALL semen_source_add(1,1,NULL, 2,2, "PIC337", "Semen AI from Primary")
 
 CALL pig_prod_pig_dead_add(1, 13, NULL, "2025-10-01", 1, 1, "Nalisang anay sa linog, nadat ugan baktin")
+
+
+CREATE PROCEDURE sow_boar_add(
+    1,
+    
+    1,
+    7,
+    1,
+    1,
+    
+    'F',
+    0,
+    
+    NULL,
+    'Medi',
+    '2025-06-19',
+    NULL
+);
+
+CALL sow_boar_add(
+    1,
+    
+    1,
+    7,
+    1,
+    1,
+    
+    'F',
+    0,
+    
+    NULL,
+    'Menang',
+    '2025-06-19',
+    NULL
+);
+
+CALL sow_boar_add(
+    1,
+    
+    1,
+    7,
+    1,
+    1,
+    
+    'F',
+    0,
+    
+    NULL,
+    'Ging2x',
+    '2025-06-19',
+    NULL
+);
+
+
+CALL sow_boar_add(
+    1,
+    
+    1,
+    7,
+    1,
+    1,
+    
+    'M',
+    0,
+    
+    NULL,
+    'Desidido',
+    '2025-06-19',
+    NULL
+);
+
+CALL sow_boar_add(
+    1,
+    
+    1,
+    7,
+    1,
+    1,
+    
+    'M',
+    0,
+    
+    NULL,
+    'Nanding',
+    '2025-06-19',
+    NULL
+);
+
 
 
 

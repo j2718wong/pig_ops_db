@@ -5,10 +5,13 @@ CREATE PROCEDURE pig_prod_update_insem(
     in_user_id              INT,
     
     in_pig_prod_id          INT,
+    in_boar_id              INT,
+    in_semen_source_id      INT,
+    
     
     in_semen_cost           DECIMAL(6,2),
     in_insemination_cost    DECIMAL(6,2),
-    in_insem_cost_comments  VARCHAR(200),
+    in_comments             VARCHAR(160),
     
     in_insem_staff_id       INT,
     in_date_insemination    VARCHAR(10)  /* in YYYY-MM-DD format*/
@@ -60,11 +63,14 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
+DECLARE cur_pig_prod_insem_notes_id             INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_date_actual_birth          DATE;
 
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -78,12 +84,16 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
+        pig_fam_id,
         prod_status_id,
-        flag
+        flag,
+        insem_notes_id
 INTO    
         cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id,
-        cur_pig_prod_flag
+        cur_pig_prod_flag,
+        cur_pig_prod_insem_notes_id
 FROM    pig_production
 WHERE   id = in_pig_prod_id
 LIMIT   1;
@@ -146,9 +156,10 @@ END IF;
 
 
 UPDATE pig_production SET
+    boar_id             = in_boar_id,
+    semen_source_id     = in_semen_source_id,
     semen_cost          = in_semen_cost,
     insemination_cost   = in_insemination_cost,
-    insem_cost_comments = in_insem_cost_comments,
     
     date_insemination   = in_date_insemination,
     date_expected_birth = DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
@@ -157,6 +168,44 @@ UPDATE pig_production SET
     dt_last_update      = CURRENT_TIMESTAMP
     
 WHERE id =  in_pig_prod_id;
+
+IF cur_pig_prod_insem_notes_id > 0 THEN 
+    UPDATE pig_prod_notes SET
+        notes               = in_comments,
+        
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP
+
+    WHERE id = cur_pig_prod_insem_notes_id;
+
+ELSE
+    INSERT INTO pig_prod_notes (
+        account_id,
+        pig_farm_id,
+        pig_prod_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
+        in_pig_prod_id,
+        
+        in_comments,
+        CURRENT_DATE,
+        in_user_id
+    );
+    
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+    /* pig_production.insem_notes_id*/
+    UPDATE pig_production SET
+        insem_notes_id = cur_pig_prod_notes_id
+    WHERE id = in_pig_prod_id;
+
+END IF;
 
 END process_user;
 

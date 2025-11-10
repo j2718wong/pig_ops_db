@@ -5,12 +5,12 @@ CREATE PROCEDURE pig_prod_add(
     in_user_id              INT,
    
     in_sow_id               INT,    /* Cannot be updated*/
-    in_boar_id              INT,    /* Cannot be updated*/
-    in_semen_source_id      INT,    /* Cannot be updated*/
+    in_boar_id              INT,
+    in_semen_source_id      INT,
     
     in_semen_cost           DECIMAL(6,2),
     in_insemination_cost    DECIMAL(6,2),
-    in_insem_cost_comments  VARCHAR(200),
+    in_comments             VARCHAR(160),
     
     in_insem_staff_id       INT,
     in_date_insemination    VARCHAR(10)  /* in YYYY-MM-DD format*/
@@ -80,11 +80,13 @@ DECLARE cur_semen_source_semen_supplier_id      INT             DEFAULT 0;
 DECLARE cur_insemination_type                   VARCHAR(4)      DEFAULT NULL;
 
 
-DECLARE cur_pig_farm_last_pig_production_id               INT             DEFAULT 0;
+DECLARE cur_pig_farm_last_pig_production_id     INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_ai_id                      INT             DEFAULT 0;
+
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -183,7 +185,6 @@ IF in_boar_id IS NOT NULL THEN
         
         semen_cost,
         insemination_cost,
-        insem_cost_comments,
         
         date_insemination,
         date_expected_birth,
@@ -201,8 +202,7 @@ IF in_boar_id IS NOT NULL THEN
         NULL,
         
         NULL,
-        in_insemination_cost,
-        in_insem_cost_comments,
+        in_comments,
         
         in_date_insemination,
         DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
@@ -248,7 +248,6 @@ ELSE
         
         semen_cost,
         insemination_cost,
-        insem_cost_comments,
         
         date_insemination,
         date_expected_birth,
@@ -267,7 +266,6 @@ ELSE
         
         in_semen_cost,
         in_insemination_cost,
-        in_insem_cost_comments,
         
         in_date_insemination,
         DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
@@ -300,6 +298,37 @@ ELSE
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_ai_id;
     
 END IF; 
+
+
+/* Add comments*/
+IF in_comments IS NOT NULL THEN 
+    INSERT INTO pig_prod_notes (
+        account_id,
+        pig_farm_id,
+        pig_prod_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        cur_sow_boar_account_id,
+        cur_sow_boar_pig_farm_id,
+        cur_pig_prod_id,
+        
+        in_comments,
+        CURRENT_DATE,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+    /* pig_production.insem_notes_id*/
+    UPDATE pig_production SET
+        insem_notes_id = cur_pig_prod_notes_id
+    WHERE id = cur_pig_prod_id;
+
+END IF;
     
 
 /* Increment pig_farm.last_pig_production_id*/
@@ -313,6 +342,8 @@ UPDATE sow_boar SET
     last_prod_id    = cur_pig_prod_id,
     sow_status_id   = SOW_STATUS_ID_GESTATING
 WHERE id = in_sow_id;
+
+
 
 
 /* Create pig_prod_pig_ops entry*/
