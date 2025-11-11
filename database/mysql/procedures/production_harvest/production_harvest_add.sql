@@ -69,9 +69,15 @@ DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 DECLARE cur_num_days_since_birth                INT             DEFAULT NULL;
 
 
+DECLARE cur_live_weight_ave                     DECIMAL(6,1)    DEFAULT NULL;
+DECLARE cur_slaughter_weight                    DECIMAL(6,1)    DEFAULT NULL;
+    
+
 DECLARE cur_production_harvest_id               INT             DEFAULT 0;
 
 DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
+
+
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -198,6 +204,14 @@ ELSE
 END IF;
 
 
+IF in_live_weight IS NOT NULL THEN 
+    SET cur_live_weight_ave = in_live_weight/num_pigs_harvest;
+END IF;
+
+IF in_slaughter_weight IS NOT NULL THEN 
+    SET cur_slaughter_weight = in_slaughter_weight/num_pigs_harvest;
+END IF;
+
 INSERT INTO production_harvest(
     account_id,
 
@@ -214,6 +228,9 @@ INSERT INTO production_harvest(
     live_weight,
     slaughter_weight,
     slaughter_net_weight,
+    
+    live_weight_ave,
+    slaughter_weight_ave,
     
     live_price_per_unit,
     slaughter_price_per_unit,
@@ -240,6 +257,9 @@ INSERT INTO production_harvest(
     in_live_weight,
     in_slaughter_weight,
     in_slaughter_net_weight,
+    
+    cur_live_weight_ave,
+    slaughter_weight_ave,
     
     in_live_price_per_unit,
     in_slaughther_price_per_unit,

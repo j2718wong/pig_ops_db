@@ -130,9 +130,9 @@ END IF;
 
 
 /*
-It is possible to change the date_actual_birth, but there is a series of operations
-to be done to the affected business objects. So That is why need to check if the 
-date_actual_birth has been modified.
+It is possible to change the date_actual_birth, but there is a series of 
+operations to be done to the affected business objects. So that is why   
+we need to check if the date_actual_birth has been modified.
 
 */
 
