@@ -53,6 +53,7 @@ DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_ops_operation_type     INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_ops_notes_id           INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
@@ -72,12 +73,14 @@ SELECT
         b.account_id,
         a.pig_prod_id,
         a.operation_type,
-        b.prod_status_id
+        b.prod_status_id,
+        a.notes_id
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_id,
         cur_pig_prod_pig_ops_operation_type,
-        cur_pig_prod_status_id
+        cur_pig_prod_status_id,
+        cur_pig_prod_pig_ops_notes_id
         
 FROM    pig_prod_pig_ops a
 LEFT OUTER JOIN pig_production b ON a.pig_prod_id = b.id
@@ -126,38 +129,53 @@ IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN
     END IF;
 END IF;
 
-IF in_notes IS NOT NULL THEN 
-    INSERT INTO pig_prod_notes (
-        account_id,
-        pig_farm_id,
-        pig_prod_id,
-        sow_boar_id,
-        production_group_id,
-        
-        notes,
-        date_notes,
-        added_by_user_id
-        
-    ) VALUES (
-        cur_pig_prod_account_id,
-        NULL,
-        cur_pig_prod_id,
-        NULL,
-        NULL,
-        
-        in_notes,
-        CURRENT_DATE,
-        in_user_id
-    );
 
-    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 THEN 
+    IF in_notes IS NOT NULL THEN 
+        INSERT INTO pig_prod_notes (
+            account_id,
+            pig_farm_id,
+            pig_prod_id,
+            sow_boar_id,
+            production_group_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            cur_pig_prod_account_id,
+            NULL,
+            cur_pig_prod_id,
+            NULL,
+            NULL,
+            
+            in_notes,
+            CURRENT_DATE,
+            in_user_id
+        );
+
+        SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+        
+        UPDATE pig_prod_pig_ops SET
+            notes_id            = cur_pig_prod_notes_id
+        WHERE id = in_pig_prod_pig_ops_id;
+        
+        
+    END IF;
+
+ELSE
+    UPDATE pig_prod_notes SET 
+        notes               = in_notes,
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP
+    WHERE id = cur_pig_prod_pig_ops_notes_id;
 
 END IF;
 
 
 UPDATE pig_prod_pig_ops SET
     date_actual         = in_date,
-    notes_id            = cur_pig_prod_notes_id,
     staff_id            = in_staff_id,
     
     last_update_user_id = in_user_id,

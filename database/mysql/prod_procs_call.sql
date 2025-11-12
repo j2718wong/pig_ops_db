@@ -106,6 +106,7 @@ CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-10', 6, 1, 1, 6, 50, 1700, 10200);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-13', 6, 1, 1, 8, 50, 1700, 13600);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-10-27', 6, 1, 2, 1, 50, 1680, 1680);
 CALL feed_buy_add(1, NULL, 9, NULL,  '2025-11-01', 6, 1, 1, 13, 50, 1700, 22100);
+CALL feed_buy_add(1, NULL, 9, NULL,  '2025-11-11', 7, 1, 1, 15, 50, 1555, 23325);
 
 
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-09-02', 2, 1, 1, 2, 50, 1670, 3340);
@@ -119,23 +120,6 @@ CALL feed_buy_add(1, NULL, 13, NULL, '2025-11-01', 5, 1, 1, 7, 50, 1865, 13055);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-09-17', 7, 1, 1, 2, 50, 1575, 3150);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-01', 1, 1, 1, 5, 50, 1480, 7400);
 
-
-CREATE PROCEDURE pig_prod_feed_bal_add(
-    in_user_id              INT,
-    in_pig_prod_id          INT,
-    in_pig_prod_group_id    INT,
-    
-    in_date_balance         VARCHAR(10),
-    
-    in_num_pigs             INT,
-    
-    in_num_lactating        DECIMAL(5,1),
-    in_num_booster          DECIMAL(5,1),
-    in_num_prestarter       DECIMAL(5,1),
-    in_num_starter          DECIMAL(5,1),
-    in_num_grower           DECIMAL(5,1),
-    in_num_finisher         DECIMAL(5,1)
-) 
 
 
 CALL feed_balance_add(1,  5, NULL, '2025-08-09',  3, 0,   0, 0,     0,  4.5,  NULL);
