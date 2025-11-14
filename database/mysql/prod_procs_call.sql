@@ -119,7 +119,9 @@ CALL feed_buy_add(1, NULL, 13, NULL, '2025-11-01', 5, 1, 1, 7, 50, 1865, 13055);
 
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-09-17', 7, 1, 1, 2, 50, 1575, 3150);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-01', 1, 1, 1, 5, 50, 1480, 7400);
-
+CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-10', 7, 1, 1, 1, 50, 1575, 1575);
+CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-27', 7, 1, 2, 2, 50, 1525, 3050);
+CALL feed_buy_add(1, 1, NULL, NULL,  '2025-11-01', 7, 1, 1, 10, 50, 1575, 15750);
 
 
 CALL feed_balance_add(1,  5, NULL, '2025-08-09',  3, 0,   0, 0,     0,  4.5,  NULL);
