@@ -202,7 +202,7 @@ IF in_boar_id IS NOT NULL THEN
         NULL,
         
         NULL,
-        in_comments,
+        in_insemination_cost,
         
         in_date_insemination,
         DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
