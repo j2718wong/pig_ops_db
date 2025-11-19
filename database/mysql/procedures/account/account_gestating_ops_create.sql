@@ -73,6 +73,9 @@ INSERT INTO account_pig_ops (
     "Deworm"
 );
 
+UPDATE account SET 
+    ver_num_gestating_ops = 1
+WHERE id = in_account_id;
 
 END $$
 
