@@ -5,9 +5,9 @@ CREATE PROCEDURE account_update_settings(
     in_user_id                  INT,
     
     in_day_1_on_dob             INT,
-    in_num_days_weaning         INT,
-    in_num_days_harvest         INT
-    
+    in_days_wean                INT,
+    in_days_harvest_from_birth  INT,
+    in_days_harvest_from_wean   INT
 )
 
 BEGIN
@@ -97,12 +97,13 @@ END IF;
 
 
 UPDATE account SET
-    flag_settings       = cur_account_flag_settings,
-    num_days_weaning    = in_num_days_weaning,
-    num_days_harvest    = in_num_days_harvest,
+    flag_settings           = cur_account_flag_settings,
+    days_wean               = in_days_wean,
+    days_harvest_from_birth = in_days_harvest_from_birth,
+    days_harvest_from_wean  = in_days_harvest_from_wean,
     
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
+    last_update_user_id     = in_user_id,
+    dt_last_update          = CURRENT_TIMESTAMP
 WHERE id = cur_user_account_id;
 
 
