@@ -139,20 +139,20 @@ WHERE id =  in_account_pig_ops_id;
 
 
 IF cur_pig_ops_num_days_since != in_num_days_since THEN 
-    IF in_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+    IF cur_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
         CALL account_pig_ops_update_update_prod_gestating(
             cur_user_account_id,
-            cur_account_pig_ops_id,
+            in_account_pig_ops_id,
             in_num_days_since
         );
     END IF;
 
-    IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
-        in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+    IF  cur_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
+        cur_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
         
         CALL account_pig_ops_update_update_prod_lactating(
             cur_user_account_id,
-            cur_account_pig_ops_id,
+            in_account_pig_ops_id,
             in_num_days_since
         );
     END IF;
