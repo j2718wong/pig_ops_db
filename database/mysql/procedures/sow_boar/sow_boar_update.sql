@@ -141,7 +141,7 @@ ELSE
         ) VALUES (
             cur_sow_boar_id,
             
-            in_comments,
+            in_notes,
             CURRENT_DATE,
             in_user_id
         );

@@ -43,6 +43,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_notes_id					INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -83,9 +84,28 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+IF in_dispose_notes IS NOT NULL THEN 
+	INSERT INTO pig_prod_notes (
+        sow_boar_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        in_sow_boar_id,
+        
+        in_dispose_notes,
+        CURRENT_DATE,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+END IF;
+
 UPDATE sow_boar SET
     date_dispose        = in_date_dispose,
-    dispose_notes       = in_dispose_notes,
+    dispose_notes_id    = cur_pig_prod_notes_id,
     sow_status_id       = in_dispose_status_id,
     flag                = flag | FLAG_BIT_SOW_BOAR_IS_DISPOSED,
     
