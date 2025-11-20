@@ -268,7 +268,7 @@ ELSE
         in_insemination_cost,
         
         in_date_insemination,
-        DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
+        DATE_ADD(in_date_insemination, INTERVAL 114 DAY),
 
         PRODUCTION_STATUS_ID_GESTATING,
         in_insem_staff_id
@@ -303,8 +303,6 @@ END IF;
 /* Add comments*/
 IF in_comments IS NOT NULL THEN 
     INSERT INTO pig_prod_notes (
-        account_id,
-        pig_farm_id,
         pig_prod_id,
         
         notes,
@@ -312,8 +310,6 @@ IF in_comments IS NOT NULL THEN
         added_by_user_id
         
     ) VALUES (
-        cur_sow_boar_account_id,
-        cur_sow_boar_pig_farm_id,
         cur_pig_prod_id,
         
         in_comments,

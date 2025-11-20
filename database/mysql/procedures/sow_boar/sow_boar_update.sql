@@ -43,10 +43,15 @@ DECLARE FLAG_BIT_SOW_BOAR_IS_EXTERNAL           INT             DEFAULT 2;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+DECLARE cur_sow_boar_add_notes_id               INT             DEFAULT 0;
+
 
 DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
 DECLARE cur_sow_boar_flag                       INT             DEFAULT 0;
+
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -58,10 +63,12 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  account_id,
-        flag
+        flag,
+        add_notes_id
         
 INTO    cur_sow_boar_account_id,
-        cur_sow_boar_flag
+        cur_sow_boar_flag,
+        cur_sow_boar_add_notes_id
         
 FROM    sow_boar
 WHERE   id = in_sow_boar_id
@@ -107,13 +114,49 @@ UPDATE sow_boar SET
     number              = in_number,
     name                = in_name,
     date_of_birth       = in_date_of_birth,
-    notes               = in_notes,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
     
 WHERE 
     id = in_sow_boar_id;
+
+IF cur_sow_boar_add_notes_id > 0 THEN
+    UPDATE pig_prod_notes SET
+        notes               = in_notes,
+        
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP
+
+    WHERE id = cur_sow_boar_add_notes_id;
+ELSE 
+    IF in_notes IS NOT NULL THEN 
+        INSERT INTO pig_prod_notes (
+            sow_boar_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            cur_sow_boar_id,
+            
+            in_comments,
+            CURRENT_DATE,
+            in_user_id
+        );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+    /* sow_boar.add_notes_id*/
+    UPDATE sow_boar SET
+        add_notes_id = cur_pig_prod_notes_id
+    WHERE id = in_sow_boar_id;
+
+    END IF;
+
+END IF;
+
 
 
 END process_user;

@@ -57,6 +57,8 @@ DECLARE cur_pig_farm_last_boar_id               INT             DEFAULT 0;
 DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
 DECLARE cur_sow_boar_flag                       INT             DEFAULT 0;
 
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -159,7 +161,6 @@ IF in_sex = 'F' THEN
         number,
         name,
         date_of_birth,
-        notes,
         
         added_by_user_id
     ) VALUES (
@@ -177,7 +178,6 @@ IF in_sex = 'F' THEN
         in_number,
         in_name,
         in_date_of_birth,
-        in_notes,
         
         in_user_id
     );
@@ -201,7 +201,6 @@ ELSE
         number,
         name,
         date_of_birth,
-        notes,
         
         added_by_user_id
     ) VALUES (
@@ -219,7 +218,6 @@ ELSE
         in_number,
         in_name,
         in_date_of_birth,
-        in_notes,
         
         in_user_id
     );
@@ -227,8 +225,33 @@ ELSE
     
 END IF;
 
-
 SELECT LAST_INSERT_ID() INTO cur_sow_boar_id;
+
+
+IF in_notes IS NOT NULL THEN
+    INSERT INTO pig_prod_notes (
+        sow_boar_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        cur_sow_boar_id,
+        
+        in_notes,
+        CURRENT_DATE,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+    UPDATE sow_boar SET 
+        add_notes_id = cur_pig_prod_notes_id
+    WHERE id = cur_sow_boar_id;
+
+END IF;
+
 
 UPDATE pig_farm SET 
     last_sow_id     = cur_pig_farm_last_sow_id,

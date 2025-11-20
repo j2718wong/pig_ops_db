@@ -179,32 +179,30 @@ IF cur_pig_prod_insem_notes_id > 0 THEN
     WHERE id = cur_pig_prod_insem_notes_id;
 
 ELSE
-    INSERT INTO pig_prod_notes (
-        account_id,
-        pig_farm_id,
-        pig_prod_id,
+    IF in_comments IS NOT NULL THEN 
+        INSERT INTO pig_prod_notes (
+            pig_prod_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            in_pig_prod_id,
+            
+            in_comments,
+            CURRENT_DATE,
+            in_user_id
+        );
         
-        notes,
-        date_notes,
-        added_by_user_id
+        SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
         
-    ) VALUES (
-        cur_pig_prod_account_id,
-        cur_pig_prod_pig_farm_id,
-        in_pig_prod_id,
-        
-        in_comments,
-        CURRENT_DATE,
-        in_user_id
-    );
+        /* pig_production.insem_notes_id*/
+        UPDATE pig_production SET
+            insem_notes_id = cur_pig_prod_notes_id
+        WHERE id = in_pig_prod_id;
+    END IF;
     
-    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
-    
-    /* pig_production.insem_notes_id*/
-    UPDATE pig_production SET
-        insem_notes_id = cur_pig_prod_notes_id
-    WHERE id = in_pig_prod_id;
-
 END IF;
 
 END process_user;
