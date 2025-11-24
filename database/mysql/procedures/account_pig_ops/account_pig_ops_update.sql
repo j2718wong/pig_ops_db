@@ -2,13 +2,14 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS account_pig_ops_update $$
 CREATE PROCEDURE account_pig_ops_update(
-    in_user_id                  INT,
+    in_user_id              INT,
     
-    in_account_pig_ops_id       INT,
-    in_num_days_since           INT,
+    in_account_pig_ops_id   INT,
+    in_num_days_since       INT,
     
-    in_name                     VARCHAR(50),
-    in_description              VARCHAR(160)
+    in_name                 VARCHAR(50),
+    in_short_name           VARCHAR(15),
+    in_description          VARCHAR(160)
     
 )
 
@@ -130,6 +131,7 @@ UPDATE account_pig_ops SET
     version_num         = cur_account_ver_num_gestating_ops,
     
     name                = in_name,
+    short_name          = in_in_short_name,
     description         = in_description,
     
     last_update_user_id = in_user_id,

@@ -11,7 +11,7 @@ CREATE PROCEDURE production_calculate_current_pigs(
 BEGIN
 
 /** 
- * 
+ * Will count number of pigs left in pig_production or production_group.
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since September 19, 2025
  *

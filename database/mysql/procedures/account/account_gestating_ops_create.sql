@@ -36,13 +36,15 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
-    name
+    name,
+    short_name
 ) VALUES (
     in_account_id,
     PIG_OPERATION_TYPE_GESTATING,
     1,
     GESTATING_OPS_NUM_DAYS_CHECK_PREGNANT,
-    "Check if pregnant"
+    "Check if Pregnant",
+    "CheckPregnant"
 );
 
 INSERT INTO account_pig_ops (
@@ -50,12 +52,14 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
-    name
+    name,
+    short_name
 ) VALUES (
     in_account_id,
     PIG_OPERATION_TYPE_GESTATING,
     1,
     GESTATING_OPS_NUM_DAYS_INJECT_IRON,
+    "Inject Iron",
     "Inject Iron"
 );
 
@@ -70,6 +74,7 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_GESTATING,
     1,
     GESTATING_OPS_NUM_DAYS_DEWORM,
+    "Deworm",
     "Deworm"
 );
 

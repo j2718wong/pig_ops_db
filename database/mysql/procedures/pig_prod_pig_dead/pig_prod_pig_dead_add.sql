@@ -8,9 +8,8 @@ CREATE PROCEDURE pig_prod_pig_dead_add(
     in_production_group_id  INT,
     
     in_date_dead            VARCHAR(10),
-    in_dead_type_id         INT,
     in_num_pigs_dead        INT,
-    in_comments             VARCHAR(160)
+    in_notes                VARCHAR(160)
 )  
 
 BEGIN
@@ -75,6 +74,9 @@ DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
 DECLARE cur_dead_at_stage                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_pig_dead_id                INT             DEFAULT 0;
+
+
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -188,7 +190,11 @@ IF in_pig_prod_id > 0 THEN
     IF cur_pig_prod_date_weaning IS NULL THEN 
         SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
     ELSE
-        SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
+        IF in_date_dead >= cur_pig_prod_date_weaning THEN 
+            SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
+        ELSE
+            SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
+        END IF;
     END IF;
 
 ELSE
@@ -203,10 +209,8 @@ INSERT INTO pig_prod_pig_dead (
     production_group_id,
     
     date_dead,
-    dead_type_id,
     dead_at_stage,
     num_pigs_dead,
-    comments,
     
     added_by_user_id
     
@@ -217,15 +221,45 @@ INSERT INTO pig_prod_pig_dead (
     in_production_group_id,
     
     in_date_dead,
-    in_dead_type_id,
     cur_dead_at_stage,
     in_num_pigs_dead,
-    in_comments,
     
     in_user_id
 );
 
+
 SELECT LAST_INSERT_ID() INTO cur_pig_prod_pig_dead_id;
+
+
+/* Add notes*/
+IF in_notes IS NOT NULL THEN 
+    INSERT INTO pig_prod_notes (
+        pig_prod_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        in_pig_prod_id,
+        
+        in_notes,
+        CURRENT_DATE,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+    /* pig_production.insem_notes_id*/
+    UPDATE pig_prod_pig_dead SET
+        notes_id = cur_pig_prod_notes_id
+    WHERE id = cur_pig_prod_pig_dead_id;
+
+END IF;
+
+
+
+
 
 
 /* Calculate current number of pigs.*/

@@ -7,6 +7,7 @@ CREATE PROCEDURE account_pig_ops_add(
     in_num_days_since       INT,
     
     in_name                 VARCHAR(50),
+    in_short_name           VARCHAR(15),
     in_description          VARCHAR(160)
 )  
 
@@ -114,6 +115,7 @@ INSERT INTO account_pig_ops(
     version_num,
     
     name,
+    short_name,
     description,
     
     added_by_user_id
@@ -124,6 +126,7 @@ INSERT INTO account_pig_ops(
     cur_account_ver_num_gestating_ops,
     
     in_name,
+    in_short_name,
     in_description,
     
     in_user_id
