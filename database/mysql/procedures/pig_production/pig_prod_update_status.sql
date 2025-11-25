@@ -5,7 +5,8 @@ CREATE PROCEDURE pig_prod_update_status(
     in_user_id              INT,
     
     in_pig_prod_id          INT,
-    in_pig_prod_status_id   INT
+    in_pig_prod_status_id   INT,
+    in_notes                VARCHAR(160)
 )
 
 BEGIN
@@ -15,7 +16,7 @@ BEGIN
  * 
  * Will manually update pig_production.prod_status_id
  *
- * Allowed status_ids: TERMINATED, NOT_PREGNANT, CLOSED
+ * Allowed status_ids: TERMINATED, NOT_PREGNANT, CLOSED, NO_LIVE_PIGLETS
  *
  *
  * @author Jack Wong
@@ -50,6 +51,10 @@ DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
 DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
+DECLARE PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS    INT             DEFAULT 10;
+
+DECLARE SOW_STATUS_ID_GESTATING                 INT             DEFAULT 2;
+DECLARE SOW_STATUS_ID_DEAD                      INT             DEFAULT 6;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -58,10 +63,11 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 
-DECLARE cur_pig_prod_date_actual_birth          DATE;
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -76,10 +82,12 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
+        sow_id,
         prod_status_id,
         flag
 INTO    
         cur_pig_prod_account_id,
+        cur_pig_prod_sow_id,
         cur_pig_prod_status_id,
         cur_pig_prod_flag
 FROM    pig_production
@@ -110,7 +118,7 @@ END IF;
 
 
 IF  in_pig_prod_status_id <= 0 OR 
-    in_pig_prod_status_id > PRODUCTION_STATUS_ID_CLOSED THEN
+    in_pig_prod_status_id > PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS THEN
     
     SET res_num     = RES_NUM_INVALID_PIG_PROD_STATUS;
     SET res_code    = "RES_NUM_INVALID_PIG_PROD_STATUS";
@@ -121,7 +129,8 @@ END IF;
 
 IF in_pig_prod_status_id NOT IN (PRODUCTION_STATUS_ID_TERMINATED, 
                                 PRODUCTION_STATUS_ID_NOT_PREGNANT, 
-                                PRODUCTION_STATUS_ID_CLOSED) THEN
+                                PRODUCTION_STATUS_ID_CLOSED,
+                                PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS) THEN
     
     SET res_num     = RES_NUM_MANUAL_STATUS_UPDATE_NOT_ALLOWED;
     SET res_code    = "RES_NUM_MANUAL_STATUS_UPDATE_NOT_ALLOWED";
@@ -130,7 +139,8 @@ IF in_pig_prod_status_id NOT IN (PRODUCTION_STATUS_ID_TERMINATED,
 END IF;
 
 IF in_pig_prod_status_id IN (PRODUCTION_STATUS_ID_TERMINATED, 
-                            PRODUCTION_STATUS_ID_NOT_PREGNANT) THEN 
+                            PRODUCTION_STATUS_ID_NOT_PREGNANT,
+                            PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS) THEN 
     IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_GESTATING THEN 
         SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_GESTATING;
         SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_GESTATING";
@@ -147,6 +157,44 @@ UPDATE pig_production SET
     dt_last_update              = CURRENT_TIMESTAMP
     
 WHERE id =  in_pig_prod_id;
+
+
+/* This will also update sow_status*/
+IF in_pig_prod_status_id = PRODUCTION_STATUS_ID_TERMINATED THEN 
+    UPDATE sow_boar SET 
+        sow_status_id = SOW_STATUS_ID_DEAD
+    WHERE id = cur_pig_prod_sow_id;
+END IF;
+
+IF in_pig_prod_status_id IN (PRODUCTION_STATUS_ID_NOT_PREGNANT,
+                            PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS) THEN 
+    UPDATE sow_boar SET 
+        sow_status_id = SOW_STATUS_ID_GESTATING
+    WHERE id = cur_pig_prod_sow_id;
+END IF;
+
+
+/* Add notes*/
+IF in_notes IS NOT NULL THEN 
+    INSERT INTO pig_prod_notes (
+        pig_prod_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        in_pig_prod_id,
+        
+        in_notes,
+        CURRENT_DATE,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+END IF;
+
 
 
 END process_user;

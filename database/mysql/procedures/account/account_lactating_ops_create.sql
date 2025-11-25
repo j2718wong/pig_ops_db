@@ -154,6 +154,9 @@ INSERT INTO account_pig_ops (
     "Deworm"
 );
 
+UPDATE account SET 
+    ver_num_lactating_piglets_ops = 1
+WHERE id = in_account_id;
 
 
 
@@ -162,20 +165,23 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
-    name
+    name,
+    short_name
 ) VALUES (
     in_account_id,
     PIG_OPERATION_TYPE_LACTATING_SOW,
     1,
     LACTATING_SOW_OPS_NUM_DAYS_DEWORM,
+    "Deworm",
     "Deworm"
 );
 
-
-
 UPDATE account SET 
-    ver_num_lactating_piglets_ops = 1
+    ver_num_lactating_sow_ops = 1
 WHERE id = in_account_id;
+
+
+
 
 END $$
 
