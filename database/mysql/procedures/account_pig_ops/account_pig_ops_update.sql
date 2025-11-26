@@ -131,7 +131,7 @@ UPDATE account_pig_ops SET
     version_num         = cur_account_ver_num_gestating_ops,
     
     name                = in_name,
-    short_name          = in_in_short_name,
+    short_name          = in_short_name,
     description         = in_description,
     
     last_update_user_id = in_user_id,

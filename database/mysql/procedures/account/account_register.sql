@@ -26,11 +26,11 @@ DECLARE RES_NUM_SUCCESS                             INT         DEFAULT 0;
 DECLARE RES_NUM_ACCOUNT_ALREADY_REGISTERED_FOR_USER INT         DEFAULT 21;
 DECLARE RES_NUM_DUPLICATE_ENTRY                     INT         DEFAULT 22;
 
-
+/* User flag*/
 DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 
-DECLARE BUSINESS_OBJ_ID_ACCOUNT                	INT             DEFAULT 2;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT                 INT             DEFAULT 2;
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
@@ -45,6 +45,11 @@ DECLARE FLAG_BIT_ACCOUNT_ENABLE                 INT             DEFAULT 1;
 DECLARE ACCOUNT_STATUS_ID_ON_TRIAL              INT             DEFAULT 1;
 DECLARE ACCOUNT_STATUS_ID_TRIAL_EXPIRED         INT             DEFAULT 2;
 DECLARE ACCOUNT_STATUS_ID_UNPAID_BILL           INT             DEFAULT 3;
+
+
+/* account.flag_setting bits*/
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH         INT             DEFAULT 1;
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_INSEM         INT             DEFAULT 2;
 
 
 
@@ -140,6 +145,8 @@ INSERT INTO account(
     name,
     country_id,
     flag,
+    flag_settings,
+    
     status_id,
     date_trial_start,
     date_trial_end
@@ -147,6 +154,8 @@ INSERT INTO account(
     in_name,
     in_country_id,
     1,
+    FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH,
+    
     ACCOUNT_STATUS_ID_ON_TRIAL,
     CURRENT_DATE,
     DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY)

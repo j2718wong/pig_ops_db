@@ -68,8 +68,12 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 
+DECLARE cur_account_flag_settings               INT             DEFAULT 0;
+
 DECLARE cur_count_account_pig_ops               INT             DEFAULT 0;
 DECLARE cur_count_pig_prod_pig_ops              INT             DEFAULT 0;
+
+DECLARE num_days_to_add                         INT             DEFAULT 0;
 
 DECLARE date_temp                               DATE            DEFAULT NULL;
 DECLARE detected_actual_date_birth_change       INT             DEFAULT 0;
@@ -120,6 +124,16 @@ process_user : BEGIN
 IF res_num != RES_NUM_SUCCESS THEN 
     LEAVE process_user;
 END IF;
+
+
+
+
+SELECT  flag_settings
+INTO    cur_account_flag_settings
+FROM    account 
+WHERE   id = cur_pig_prod_account_id;
+
+
 
 IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_GESTATING,
                                     PRODUCTION_STATUS_ID_LACTATING) THEN 

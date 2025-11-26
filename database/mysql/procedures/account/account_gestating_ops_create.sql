@@ -68,7 +68,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
-    name
+    name,
+    short_name
 ) VALUES (
     in_account_id,
     PIG_OPERATION_TYPE_GESTATING,

@@ -21,6 +21,37 @@ BEGIN
  *
  */
 
+/**
+Account Pig Operation Notes.
+
+1.) For practical pig management purposes, the pig's age is typically counted
+starting from day of its birth as DAY ONE. This convention is used in tracking 
+developmental miles stones, health protocols, and managing production cycle.
+
+But the computers always count day 1 on the next day of the event, after 24 
+hours. 
+
+To prevent confusion, the number of days settings displayed in the UI
+will be also be saved in the database.
+
+To add flexibility, this feature is saved in 
+
+account.flag_settings FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH flag.
+
+This flag is defaulted to 1 during account creation. 
+
+
+2.) Tracking gestation may refer the day of breeding or insemination
+as DAY 0.  
+
+To add flexibility, this can be also be change as DAY 1. This is saved in 
+account.flag_settings FLAG_BIT_DAY_1_ON_DATE_OF_INSEM flag.
+
+This flag is defaulted to 0 during account creation. 
+
+*/
+
+
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 

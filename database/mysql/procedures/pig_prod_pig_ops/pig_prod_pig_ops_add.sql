@@ -19,9 +19,22 @@ BEGIN
  * @since August 30, 2025
  *
  */
- 
+
+DECLARE cur_account_flag_settings               INT             DEFAULT 0;
 DECLARE cur_account_pig_ops_id                  INT             DEFAULT 0;
 DECLARE cur_account_pig_ops_num_days            INT             DEFAULT 0;
+
+
+DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+
+
+/* account.flag_setting bits*/
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH         INT             DEFAULT 1;
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_INSEM         INT             DEFAULT 2;
+
+DECLARE num_days_to_add                         INT             DEFAULT 0;
 
 
 DECLARE l_last_row_fetched TINYINT;
@@ -37,6 +50,12 @@ DECLARE c_account_pig_ops CURSOR FOR
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET l_last_row_fetched=1; 
 
 
+SELECT  flag_settings
+INTO    cur_account_flag_settings
+FROM    account 
+WHERE   id = in_account_id;
+
+
     
 SET l_last_row_fetched=0;
 OPEN c_account_pig_ops;   
@@ -49,6 +68,30 @@ loop_here: LOOP
         
     IF l_last_row_fetched=1 THEN LEAVE loop_here; END IF;
 
+
+    /* Default*/
+    SET num_days_to_add = cur_account_pig_ops_num_days;
+    
+    IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS OR 
+        in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW THEN 
+        
+        IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH > 0 THEN 
+            SET num_days_to_add = cur_account_pig_ops_num_days - 1;
+        ELSE
+            SET num_days_to_add = cur_account_pig_ops_num_days;
+        END IF;
+    END IF;
+    
+    
+    IF in_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+        IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_INSEM > 0 THEN 
+            SET num_days_to_add = cur_account_pig_ops_num_days - 1;
+        ELSE
+            SET num_days_to_add = cur_account_pig_ops_num_days;
+        END IF;
+    END IF;
+    
+
     INSERT INTO pig_prod_pig_ops(
         pig_prod_id,
         account_pig_ops_id,
@@ -58,7 +101,7 @@ loop_here: LOOP
         in_pig_prod_id,
         cur_account_pig_ops_id,
         in_operation_type,
-        DATE_ADD(in_date_reference, INTERVAL cur_account_pig_ops_num_days DAY)
+        DATE_ADD(in_date_reference, INTERVAL num_days_to_add DAY)
     );
     
 

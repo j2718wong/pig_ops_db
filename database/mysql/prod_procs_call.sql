@@ -234,6 +234,7 @@ CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
 
 CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Meloy Requinto", NULL, NULL, NULL);
 CALL account_pig_buyer_add(1, 1, 49, 1011, 0, "Mingla Lamesa Mangrasyon", NULL, NULL, NULL);
+CALL account_pig_buyer_add(1, 1, 49, 1013, 0, "Ting Rasyon sa Naga merkado", NULL, NULL, NULL);
 
 
 /* Harvested bayad sa butakal; harvest_type to be updated later*/
@@ -250,7 +251,11 @@ CALL production_harvest_add(1,7,NULL,NULL,'2025-11-11', 5, NULL,NULL, NULL, NULL
 
 
 /* Harvested as internla cosumo kay nibuto ang posod; gitiwasan*/
-CALL production_harvest_add(1,13,NULL,NULL,'2025-11-10', 1, NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+CALL production_harvest_add(1,9,NULL,NULL,'2025-11-10', 1, NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+
+/* Harvested rasyon Naga*/
+CALL production_harvest_add(1,9,NULL,3,'2025-11-26', 3, NULL,NULL,207,204,NULL,215,42810,1350,"plete baboy 350 isa, sakwat baboy 100 isa");
 
 
 
