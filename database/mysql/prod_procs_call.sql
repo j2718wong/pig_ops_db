@@ -227,6 +227,12 @@ CALL feed_balance_add(1,  13, NULL, '2025-11-22', 9,  0,   0, 0,     5.5, NULL, 
 CALL sow_boar_balance_add(1,  1,  '2025-11-22', 2.5, 5);
 
 
+CALL feed_balance_add(1,  9, NULL, '2025-11-29', 2,  0,   0, 0,     0,  0,    2);
+CALL feed_balance_add(1,  13, NULL, '2025-11-29', 9,  0,   0, 0,     4, NULL,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-11-29', 1, 2);
+
+
+
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
 CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
@@ -235,6 +241,8 @@ CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
 CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Meloy Requinto", NULL, NULL, NULL);
 CALL account_pig_buyer_add(1, 1, 49, 1011, 0, "Mingla Lamesa Mangrasyon", NULL, NULL, NULL);
 CALL account_pig_buyer_add(1, 1, 49, 1013, 0, "Ting Rasyon sa Naga merkado", NULL, NULL, NULL);
+CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Silingan Punod Namatyan", NULL, NULL, NULL);
+
 
 
 /* Harvested bayad sa butakal; harvest_type to be updated later*/
@@ -256,6 +264,11 @@ CALL production_harvest_add(1,9,NULL,NULL,'2025-11-10', 1, NULL,NULL, NULL, NULL
 
 /* Harvested rasyon Naga*/
 CALL production_harvest_add(1,9,NULL,3,'2025-11-26', 3, NULL,NULL,207,204,NULL,215,42810,1350,"plete baboy 350 isa, sakwat baboy 100 isa");
+
+/* Harvested rasyon Silingan Punod*/
+CALL production_harvest_add(1,9,NULL,4,'2025-11-28', 3, NULL,NULL,207,207,NULL,215,44505,0,"walay plete kay silingan");
+
+CALL production_harvest_add(1,9,NULL,3,'2025-11-29', 7, NULL,NULL,525,518,NULL,215,108920,2450,"plete baboy 350 isa, sakwat baboy 100 isa");
 
 
 

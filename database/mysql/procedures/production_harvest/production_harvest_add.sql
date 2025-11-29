@@ -147,6 +147,7 @@ IF in_pig_prod_id > 0 THEN
     INTO    cur_production_harvest_id
     FROM    production_harvest
     WHERE   pig_prod_id         = in_pig_prod_id    AND
+            acc_pig_buyer_id    = in_acc_pig_buyer_id AND
             date_harvest        = in_date_harvest
     LIMIT   1;
     
@@ -156,6 +157,7 @@ ELSE
     INTO    cur_production_harvest_id
     FROM    production_harvest
     WHERE   production_group_id = in_production_group_id    AND
+            acc_pig_buyer_id    = in_acc_pig_buyer_id AND
             date_harvest        = in_date_harvest
     LIMIT   1;
     
