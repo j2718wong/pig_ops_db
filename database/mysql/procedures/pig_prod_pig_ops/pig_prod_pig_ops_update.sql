@@ -151,7 +151,7 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             NULL,
             
             in_notes,
-            CURRENT_DATE,
+            in_date,
             in_user_id
         );
 
@@ -166,6 +166,7 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
 
 ELSE
     UPDATE pig_prod_notes SET 
+        date_notes          = in_date,
         notes               = in_notes,
         last_update_user_id = in_user_id,
         dt_last_update      = CURRENT_TIMESTAMP
