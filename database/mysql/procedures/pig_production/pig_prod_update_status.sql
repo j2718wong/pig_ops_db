@@ -6,6 +6,8 @@ CREATE PROCEDURE pig_prod_update_status(
     
     in_pig_prod_id          INT,
     in_pig_prod_status_id   INT,
+    
+    in_date_status          VARCHAR(10),
     in_notes                VARCHAR(160)
 )
 
@@ -187,7 +189,7 @@ IF in_notes IS NOT NULL THEN
         in_pig_prod_id,
         
         in_notes,
-        CURRENT_DATE,
+        in_date_status,
         in_user_id
     );
 

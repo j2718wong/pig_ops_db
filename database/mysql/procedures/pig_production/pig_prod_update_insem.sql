@@ -57,6 +57,8 @@ DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
+DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
@@ -65,6 +67,7 @@ DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+DECLARE cur_pig_prod_date_insemination          DATE            DEFAULT NULL;
 DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_insem_notes_id             INT             DEFAULT 0;
 
@@ -84,14 +87,16 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
-        pig_fam_id,
+        pig_farm_id,
         prod_status_id,
+        date_insemination,
         flag,
         insem_notes_id
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id,
+        cur_pig_prod_date_insemination,
         cur_pig_prod_flag,
         cur_pig_prod_insem_notes_id
 FROM    pig_production
@@ -169,8 +174,10 @@ UPDATE pig_production SET
     
 WHERE id =  in_pig_prod_id;
 
+
 IF cur_pig_prod_insem_notes_id > 0 THEN 
     UPDATE pig_prod_notes SET
+        date_notes          = in_date_insemination,
         notes               = in_comments,
         
         last_update_user_id = in_user_id,
@@ -191,7 +198,7 @@ ELSE
             in_pig_prod_id,
             
             in_comments,
-            CURRENT_DATE,
+            in_date_insemination,
             in_user_id
         );
         
@@ -204,6 +211,16 @@ ELSE
     END IF;
     
 END IF;
+
+
+IF cur_pig_prod_date_insemination != in_date_insemination THEN 
+    UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+        a.date_target = DATE_ADD(in_date_insemination, INTERVAL b.num_days_since DAY)
+    WHERE   a.pig_prod_id = in_pig_prod_id AND 
+            a.operation_type = PIG_OPERATION_TYPE_GESTATING AND
+            a.account_pig_ops_id = b.id;
+END IF;
+
 
 END process_user;
 
