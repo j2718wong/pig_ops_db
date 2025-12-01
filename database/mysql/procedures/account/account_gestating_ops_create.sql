@@ -43,7 +43,7 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_GESTATING,
     1,
     GESTATING_OPS_NUM_DAYS_CHECK_PREGNANT,
-    "Check if Pregnant",
+    "Check Pregnant",
     "CheckPregnant"
 );
 
