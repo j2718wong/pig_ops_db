@@ -72,6 +72,7 @@ loop_here: LOOP
     /* Default*/
     SET num_days_to_add = cur_account_pig_ops_num_days;
     
+	/* Need to adjust Day 1 counting.*/
     IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS OR 
         in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW THEN 
         

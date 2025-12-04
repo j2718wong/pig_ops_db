@@ -58,6 +58,12 @@ DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
 
 
+
+/* account.flag_setting bits*/
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH         INT             DEFAULT 1;
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_INSEM         INT             DEFAULT 2;
+
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
@@ -140,6 +146,8 @@ IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_GESTATING,
     SET res_num     = RES_NUM_UPDATE_BIRTH_NOT_ALLOWED;
     SET res_code    = "RES_NUM_UPDATE_BIRTH_NOT_ALLOWED";
     SET res_desc    = "Production status not GESTATING or LACTATING.";
+    
+    LEAVE process_user;
 END IF;
 
 
@@ -216,11 +224,22 @@ IF cur_count_account_pig_ops > 0 THEN
         
     ELSE
         IF detected_actual_date_birth_change > 0 THEN
-            UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
-                a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since DAY)
-            WHERE   a.pig_prod_id = in_pig_prod_id AND 
-                    a.operation_type = PIG_OPERATION_TYPE_LACTATING_SOW AND
-                    a.account_pig_ops_id = b.id;
+            
+            /* Need to adjust Day 1 counting.*/
+            IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN 
+                UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                    a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since DAY)
+                WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                        a.operation_type = PIG_OPERATION_TYPE_LACTATING_SOW AND
+                        a.account_pig_ops_id = b.id;
+            
+            ELSE
+                UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                    a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since - 1 DAY)
+                WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                        a.operation_type = PIG_OPERATION_TYPE_LACTATING_SOW AND
+                        a.account_pig_ops_id = b.id;
+            END IF;
         END IF;
 
     END IF;
@@ -247,11 +266,21 @@ IF cur_count_pig_prod_pig_ops = 0 THEN
 
 ELSE
     IF detected_actual_date_birth_change > 0 THEN
-        UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
-            a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since DAY)
-        WHERE   a.pig_prod_id = in_pig_prod_id AND 
-                a.operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS AND
-                a.account_pig_ops_id = b.id;
+    
+        IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN
+            UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since DAY)
+            WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                    a.operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS AND
+                    a.account_pig_ops_id = b.id;
+        
+        ELSE
+            UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since - 1 DAY)
+            WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                    a.operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS AND
+                    a.account_pig_ops_id = b.id;
+        END IF;
     END IF;
 END IF;
 

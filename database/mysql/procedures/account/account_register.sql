@@ -138,7 +138,10 @@ IF cur_account_id > 0 THEN
 END IF;
 
 
-
+/* Note: 
+    FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH is SET on account creation
+    FLAG_BIT_DAY_1_ON_DATE_OF_INSEM is CLEAR on account creation.
+*/
 
 
 INSERT INTO account(

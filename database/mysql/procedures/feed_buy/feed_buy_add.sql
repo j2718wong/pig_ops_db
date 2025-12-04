@@ -32,7 +32,7 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
+DECLARE RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_FEED_BUY  INT        DEFAULT 20;
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 21;
 
 
@@ -43,6 +43,7 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+DECLARE FEED_TYPE_ID_GESTATING                  INT             DEFAULT 1;
 DECLARE FEED_TYPE_ID_LACTATING                  INT             DEFAULT 2;
 DECLARE FEED_TYPE_ID_BOOSTER                    INT             DEFAULT 3;
 DECLARE FEED_TYPE_ID_PRESTARTER                 INT             DEFAULT 4;
@@ -51,6 +52,14 @@ DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
 DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 
 
+DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
+DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
+DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
+DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
+DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
+DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
+DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
+DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
@@ -64,8 +73,8 @@ DECLARE FLAG_BIT_FEED_SUPPLIER_IS_DELETED       INT             DEFAULT 1;
 DECLARE FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED      INT             DEFAULT 2;
 
 
-DECLARE MIN_COUNT_ACCOUNT_FEED_BRAND_IS_VERIFIED  	INT       	DEFAULT 3;
-DECLARE MIN_COUNT_ACCOUNT_FEED_SUPPLIER_IS_VERIFIED INT        	DEFAULT 3;
+DECLARE MIN_COUNT_ACCOUNT_FEED_BRAND_IS_VERIFIED    INT         DEFAULT 3;
+DECLARE MIN_COUNT_ACCOUNT_FEED_SUPPLIER_IS_VERIFIED INT         DEFAULT 3;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -165,11 +174,17 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
-    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
-    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
-    
-    LEAVE process_user;
+IF in_pig_prod_id > 0 THEN
+    IF cur_pig_prod_status_id IN (  PRODUCTION_STATUS_ID_TERMINATED,
+                                    PRODUCTION_STATUS_ID_NOT_PREGNANT,
+                                    PRODUCTION_STATUS_ID_COMBINED,
+                                    PRODUCTION_STATUS_ID_HARVESTED,
+                                    PRODUCTION_STATUS_ID_CLOSED) THEN 
+        SET res_num     = RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_FEED_BUY;
+        SET res_code    = "RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_FEED_BUY";
+        
+        LEAVE process_user;
+    END IF;
 END IF;
 
 
@@ -180,7 +195,8 @@ IF in_pig_prod_id > 0 THEN
     FROM    feed_buy
     WHERE   pig_prod_id         = in_pig_prod_id    AND
             date_buy            = in_date_buy       AND
-            feed_type_id        = in_feed_type_id
+            feed_type_id        = in_feed_type_id   AND 
+            feed_supplier_id    = in_feed_supplier_id
     LIMIT   1;
     
 ELSE 
@@ -191,7 +207,8 @@ ELSE
         FROM    feed_buy
         WHERE   pig_prod_group_id   = in_prod_group_id  AND
                 date_buy            = in_date_buy       AND
-                feed_type_id        = in_feed_type_id
+                feed_type_id        = in_feed_type_id   AND 
+                feed_supplier_id    = in_feed_supplier_id
         LIMIT   1;
 
     ELSE
@@ -200,7 +217,8 @@ ELSE
         FROM    feed_buy
         WHERE   pig_farm_id         = in_pig_farm_id  AND
                 date_buy            = in_date_buy     AND
-                feed_type_id        = in_feed_type_id
+                feed_type_id        = in_feed_type_id AND 
+                feed_supplier_id    = in_feed_supplier_id
         LIMIT   1;
     END IF;
     
@@ -270,6 +288,15 @@ IF in_pig_prod_id > 0 THEN
     FROM    feed_buy
     WHERE   pig_prod_id = in_pig_prod_id AND feed_type_id = in_feed_type_id;
 
+    
+    IF in_feed_type_id = FEED_TYPE_ID_GESTATING THEN
+        UPDATE pig_production SET 
+            num_b_gestating     = cur_feed_quantity,
+            num_b_kg_gestating  = cur_feed_weight_kg,
+            cost_gestating      = cur_total_cost
+        WHERE id = in_pig_prod_id;
+    END IF;
+
 
     IF in_feed_type_id = FEED_TYPE_ID_LACTATING THEN
         UPDATE pig_production SET 
@@ -314,6 +341,7 @@ IF in_pig_prod_id > 0 THEN
             cost_grower         = cur_total_cost
         WHERE id = in_pig_prod_id;
     END IF;
+    
     
     IF in_feed_type_id = FEED_TYPE_ID_FINISHER THEN 
         UPDATE pig_production SET 
