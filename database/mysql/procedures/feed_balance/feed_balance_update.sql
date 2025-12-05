@@ -161,7 +161,7 @@ UPDATE feed_balance SET
 
 WHERE id = in_feed_balance_id;
 
-SELECT LAST_INSERT_ID() INTO cur_pig_prod_feed_bal_id;
+
 
 
 END process_user;
