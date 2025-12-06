@@ -8,6 +8,7 @@ CREATE PROCEDURE pig_prod_pig_dead_add(
     in_production_group_id  INT,
     
     in_date_dead            VARCHAR(10),
+    in_pig_dead_type_id     INT,
     in_num_pigs_dead        INT,
     in_notes                VARCHAR(160)
 )  
@@ -209,6 +210,7 @@ INSERT INTO pig_prod_pig_dead (
     production_group_id,
     
     date_dead,
+    dead_type_id,
     dead_at_stage,
     num_pigs_dead,
     
@@ -221,6 +223,7 @@ INSERT INTO pig_prod_pig_dead (
     in_production_group_id,
     
     in_date_dead,
+    in_pig_dead_type_id,
     cur_dead_at_stage,
     in_num_pigs_dead,
     

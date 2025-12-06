@@ -116,12 +116,20 @@ CALL feed_buy_add(1, NULL, 13, NULL, '2025-10-03', 2, 1, 1, 1, 50, 1670, 1670);
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-10-13', 5, 1, 1, 2, 50, 1865, 3730);
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-10-13', 5, 1, 1, 2, 50, 1865, 3730);
 CALL feed_buy_add(1, NULL, 13, NULL, '2025-11-01', 5, 1, 1, 7, 50, 1865, 13055);
+CALL feed_buy_add(1, NULL, 13, NULL, '2025-12-02', 6, 1, 2, 9, 50, 1680, 15120);
+
+
 
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-09-17', 7, 1, 1, 2, 50, 1575, 3150);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-01', 1, 1, 1, 5, 50, 1480, 7400);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-10', 7, 1, 1, 1, 50, 1575, 1575);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-10-27', 7, 1, 2, 2, 50, 1525, 3050);
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-11-01', 7, 1, 1, 10, 50, 1575, 15750);
+CALL feed_buy_add(1, 1, NULL, NULL,  '2025-12-02', 1, 1, 1, 6, 50, 1460, 8760);
+CALL feed_buy_add(1, 1, NULL, NULL,  '2025-12-02', 7, 1, 1, 4, 50, 1575, 6300);
+CALL feed_buy_add(1, 1, NULL, NULL,  '2025-12-02', 7, 1, 2, 11, 50, 1555, 17105);
+
+
 
 
 CALL feed_balance_add(1,  5, NULL, '2025-08-09',  3, 0,   0, 0,     0,  4.5,  NULL);
@@ -232,6 +240,10 @@ CALL feed_balance_add(1,  13, NULL, '2025-11-29', 9,  0,   0, 0,     4, NULL,   
 CALL sow_boar_balance_add(1,  1,  '2025-11-29', 1, 2);
 
 
+CALL feed_balance_add(1,  13, NULL, '2025-12-06', 9,  0,   0, 0,     2, 9,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-12-06', 6, 17);
+
+
 
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
@@ -242,6 +254,7 @@ CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Meloy Requinto", NULL, NULL, 
 CALL account_pig_buyer_add(1, 1, 49, 1011, 0, "Mingla Lamesa Mangrasyon", NULL, NULL, NULL);
 CALL account_pig_buyer_add(1, 1, 49, 1013, 0, "Ting Rasyon sa Naga merkado", NULL, NULL, NULL);
 CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Silingan Punod Namatyan", NULL, NULL, NULL);
+CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Silingan Punod Palit Anay", NULL, NULL, NULL);
 
 
 
@@ -268,8 +281,11 @@ CALL production_harvest_add(1,9,NULL,3,'2025-11-26', 3, NULL,NULL,207,204,NULL,2
 /* Harvested rasyon Silingan Punod*/
 CALL production_harvest_add(1,9,NULL,4,'2025-11-28', 3, NULL,NULL,207,207,NULL,215,44505,0,"walay plete kay silingan");
 
+/* Harvested rasyon Naga*/
 CALL production_harvest_add(1,9,NULL,3,'2025-11-29', 7, NULL,NULL,525,518,NULL,215,108920,2450,"plete baboy 350 isa, sakwat baboy 100 isa");
 
+/* Harvested Silingan anay*/
+CALL production_harvest_add(1,9,NULL,5,'2025-12-02', 2, NULL,NULL,168,168,NULL,215,36120,0,"Gitupong ang timbangs a pinakabugat na narasyon");
 
 
 CALL semen_supplier_add(1,1,49,1013,27033, "Primary", NULL, NULL, NULL);

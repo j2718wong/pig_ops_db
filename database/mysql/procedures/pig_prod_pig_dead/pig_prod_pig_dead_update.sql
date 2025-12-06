@@ -7,6 +7,7 @@ CREATE PROCEDURE pig_prod_pig_dead_update(
     in_pig_prod_pig_dead_id     INT,
     
     in_date_dead                VARCHAR(10),
+    in_pig_dead_type_id         INT,
     in_num_pigs_dead            INT,
     in_notes                    VARCHAR(160)
     
@@ -143,6 +144,7 @@ END IF;
 
 UPDATE pig_prod_pig_dead SET
     date_dead           = in_date_dead,
+    dead_type_id        = in_pig_dead_type_id,
     num_pigs_dead       = in_num_pigs_dead,
 
     notes               = in_notes,

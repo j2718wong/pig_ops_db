@@ -240,7 +240,7 @@ IF in_num_pigs IS NULL THEN
         IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_GESTATING THEN 
             SET in_num_pigs = 0;
         ELSE
-            CALL production_calculate_current_pigs(in_pig_prod_id, in_num_pigs);
+            CALL production_calculate_current_pigs(in_pig_prod_id, 0, in_num_pigs);
         END IF;
     ELSE /*production_group*/
         CALL production_calculate_current_pigs(0, in_prod_group_id, in_num_pigs);
