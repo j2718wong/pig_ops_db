@@ -186,6 +186,26 @@ INSERT INTO feed_supplier(
 SELECT LAST_INSERT_ID() INTO cur_feed_supplier_id;
 
 
+SET cur_count = 0;
+
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    account_selection
+WHERE   account_id =  cur_user_account_id AND 
+        feed_supplier_id = cur_feed_supplier_id;
+        
+
+IF cur_count = 0 THEN 
+    INSERT INTO account_selection(
+        account_id,
+        feed_supplier_id
+    ) VALUES (
+        cur_user_account_id,
+        cur_feed_supplier_id
+    );
+END IF;
+
+
 
 END process_user;
 
