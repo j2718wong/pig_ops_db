@@ -14,7 +14,9 @@ CREATE PROCEDURE account_pig_buyer_update(
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
     in_whatsapp             VARCHAR(20),
-    in_messenger            VARCHAR(50)
+    in_messenger            VARCHAR(50),
+    
+    in_description          VARCHAR(160)
 )  
 
 BEGIN
@@ -95,14 +97,16 @@ END IF;
 
 UPDATE account_pig_buyer SET 
     country_id              = in_country_id,
-    address_level_1_id         = in_address_level_1_id,
-    address_level_2_id         = in_address_level_2_id,
-    address_level_3_id         = in_address_level_3_id,
+    address_level_1_id      = in_address_level_1_id,
+    address_level_2_id      = in_address_level_2_id,
+    address_level_3_id      = in_address_level_3_id,
     
     name                    = in_name,    
     contact_number          = in_contact_number,
     whatsapp                = in_whatsapp,
     messenger               = in_messenger,
+    
+    description             = in_description,
     
     last_update_user_id     = in_user_id,
     dt_last_update          = CURRENT_TIMESTAMP

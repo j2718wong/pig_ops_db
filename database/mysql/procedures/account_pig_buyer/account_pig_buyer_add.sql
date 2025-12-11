@@ -12,7 +12,8 @@ CREATE PROCEDURE account_pig_buyer_add(
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
     in_whatsapp             VARCHAR(20),
-    in_messenger            VARCHAR(50)
+    in_messenger            VARCHAR(50),
+    in_description          VARCHAR(160)
 )  
 
 BEGIN
@@ -113,6 +114,8 @@ INSERT INTO account_pig_buyer(
     whatsapp,
     messenger,
     
+    description,
+    
     added_by_user_id
     
 ) VALUES (
@@ -127,7 +130,9 @@ INSERT INTO account_pig_buyer(
     in_contact_number,
     in_whatsapp,
     in_messenger,
-   
+    
+    in_description,
+    
     in_user_id
 );
 
