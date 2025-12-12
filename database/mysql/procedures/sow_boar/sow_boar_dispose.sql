@@ -31,19 +31,12 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-DECLARE FLAG_BIT_SOW_BOAR_IS_DISPOSED           INT             DEFAULT 1;
-DECLARE FLAG_BIT_SOW_BOAR_IS_EXTERNAL           INT             DEFAULT 2;
-
-
-DECLARE SOW_STATUS_ID_CULLED                    INT             DEFAULT 5;
-
-
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
-DECLARE cur_pig_prod_notes_id					INT             DEFAULT 0;
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -85,7 +78,7 @@ END IF;
 
 
 IF in_dispose_notes IS NOT NULL THEN 
-	INSERT INTO pig_prod_notes (
+    INSERT INTO pig_prod_notes (
         sow_boar_id,
         
         notes,
@@ -107,7 +100,7 @@ UPDATE sow_boar SET
     date_dispose        = in_date_dispose,
     dispose_notes_id    = cur_pig_prod_notes_id,
     sow_status_id       = in_dispose_status_id,
-    flag                = flag | FLAG_BIT_SOW_BOAR_IS_DISPOSED,
+    is_disposed         = 1,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP

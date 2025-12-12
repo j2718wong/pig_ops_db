@@ -188,6 +188,8 @@ CALL account_gestating_ops_create(cur_account_id);
 
 CALL account_lactating_ops_create(cur_account_id);
 
+CALL account_gilt_ops_create(cur_account_id);
+
 
 /* Insert app_audit_log. */
 SET s_desc = CONCAT("Account registered; acc_name = ", in_name);

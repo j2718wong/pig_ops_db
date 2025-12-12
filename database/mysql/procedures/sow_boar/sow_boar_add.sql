@@ -11,10 +11,12 @@ CREATE PROCEDURE sow_boar_add(
     
     in_sex                  CHAR(1),
     in_is_external          INT,
+    in_is_production_ready  INT,
     
     in_number               VARCHAR(10),
     in_name                 VARCHAR(20),
     in_date_of_birth        VARCHAR(10),
+    in_date_eartag          VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
 
@@ -40,9 +42,14 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-/* sow_boar.flag bits*/
-DECLARE FLAG_BIT_SOW_BOAR_IS_DISPOSED           INT             DEFAULT 1;
-DECLARE FLAG_BIT_SOW_BOAR_IS_EXTERNAL           INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
+
+
+DECLARE SOW_STATUS_ID_GROWING                   INT             DEFAULT 1;
+
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -58,6 +65,8 @@ DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
 DECLARE cur_sow_boar_flag                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
+DECLARE cur_count                               INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -139,12 +148,11 @@ IF cur_sow_boar_id > 0 THEN
 END IF;
 
 
+
+
 IF in_sex = 'F' THEN 
     SET cur_pig_farm_last_sow_id = cur_pig_farm_last_sow_id + 1;
     
-    IF in_is_external > 0 THEN 
-        SET cur_sow_boar_flag = FLAG_BIT_SOW_BOAR_IS_EXTERNAL;
-    END IF;
     
     INSERT INTO sow_boar(
         account_id,
@@ -154,13 +162,15 @@ IF in_sex = 'F' THEN
         farm_birth_prod_id,
         line_id,
         sow_status_id,
-        flag,
+        is_external,
+        is_production_ready,
         
         sex,
         
         number,
         name,
         date_of_birth,
+        date_eartag,
         
         added_by_user_id
     ) VALUES (
@@ -171,13 +181,16 @@ IF in_sex = 'F' THEN
         in_farm_birth_prod_id,
         in_line_id,
         in_sow_status_id,
-        cur_sow_boar_flag,
+        in_is_external,
+        in_is_production_ready,
+        
         
         in_sex,
         
         in_number,
         in_name,
         in_date_of_birth,
+        in_date_eartag,
         
         in_user_id
     );
@@ -194,13 +207,15 @@ ELSE
         farm_birth_prod_id,
         line_id,
         sow_status_id,
-        flag,
+        is_external,
+        is_production_ready,
         
         sex,
         
         number,
         name,
         date_of_birth,
+        date_eartag,
         
         added_by_user_id
     ) VALUES (
@@ -211,13 +226,15 @@ ELSE
         in_farm_birth_prod_id,
         in_line_id,
         NULL,
-        cur_sow_boar_flag,
+        in_is_external,
+        in_is_production_ready,
         
         in_sex,
         
         in_number,
         in_name,
         in_date_of_birth,
+        in_date_eartag,
         
         in_user_id
     );
@@ -257,6 +274,32 @@ UPDATE pig_farm SET
     last_sow_id     = cur_pig_farm_last_sow_id,
     last_boar_id    = cur_pig_farm_last_boar_id
 WHERE id = in_pig_farm_id;
+
+
+/* Add gilt ops if sow and birthdate is not NULL.*/
+IF in_sex = 'F' AND in_date_of_birth IS NOT NULL  THEN 
+    
+    /* Count if there is an account gilt pig ops.*/
+    SELECT  COUNT(*) 
+    INTO    cur_count 
+    FROM    account_pig_ops
+    WHERE   account_id = cur_pig_farm_account_id AND 
+            operation_type = PIG_OPERATION_TYPE_GILT_OPS;
+            
+            
+    IF cur_count > 0 THEN 
+    
+        CALL gilt_pig_ops_add(
+            in_user_id,
+            cur_user_account_id,
+            PIG_OPERATION_TYPE_GILT_OPS,
+            cur_sow_boar_id,
+            in_date_of_birth
+        );
+        
+    END IF;
+
+END IF;
 
 
 END process_user;

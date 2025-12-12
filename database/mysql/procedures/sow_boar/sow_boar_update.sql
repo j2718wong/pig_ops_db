@@ -9,10 +9,12 @@ CREATE PROCEDURE sow_boar_update(
     in_line_id              INT,
     in_sow_status_id        INT,
     in_is_external          INT,
+    in_is_production_ready  INT,
     
     in_number               VARCHAR(10),
     in_name                 VARCHAR(20),
     in_date_of_birth        VARCHAR(10),
+    in_date_eartag          VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
 
@@ -27,6 +29,7 @@ BEGIN
  */
 
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
+DECLARE RES_NUM_SOW_BOAR_ALREADY_DISPOSED       INT             DEFAULT 1;
 
 DECLARE BUSINESS_OBJ_ID_SOW_BOAR                INT             DEFAULT 19;
 
@@ -35,22 +38,36 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-/* sow_boar.flag bits*/
-DECLARE FLAG_BIT_SOW_BOAR_IS_DISPOSED           INT             DEFAULT 1;
-DECLARE FLAG_BIT_SOW_BOAR_IS_EXTERNAL           INT             DEFAULT 2;
+
+/* account.flag_setting bits*/
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH         INT             DEFAULT 1;
+DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_INSEM         INT             DEFAULT 2;
+
+
+
+DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
+DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
+DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
-DECLARE cur_sow_boar_add_notes_id               INT             DEFAULT 0;
-
 
 DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
 DECLARE cur_sow_boar_flag                       INT             DEFAULT 0;
+DECLARE cur_sow_boar_add_notes_id               INT             DEFAULT 0;
+DECLARE cur_sow_boar_is_disposed                INT             DEFAULT 0;
+DECLARE cur_sow_boar_sex                        VARCHAR(2);
+DECLARE cur_sow_boar_date_of_birth              DATE;
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
+DECLARE cur_account_flag_settings               INT             DEFAULT 0;
+DECLARE cur_count                               INT             DEFAULT 0;
+
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -64,11 +81,17 @@ SET res_code    = "SUCCESS";
 
 SELECT  account_id,
         flag,
-        add_notes_id
+        add_notes_id,
+        is_disposed,
+        sex,
+        date_of_birth
         
 INTO    cur_sow_boar_account_id,
         cur_sow_boar_flag,
-        cur_sow_boar_add_notes_id
+        cur_sow_boar_add_notes_id,
+        cur_sow_boar_is_disposed,
+        cur_sow_boar_sex,
+        cur_sow_boar_date_of_birth
         
 FROM    sow_boar
 WHERE   id = in_sow_boar_id
@@ -97,11 +120,11 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-/* clear flag bif first*/
-SET cur_sow_boar_flag = cur_sow_boar_flag & ~FLAG_BIT_SOW_BOAR_IS_EXTERNAL;
-IF in_is_external > 0 THEN
-    /* then update*/
-    SET cur_sow_boar_flag = cur_sow_boar_flag | FLAG_BIT_SOW_BOAR_IS_EXTERNAL;
+IF cur_sow_boar_is_disposed > 0 THEN 
+    SET res_num     = RES_NUM_SOW_BOAR_ALREADY_DISPOSED;
+    SET res_code    = "RES_NUM_SOW_BOAR_ALREADY_DISPOSED";
+    
+    LEAVE process_user;
 END IF;
 
 
@@ -110,16 +133,20 @@ UPDATE sow_boar SET
     line_id             = in_line_id,
     sow_status_id       = in_sow_status_id,
     flag                = cur_sow_boar_flag,
+    is_external         = in_is_external,
+    is_production_ready = in_is_production_ready,
     
     number              = in_number,
     name                = in_name,
     date_of_birth       = in_date_of_birth,
+    date_eartag         = in_date_eartag,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
     
 WHERE 
     id = in_sow_boar_id;
+
 
 IF cur_sow_boar_add_notes_id > 0 THEN
     UPDATE pig_prod_notes SET
@@ -157,6 +184,71 @@ ELSE
 
 END IF;
 
+
+/*Perform a series of gilt ops adjustments if 
+- a sow
+- no gilt ops yet
+- change in sow date_of_birth (need to recalculate the dates);
+*/
+
+SELECT  flag_settings
+INTO    cur_account_flag_settings
+FROM    account 
+WHERE   id = cur_pig_farm_account_id;
+
+
+IF cur_sow_boar_sex = 'F' THEN 
+    /* Count if there is an account gilt pig ops.*/
+    SELECT  COUNT(*) 
+    INTO    cur_count 
+    FROM    account_pig_ops
+    WHERE   account_id = cur_pig_farm_account_id AND 
+            operation_type = PIG_OPERATION_TYPE_GILT_OPS;
+            
+    IF cur_count > 0 THEN 
+        SET cur_count = 0;
+    
+        SELECT  COUNT(*) 
+        INTO    cur_count 
+        FROM    pig_prod_pig_ops
+        WHERE   sow_boar_id = in_sow_boar_id AND 
+                operation_type = PIG_OPERATION_TYPE_GILT_OPS;
+        
+        IF cur_count = 0 AND  in_date_of_birth IS NOT NULL THEN 
+            CALL gilt_pig_ops_add(
+                in_user_id,
+                cur_user_account_id,
+                PIG_OPERATION_TYPE_GILT_OPS,
+                in_sow_boar_id,
+                in_date_of_birth
+            );
+        
+        END IF;
+        
+        IF cur_count > 0 AND in_date_of_birth IS NOT NULL THEN 
+            
+            /* Need to adjust Day 1 counting.*/
+            IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN 
+                UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                    a.date_target = DATE_ADD(in_date_of_birth, INTERVAL b.num_days_since DAY)
+                WHERE   a.sow_boar_id = in_sow_boar_id AND 
+                        a.operation_type = PIG_OPERATION_TYPE_GILT_OPS AND
+                        a.account_pig_ops_id = b.id;
+            
+            ELSE
+                UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                    a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since - 1 DAY)
+                WHERE   a.sow_boar_id = in_sow_boar_id AND 
+                        a.operation_type = PIG_OPERATION_TYPE_GILT_OPS AND
+                        a.account_pig_ops_id = b.id;
+            END IF;
+        
+        END IF;
+        
+        
+    END IF;
+    
+END IF;
 
 
 END process_user;

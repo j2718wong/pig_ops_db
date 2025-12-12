@@ -37,7 +37,7 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
-
+DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';

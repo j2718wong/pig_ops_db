@@ -59,6 +59,8 @@ DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE cur_prod_pig_ops_id                     INT             DEFAULT 0;
 
+DECLARE cur_staff_name                          VARCHAR(50);
+DECLARE cur_notes                               VARCHAR(200);
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -131,38 +133,55 @@ END IF;
 
 
 IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 THEN 
+    SELECT  name
+    INTO    cur_staff_name
+    FROM    pig_farm_staff
+    WHERE   id = in_staff_id;
+    
+    /* This is necessary as notes is optional; It will leave blank in table row 
+     UI if no notes.*/
+    SET cur_notes  = CONCAT('Pig operation done by ', cur_staff_name, '. ');
+    
+    
     IF in_notes IS NOT NULL THEN 
-        INSERT INTO pig_prod_notes (
-            account_id,
-            pig_farm_id,
-            pig_prod_id,
-            sow_boar_id,
-            production_group_id,
-            
-            notes,
-            date_notes,
-            added_by_user_id
-            
-        ) VALUES (
-            cur_pig_prod_account_id,
-            NULL,
-            cur_pig_prod_id,
-            NULL,
-            NULL,
-            
-            in_notes,
-            in_date,
-            in_user_id
-        );
-
-        SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
-        
-        UPDATE pig_prod_pig_ops SET
-            notes_id            = cur_pig_prod_notes_id
-        WHERE id = in_pig_prod_pig_ops_id;
-        
-        
+        SET cur_notes  = CONCAT(cur_notes, in_notes);
     END IF;
+    
+    
+    /* Truncate notes if needed. */
+    IF LENGTH(cur_notes) >= 160 THEN 
+        SET cur_notes = SUBSTRING(cur_notes, 1, 159);
+    END IF;
+    
+    
+    INSERT INTO pig_prod_notes (
+        account_id,
+        pig_farm_id,
+        pig_prod_id,
+        sow_boar_id,
+        production_group_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        cur_pig_prod_account_id,
+        NULL,
+        cur_pig_prod_id,
+        NULL,
+        NULL,
+        
+        cur_notes,
+        in_date,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+    UPDATE pig_prod_pig_ops SET
+        notes_id            = cur_pig_prod_notes_id
+    WHERE id = in_pig_prod_pig_ops_id;
 
 ELSE
     UPDATE pig_prod_notes SET 
