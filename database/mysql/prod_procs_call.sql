@@ -243,7 +243,8 @@ CALL sow_boar_balance_add(1,  1,  '2025-11-29', 1, 2);
 CALL feed_balance_add(1,  13, NULL, '2025-12-06', 9,  0,   0, 0,     2, 9,    NULL);
 CALL sow_boar_balance_add(1,  1,  '2025-12-06', 6, 17);
 
-
+CALL feed_balance_add(1,  13, NULL, '2025-12-13', 9,  0,   0, 0,     0.5, 9,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2025-12-13', 5, 15);
 
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')

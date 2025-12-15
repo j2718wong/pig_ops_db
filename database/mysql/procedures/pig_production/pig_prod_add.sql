@@ -61,7 +61,8 @@ DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
 DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 
-
+/* Date insemination is day 0.*/
+DECLARE PIG_NUM_DAYS_GESTATION					INT 			DEFAULT 114;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
@@ -205,7 +206,7 @@ IF in_boar_id IS NOT NULL THEN
         in_insemination_cost,
         
         in_date_insemination,
-        DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
+        DATE_ADD(in_date_insemination, INTERVAL PIG_NUM_DAYS_GESTATION DAY),
 
         PRODUCTION_STATUS_ID_GESTATING,
         in_insem_staff_id
@@ -268,7 +269,7 @@ ELSE
         in_insemination_cost,
         
         in_date_insemination,
-        DATE_ADD(in_date_insemination, INTERVAL 114 DAY),
+        DATE_ADD(in_date_insemination, INTERVAL PIG_NUM_DAYS_GESTATION DAY),
 
         PRODUCTION_STATUS_ID_GESTATING,
         in_insem_staff_id

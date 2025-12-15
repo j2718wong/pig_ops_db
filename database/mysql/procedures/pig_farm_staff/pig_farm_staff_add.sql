@@ -5,7 +5,7 @@ CREATE PROCEDURE pig_farm_staff_add(
     in_user_id                  INT,
 
     in_pig_farm_id              INT,
-    in_staff_user_id            INT,
+    in_set_user_as_staff        INT,
     in_name                     VARCHAR(50)
 
 )  
@@ -42,6 +42,8 @@ DECLARE cur_pig_farm_staff_id                   INT             DEFAULT 0;
 DECLARE cur_pig_farm_staff_flag                 INT             DEFAULT 0;
 DECLARE cur_pig_farm_staff_name                 VARCHAR(50)     DEFAULT '';
 
+DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT '';
+DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT '';
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -76,13 +78,26 @@ END IF;
 
 
 /* Check for duplicate entry */
-SELECT  id
-INTO    cur_pig_farm_staff_id
-FROM    pig_farm_staff
-WHERE   account_id = cur_user_account_id    AND
-        pig_farm_id = in_pig_farm_id        AND
-        UPPER(name)  = UPPER(in_name)
-LIMIT   1;
+IF in_set_user_as_staff = 0 THEN 
+
+    SELECT  id
+    INTO    cur_pig_farm_staff_id
+    FROM    pig_farm_staff
+    WHERE   account_id = cur_user_account_id    AND
+            pig_farm_id = in_pig_farm_id        AND
+            UPPER(name)  = UPPER(in_name)
+    LIMIT   1;
+
+ELSE
+    SELECT  id
+    INTO    cur_pig_farm_staff_id
+    FROM    pig_farm_staff
+    WHERE   account_id = cur_user_account_id    AND
+            pig_farm_id = in_pig_farm_id        AND
+            user_id  = in_user_id
+    LIMIT   1;
+END IF;
+
 
 IF cur_pig_farm_staff_id > 0 THEN 
     SET res_num     = RES_NUM_DUPLICATE_ENTRY;
@@ -91,25 +106,56 @@ IF cur_pig_farm_staff_id > 0 THEN
     LEAVE process_user;
 END IF;
 
-
-
-INSERT INTO pig_farm_staff(
-    account_id,
-    pig_farm_id,
-    user_id,
-    name,
+IF in_set_user_as_staff > 0 THEN 
+    SELECT  name_first,
+            name_last
     
-    added_by_user_id
-) VALUES (
-    cur_user_account_id,
-    in_pig_farm_id,
-    in_staff_user_id,
-    in_name,
-    
-    in_user_id
-);
+    INTO    cur_user_name_first,
+            cur_user_name_last
+    FROM    user
+    WHERE   id =  in_user_id;
 
-SELECT LAST_INSERT_ID() INTO cur_pig_farm_staff_id;
+    SET in_name = CONCAT(cur_user_name_first, ' ', cur_user_name_last);
+
+    INSERT INTO pig_farm_staff(
+        account_id,
+        pig_farm_id,
+        user_id,
+        name,
+        
+        added_by_user_id
+    ) VALUES (
+        cur_user_account_id,
+        in_pig_farm_id,
+        in_user_id,
+        in_name,
+        
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_farm_staff_id;
+
+ELSE
+    
+    INSERT INTO pig_farm_staff(
+        account_id,
+        pig_farm_id,
+        name,
+        
+        added_by_user_id
+    ) VALUES (
+        cur_user_account_id,
+        in_pig_farm_id,
+        in_name,
+        
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_farm_staff_id;
+
+END IF;
+
+
 
 
 END process_user;
