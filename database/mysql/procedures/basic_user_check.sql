@@ -395,6 +395,13 @@ IF cur_user_is_system_super_user = 0 THEN
     END IF;
 
 
+	IF in_business_obj_id_to_access = 0 THEN 
+		/* This is means the business_object is a public business object.*/
+		LEAVE process_user;
+	END IF;
+
+
+
     /* Check user.usergroup privileges. */
 
     SET flag_bit = POWER(2, cur_biz_obj_flag_bit_num);
@@ -417,6 +424,8 @@ IF cur_user_is_system_super_user = 0 THEN
         END IF;
     END IF;
 END IF;
+
+
 
 
 

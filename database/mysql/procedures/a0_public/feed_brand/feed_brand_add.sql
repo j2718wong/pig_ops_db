@@ -27,11 +27,6 @@ DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 DECLARE RES_NUM_CANNOT_ADD                      INT             DEFAULT 21;
 
 
-DECLARE BUSINESS_OBJ_ID_FEED_BRAND              INT             DEFAULT 15;
-
-DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
-DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
-DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 /* feed_brand.flag bits*/
@@ -68,8 +63,8 @@ CALL basic_user_check(
     1, /* user must have an account*/
     0,
     
-    BUSINESS_OBJ_ID_FEED_BRAND,
-    FLAG_BIT_OPERATION_ADD,
+    0, /* public business object*/
+    0,
     
     cur_user_account_id, 
     cur_user_group_id,
