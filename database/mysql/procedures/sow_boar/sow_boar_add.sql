@@ -10,6 +10,7 @@ CREATE PROCEDURE sow_boar_add(
     in_sow_status_id        INT,
     
     in_sex                  CHAR(1),
+    in_num_nipples          INT,
     in_is_external          INT,
     in_is_production_ready  INT,
     
@@ -164,6 +165,7 @@ IF in_sex = 'F' THEN
         sow_status_id,
         is_external,
         is_production_ready,
+        num_nipples,
         
         sex,
         
@@ -183,7 +185,7 @@ IF in_sex = 'F' THEN
         in_sow_status_id,
         in_is_external,
         in_is_production_ready,
-        
+        in_num_nipples,
         
         in_sex,
         
@@ -276,7 +278,10 @@ UPDATE pig_farm SET
 WHERE id = in_pig_farm_id;
 
 
-/* Add gilt ops if sow and birthdate is not NULL.*/
+/* Add gilt ops if sow and birthdate is not NULL.
+All sows regardless production ready or nt will create 
+the gilt operations.
+*/
 IF in_sex = 'F' AND in_date_of_birth IS NOT NULL  THEN 
     
     /* Count if there is an account gilt pig ops.*/

@@ -89,14 +89,10 @@ DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS         INT             DEFAULT 8;
 
 DECLARE BUSINESS_OBJ_ID_PIG_FARM                INT             DEFAULT 9;
 DECLARE BUSINESS_OBJ_ID_PIG_FARM_STAFF          INT             DEFAULT 10;
-DECLARE BUSINESS_OBJ_ID_PIG_RACE                INT             DEFAULT 11;
+
 DECLARE BUSINESS_OBJ_ID_PIG_RACE_LINE           INT             DEFAULT 12;
 
 
-DECLARE BUSINESS_OBJ_ID_SEMEN_SUPPLIER          INT             DEFAULT 13;
-DECLARE BUSINESS_OBJ_ID_FEED_SUPPLIER           INT             DEFAULT 14;
-DECLARE BUSINESS_OBJ_ID_FEED_BRAND              INT             DEFAULT 15;
-DECLARE BUSINESS_OBJ_ID_FEED_TYPE               INT             DEFAULT 16;
 DECLARE BUSINESS_OBJ_ID_FEED_BUY                INT             DEFAULT 17;
 DECLARE BUSINESS_OBJ_ID_FEED_BALANCE            INT             DEFAULT 18;
 
@@ -154,16 +150,10 @@ DECLARE cur_user_grp_flag_priv_acc_pig_ops      INT             DEFAULT 0;
 
 DECLARE cur_user_grp_flag_priv_pig_farm         INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_pig_farm_staff   INT             DEFAULT 0;
-DECLARE cur_user_grp_flag_priv_pig_race         INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_pig_race_line    INT             DEFAULT 0;
 
 
 
-
-DECLARE cur_user_grp_flag_priv_semen_supplier   INT             DEFAULT 0;
-DECLARE cur_user_grp_flag_priv_feed_supplier    INT             DEFAULT 0;
-DECLARE cur_user_grp_flag_priv_feed_brand       INT             DEFAULT 0;
-DECLARE cur_user_grp_flag_priv_feed_type        INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_feed_buy         INT             DEFAULT 0;
 DECLARE cur_user_grp_flag_priv_feed_balance     INT             DEFAULT 0;
 
@@ -223,13 +213,8 @@ SELECT
     
     b.flag_priv_pig_farm,
     b.flag_priv_pig_farm_staff,
-    b.flag_priv_pig_race,
     b.flag_priv_pig_race_line,
     
-    b.flag_priv_semen_supplier,
-    b.flag_priv_feed_supplier,
-    b.flag_priv_feed_brand,
-    b.flag_priv_feed_type,
     b.flag_priv_feed_buy,
     b.flag_priv_feed_balance,
     
@@ -272,14 +257,9 @@ INTO
     
     cur_user_grp_flag_priv_pig_farm,
     cur_user_grp_flag_priv_pig_farm_staff,
-    cur_user_grp_flag_priv_pig_race,
     cur_user_grp_flag_priv_pig_race_line,
     
-    
-    cur_user_grp_flag_priv_semen_supplier,
-    cur_user_grp_flag_priv_feed_supplier,
-    cur_user_grp_flag_priv_feed_brand,
-    cur_user_grp_flag_priv_feed_type,
+
     cur_user_grp_flag_priv_feed_buy,
     cur_user_grp_flag_priv_feed_balance,
     
@@ -395,10 +375,10 @@ IF cur_user_is_system_super_user = 0 THEN
     END IF;
 
 
-	IF in_business_obj_id_to_access = 0 THEN 
-		/* This is means the business_object is a public business object.*/
-		LEAVE process_user;
-	END IF;
+    IF in_business_obj_id_to_access = 0 THEN 
+        /* This is means the business_object is a public business object.*/
+        LEAVE process_user;
+    END IF;
 
 
 
@@ -464,27 +444,11 @@ WHEN BUSINESS_OBJ_ID_PIG_FARM THEN
 WHEN BUSINESS_OBJ_ID_PIG_FARM_STAFF THEN
     SET cur_group_flag = cur_user_grp_flag_priv_pig_farm_staff;
     
-WHEN BUSINESS_OBJ_ID_PIG_RACE THEN
-    SET cur_group_flag = cur_user_grp_flag_priv_pig_race;
-    
 WHEN BUSINESS_OBJ_ID_PIG_RACE_LINE THEN
     SET cur_group_flag = cur_user_grp_flag_priv_pig_race_line;
 
 
 
-    
-WHEN BUSINESS_OBJ_ID_SEMEN_SUPPLIER THEN
-    SET cur_group_flag = cur_user_grp_flag_priv_semen_supplier;
-     
-WHEN BUSINESS_OBJ_ID_FEED_SUPPLIER THEN
-    SET cur_group_flag = cur_user_grp_flag_priv_feed_supplier;
-    
-WHEN  BUSINESS_OBJ_ID_FEED_BRAND THEN
-    SET cur_group_flag = cur_user_grp_flag_priv_feed_brand;
-    
-WHEN BUSINESS_OBJ_ID_FEED_TYPE THEN
-    SET cur_group_flag = cur_user_grp_flag_priv_feed_type;
-        
 WHEN BUSINESS_OBJ_ID_FEED_BUY THEN
     SET cur_group_flag = cur_user_grp_flag_priv_feed_buy;
         

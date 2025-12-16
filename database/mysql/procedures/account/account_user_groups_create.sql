@@ -33,7 +33,6 @@ in user_group.flag_business_obj_1ect_1;
 
 
 
-
 */
 DECLARE BUSINESS_OBJ_ID_USER                    INT             DEFAULT 1;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT                 INT             DEFAULT 2;
@@ -48,14 +47,11 @@ DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS         INT             DEFAULT 8;
 
 DECLARE BUSINESS_OBJ_ID_PIG_FARM                INT             DEFAULT 9;
 DECLARE BUSINESS_OBJ_ID_PIG_FARM_STAFF          INT             DEFAULT 10;
-DECLARE BUSINESS_OBJ_ID_PIG_RACE                INT             DEFAULT 11;
+
 DECLARE BUSINESS_OBJ_ID_PIG_RACE_LINE           INT             DEFAULT 12;
 
 
-DECLARE BUSINESS_OBJ_ID_SEMEN_SUPPLIER          INT             DEFAULT 13;
-DECLARE BUSINESS_OBJ_ID_FEED_SUPPLIER           INT             DEFAULT 14;
-DECLARE BUSINESS_OBJ_ID_FEED_BRAND              INT             DEFAULT 15;
-DECLARE BUSINESS_OBJ_ID_FEED_TYPE               INT             DEFAULT 16;
+
 DECLARE BUSINESS_OBJ_ID_FEED_BUY                INT             DEFAULT 17;
 DECLARE BUSINESS_OBJ_ID_FEED_BALANCE            INT             DEFAULT 18;
 
@@ -125,14 +121,9 @@ FROM (
                                         
                     BUSINESS_OBJ_ID_PIG_FARM,
                     BUSINESS_OBJ_ID_PIG_FARM_STAFF,
-                    BUSINESS_OBJ_ID_PIG_RACE,
                     BUSINESS_OBJ_ID_PIG_RACE_LINE, 
                     
-                    
-                    BUSINESS_OBJ_ID_SEMEN_SUPPLIER,
-                    BUSINESS_OBJ_ID_FEED_SUPPLIER,
-                    BUSINESS_OBJ_ID_FEED_BRAND,
-                    BUSINESS_OBJ_ID_FEED_TYPE,
+
                     BUSINESS_OBJ_ID_FEED_BUY,
                     BUSINESS_OBJ_ID_FEED_BALANCE,
                     

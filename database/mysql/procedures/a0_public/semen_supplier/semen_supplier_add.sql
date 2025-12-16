@@ -73,8 +73,8 @@ CALL basic_user_check(
     1, /* user must have an account*/
     0,
     
-    BUSINESS_OBJ_ID_SEMEN_SUPPLIER,
-    FLAG_BIT_OPERATION_ADD,
+    0, /* public business object*/
+    0,
     
     cur_user_account_id, 
     cur_user_group_id,
@@ -186,6 +186,25 @@ INSERT INTO semen_supplier(
 
 SELECT LAST_INSERT_ID() INTO cur_semen_supplier_id;
 
+
+SET cur_count = 0;
+
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    account_selection
+WHERE   account_id =  cur_user_account_id AND 
+        semen_supplier_id = cur_semen_supplier_id;
+        
+
+IF cur_count = 0 THEN 
+    INSERT INTO account_selection(
+        account_id,
+        semen_supplier_id
+    ) VALUES (
+        cur_user_account_id,
+        cur_semen_supplier_id
+    );
+END IF;
 
 
 END process_user;

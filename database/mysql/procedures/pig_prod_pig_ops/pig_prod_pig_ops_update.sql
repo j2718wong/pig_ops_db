@@ -59,8 +59,11 @@ DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE cur_prod_pig_ops_id                     INT             DEFAULT 0;
 
+
+DECLARE cur_acc_pig_ops_name                    VARCHAR(50);
 DECLARE cur_staff_name                          VARCHAR(50);
 DECLARE cur_notes                               VARCHAR(200);
+
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -132,26 +135,40 @@ IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN
 END IF;
 
 
+
+
 IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 THEN 
+    
+    /* This is necessary as notes is optional; It will leave blank in table row 
+     UI if no notes.*/
+
+
+    SELECT  b.name
+    INTO    cur_acc_pig_ops_name
+    FROM    pig_prod_pig_ops a 
+    LEFT OUTER JOIN account_pig_ops b ON a.account_pig_ops_id = b.id 
+    WHERE   a.id = in_pig_prod_pig_ops_id;
+
+
     SELECT  name
     INTO    cur_staff_name
     FROM    pig_farm_staff
     WHERE   id = in_staff_id;
-    
-    /* This is necessary as notes is optional; It will leave blank in table row 
-     UI if no notes.*/
-    SET cur_notes  = CONCAT('Pig operation done by ', cur_staff_name, '. ');
-    
-    
+
+    SET cur_notes  = CONCAT('Pig operation(', cur_acc_pig_ops_name ,') done by ', cur_staff_name, '. ');
+
+
     IF in_notes IS NOT NULL THEN 
         SET cur_notes  = CONCAT(cur_notes, in_notes);
     END IF;
-    
-    
+
+
     /* Truncate notes if needed. */
     IF LENGTH(cur_notes) >= 160 THEN 
         SET cur_notes = SUBSTRING(cur_notes, 1, 159);
     END IF;
+
+    
     
     
     INSERT INTO pig_prod_notes (
