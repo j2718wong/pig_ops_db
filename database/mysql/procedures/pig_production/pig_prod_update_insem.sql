@@ -5,8 +5,12 @@ CREATE PROCEDURE pig_prod_update_insem(
     in_user_id              INT,
     
     in_pig_prod_id          INT,
+    
     in_boar_id              INT,
-    in_semen_source_id      INT,
+    
+    in_semen_supplier_id    INT,
+    in_semen_sup_semen_id  	INT,    /* semen supplier semen_id*/
+    in_semen_ai_boar_id     INT,    /* semen coming from one of farm's boar*/
     
     
     in_semen_cost           DECIMAL(6,2),
@@ -42,6 +46,12 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+
+DECLARE INSEMINATION_TYPE_BOAR                  VARCHAR(2)      DEFAULT 'B';
+DECLARE INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL   VARCHAR(4)      DEFAULT 'AI_X';
+DECLARE INSEMINATION_TYPE_ARTIFICIAL_INTERNAL   VARCHAR(4)      DEFAULT 'AI_N';
+
+
 /* pig_production.flag bits*/
 DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 2;
 
@@ -70,6 +80,8 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_insemination          DATE            DEFAULT NULL;
 DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_insem_notes_id             INT             DEFAULT 0;
+
+DECLARE cur_insemination_type                   VARCHAR(4)      DEFAULT NULL;
 
 DECLARE cur_pig_prod_date_actual_birth          DATE;
 
@@ -160,9 +172,33 @@ IF cur_pig_prod_date_actual_birth IS NOT NULL THEN
 END IF;
 
 
+/* Check if semen is coming from external supplier*/
+IF in_boar_id > 0 THEN 
+    SET cur_insemination_type = INSEMINATION_TYPE_BOAR;
+ELSE 
+
+    IF in_semen_sup_semen_id > 0 THEN 
+        SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL;
+        
+    ELSE
+        IF in_semen_ai_boar_id > 0 THEN 
+            SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_INTERNAL;
+        END IF;
+        
+    END IF;
+END IF;
+
+
 UPDATE pig_production SET
+    insemination_type   = cur_insemination_type,
+
     boar_id             = in_boar_id,
     semen_source_id     = in_semen_source_id,
+    
+    semen_supplier_id   = in_semen_supplier_id,
+    semen_sup_semen_id  = in_semen_sup_semen_id,
+    semen_ai_boar_id    = in_semen_ai_boar_id,
+    
     semen_cost          = in_semen_cost,
     insemination_cost   = in_insemination_cost,
     

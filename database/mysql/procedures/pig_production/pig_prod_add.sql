@@ -6,7 +6,9 @@ CREATE PROCEDURE pig_prod_add(
    
     in_sow_id               INT,    /* Cannot be updated*/
     in_boar_id              INT,
-    in_semen_source_id      INT,
+    in_semen_supplier_id    INT,
+    in_semen_sup_semen_id   INT,    /* semen supplier semen_id*/
+    in_semen_ai_boar_id     INT,    /* semen coming from one of farm's boar*/
     
     in_semen_cost           DECIMAL(6,2),
     in_insemination_cost    DECIMAL(6,2),
@@ -62,7 +64,7 @@ DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
 DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 
 /* Date insemination is day 0.*/
-DECLARE PIG_NUM_DAYS_GESTATION					INT 			DEFAULT 114;
+DECLARE PIG_NUM_DAYS_GESTATION                  INT             DEFAULT 114;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
@@ -75,10 +77,7 @@ DECLARE cur_sow_boar_last_prod_id               INT             DEFAULT 0;
 DECLARE cur_sow_boar_last_prod_status_id        INT             DEFAULT 0;
 
 
-DECLARE cur_semen_source_boar_id                INT             DEFAULT 0;
-DECLARE cur_semen_source_semen_supplier_id      INT             DEFAULT 0;
-
-DECLARE cur_insemination_type                   VARCHAR(4)      DEFAULT NULL;
+DECLARE cur_insemination_type                   VARCHAR(4)      DEFAULT '';
 
 
 DECLARE cur_pig_farm_last_pig_production_id     INT             DEFAULT 0;
@@ -179,10 +178,10 @@ IF in_boar_id IS NOT NULL THEN
         pig_farm_id,
         farm_prod_id,
         
-        sow_id,
         insemination_type,
+        
+        sow_id,
         boar_id,
-        semen_source_id,
         
         semen_cost,
         insemination_cost,
@@ -197,10 +196,10 @@ IF in_boar_id IS NOT NULL THEN
         cur_sow_boar_pig_farm_id,
         cur_pig_farm_last_pig_production_id,
         
-        in_sow_id,
         INSEMINATION_TYPE_BOAR,
+        
+        in_sow_id,
         in_boar_id,
-        NULL,
         
         NULL,
         in_insemination_cost,
@@ -218,34 +217,33 @@ ELSE
     /* artificial insemination */
     
     /* Check if semen is coming from external supplier*/
-    SELECT  boar_id,
-            semen_supplier_id
-    
-    INTO    cur_semen_source_boar_id,
-            cur_semen_source_semen_supplier_id
-    FROM semen_source 
-    WHERE id = in_semen_source_id;
-    
-    IF cur_semen_source_semen_supplier_id > 0 THEN 
+    IF in_semen_sup_semen_id > 0 THEN 
         SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL;
         
     ELSE
-        IF cur_semen_source_boar_id > 0 THEN 
+        IF in_semen_ai_boar_id > 0 THEN 
             SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_INTERNAL;
         END IF;
         
     END IF;
     
     
+        
+        
+    
     INSERT INTO pig_production (
         account_id,
         pig_farm_id,
         farm_prod_id,
         
-        sow_id,
         insemination_type,
+        
+        sow_id,
         boar_id,
-        semen_source_id,
+        
+        semen_supplier_id,
+        semen_sup_semen_id,
+        semen_ai_boar_id,
         
         semen_cost,
         insemination_cost,
@@ -260,10 +258,14 @@ ELSE
         cur_sow_boar_pig_farm_id,
         cur_pig_farm_last_pig_production_id,
         
-        in_sow_id,
         cur_insemination_type,
+        
+        in_sow_id,
         NULL,
-        in_semen_source_id,
+        
+        in_semen_supplier_id,
+        in_semen_sup_semen_id,
+        in_semen_ai_boar_id,
         
         in_semen_cost,
         in_insemination_cost,

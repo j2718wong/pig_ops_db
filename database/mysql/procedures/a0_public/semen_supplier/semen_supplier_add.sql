@@ -52,10 +52,11 @@ DECLARE MAX_DELETED_INVALID_ENTRIES_PER_USER    INT             DEFAULT 3;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
-
 DECLARE cur_semen_supplier_id                   INT             DEFAULT 0;
 DECLARE cur_semen_supplier_flag                 INT             DEFAULT 0;
 DECLARE cur_semen_supplier_name                 VARCHAR(50)     DEFAULT '';
+
+DECLARE in_name_upper                           VARCHAR(50)     DEFAULT '';
 
 DECLARE cur_count                               INT             DEFAULT 0;
 
@@ -90,6 +91,10 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/* All public object names are in UPPER case. Except address names.*/
+SET in_name_upper = UPPER(in_name);
+
+
 /* Check for duplicate entry */
 IF in_address_level_3_id IS NULL THEN  
     SELECT  id
@@ -98,7 +103,7 @@ IF in_address_level_3_id IS NULL THEN
     WHERE   country_id          = in_country_id   AND
             address_level_1_id  = in_address_level_1_id   AND
             address_level_2_id  = in_address_level_2_id   AND
-            UPPER(name)         = UPPER(in_name)
+            UPPER(name)         = in_name_upper
     LIMIT   1;
 ELSE
     SELECT  id
@@ -108,7 +113,7 @@ ELSE
             address_level_1_id  = in_address_level_1_id   AND
             address_level_2_id  = in_address_level_2_id   AND
             address_level_3_id  = in_address_level_3_id   AND
-            UPPER(name)         = UPPER(in_name)
+            UPPER(name)         = in_name_upper
     LIMIT   1;
 END IF;
 
@@ -176,7 +181,7 @@ INSERT INTO semen_supplier(
    in_address_level_2_id,
    in_address_level_3_id,
    
-   in_name,
+   in_name_upper,
    in_contact_number,
    in_whatsapp,
    in_messenger,

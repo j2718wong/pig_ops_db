@@ -161,7 +161,7 @@ END IF;
 
 UPDATE feed_supplier  SET 
     address_level_3_id  = in_address_level_3_id,
-    name                = in_name,
+    name                = UPPER(in_name),
     
     contact_number      = in_contact_number,
     whatsapp            = in_whatsapp,

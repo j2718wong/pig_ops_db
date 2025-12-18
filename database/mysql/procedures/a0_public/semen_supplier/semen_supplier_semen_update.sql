@@ -1,25 +1,22 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS semen_supplier_update $$
-CREATE PROCEDURE semen_supplier_update(
+DROP PROCEDURE IF EXISTS semen_supplier_semen_update $$
+CREATE PROCEDURE semen_supplier_semen_update(
     in_user_id              INT,
     
-    in_semen_supplier_id    INT, 
+    in_semen_sup_semen_id   INT, 
 
-    in_name                 VARCHAR(50),
-    in_contact_number       VARCHAR(20),
-    in_whatsapp             VARCHAR(20),
-    in_messenger            VARCHAR(50)
+    in_name                 VARCHAR(50)
 )  
 
 BEGIN
 
 /** 
- * Will update semen_supplier entry to the system.
+ * Will update semen_supplier semen entry to the system.
  * 
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
- * @since August 24, 2025
+ * @since December 17, 2025
  *
  */
 
@@ -31,10 +28,16 @@ DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 DECLARE RES_NUM_NOT_ALLOWED_TO_UPDATE           INT             DEFAULT 21;
 
 
+DECLARE BUSINESS_OBJ_ID_SEMEN_SUPPLIER          INT             DEFAULT 13;
 
-/* semen_supplier.flag bits*/
-DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
-DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED     INT             DEFAULT 2;
+DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
+DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
+DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
+
+
+/* semen_supplier_semen.flag bits*/
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_DELETED      INT             DEFAULT 1;
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED     INT             DEFAULT 2;
 
 
 /* user.flag bits*/
@@ -50,9 +53,9 @@ DECLARE cur_added_by_user_id                    INT             DEFAULT 0;
 DECLARE cur_user_orig_account_id                INT             DEFAULT 0;
 
 
-DECLARE cur_semen_supplier_id                   INT             DEFAULT 0;
-DECLARE cur_semen_supplier_flag                 INT             DEFAULT 0;
-DECLARE cur_semen_supplier_name                 VARCHAR(50)     DEFAULT '';
+DECLARE cur_semen_supplier_semen_id             INT             DEFAULT 0;
+DECLARE cur_semen_supplier_semen_flag           INT             DEFAULT 0;
+DECLARE cur_semen_supplier_semen_name           VARCHAR(50)     DEFAULT '';
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -69,8 +72,8 @@ CALL basic_user_check(
     1, /* user must have an account*/
     0,
     
-    0, /* public business object*/
-    0,
+    BUSINESS_OBJ_ID_SEMEN_SUPPLIER,
+    FLAG_BIT_OPERATION_UPDATE,
     
     cur_user_account_id, 
     cur_user_group_id,
@@ -90,11 +93,11 @@ END IF;
 SELECT  flag,
         added_by_user_id
         
-INTO    cur_semen_supplier_flag,
+INTO    cur_semen_supplier_semen_flag,
         cur_added_by_user_id
         
-FROM    semen_supplier
-WHERE   id = in_semen_supplier_id;
+FROM    semen_supplier_semen
+WHERE   id = in_semen_sup_semen_id;
 
 SELECT  account_id
 INTO    cur_user_orig_account_id
@@ -123,15 +126,15 @@ IF cur_user_orig_account_id != cur_user_account_id THEN
     /* Will allow update only if user.flag.FLAG_BIT_SYSTEM_SUPER_USER is SET*/
 
 ELSE
-    IF (cur_semen_supplier_flag & FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED) > 0 THEN 
+    IF (cur_semen_supplier_semen_flag & FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED) > 0 THEN 
         SET res_num     = RES_NUM_NOT_ALLOWED_TO_UPDATE;
         SET res_code    = "RES_NUM_NOT_ALLOWED_TO_UPDATE";
-        SET res_code    = "Semen supplier is already verified";
+        SET res_code    = "Semen supplier semen is already verified";
         
         LEAVE process_user;
     END IF;
     
-    /* Will allow update only if feed_supplier.flag.FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED 
+    /* Will allow update only if feed_supplier.flag.FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED 
     is CLEAR*/
 
 
@@ -139,15 +142,12 @@ END IF;
 
 
 
-UPDATE semen_supplier SET    
+UPDATE semen_supplier_semen SET    
     name                = in_name,
-    contact_number      = in_contact_number,
-    whatsapp            = in_whatsapp,
-    messenger           = in_messenger,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
-WHERE id = in_semen_supplier_id;
+WHERE id = in_semen_sup_semen_id;
 
 
 END process_user;
@@ -157,19 +157,20 @@ SELECT
     flag,
     name
 INTO 
-    cur_semen_supplier_flag,
-    cur_semen_supplier_name
-FROM semen_supplier
-WHERE id = in_semen_supplier_id;
+    cur_semen_supplier_semen_flag,
+    cur_semen_supplier_semen_name
+FROM semen_supplier_semen
+WHERE id = in_semen_sup_semen_id;
+
 
 SELECT 
     res_num                             AS result_number,
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_semen_supplier_id               AS semen_supplier_id,
-    cur_semen_supplier_flag             AS semen_supplier_flag,
-    cur_semen_supplier_name             AS semen_supplier_name;
+    in_semen_sup_semen_id               AS semen_supplier_semen_id,
+    cur_semen_supplier_semen_flag       AS semen_supplier_semen_flag,
+    cur_semen_supplier_semen_name       AS semen_supplier_semen_name;
 
 END $$
 
