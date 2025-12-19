@@ -42,11 +42,13 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
+DECLARE in_name_upper                           VARCHAR(50)     DEFAULT '';
+
+
 DECLARE cur_semen_supplier_semen_id             INT             DEFAULT 0;
 DECLARE cur_semen_supplier_semen_flag           INT             DEFAULT 0;
 DECLARE cur_semen_supplier_semen_name           VARCHAR(50)     DEFAULT '';
 
-DECLARE in_name_upper                           VARCHAR(50)     DEFAULT '';
 
 DECLARE cur_count                               INT             DEFAULT 0;
 
@@ -90,7 +92,7 @@ SET in_name_upper = UPPER(in_name);
 SELECT  id
 INTO    cur_semen_supplier_semen_id
 FROM    semen_supplier_semen
-WHERE   supplier_id = in_semen_supplier_id AND 
+WHERE   semen_supplier_id   = in_semen_supplier_id AND 
         UPPER(name)         = in_name_upper
 LIMIT   1;
 
@@ -166,7 +168,7 @@ INTO
     cur_semen_supplier_semen_flag,
     cur_semen_supplier_semen_name
 FROM semen_supplier_semen
-WHERE id = cur_semen_supplier_id;
+WHERE id = cur_semen_supplier_semen_id;
 
 
 

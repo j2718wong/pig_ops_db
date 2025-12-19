@@ -50,6 +50,9 @@ DECLARE cur_added_by_user_id                    INT             DEFAULT 0;
 DECLARE cur_user_orig_account_id                INT             DEFAULT 0;
 
 
+DECLARE in_name_upper                           VARCHAR(50)     DEFAULT '';
+
+
 DECLARE cur_semen_supplier_id                   INT             DEFAULT 0;
 DECLARE cur_semen_supplier_flag                 INT             DEFAULT 0;
 DECLARE cur_semen_supplier_name                 VARCHAR(50)     DEFAULT '';
@@ -107,6 +110,29 @@ SELECT  flag
 INTO    cur_user_flag
 FROM    user
 WHERE   id = in_user_id;
+
+
+
+
+/* Check for duplicate entry */
+
+SELECT  id
+INTO    cur_semen_supplier_id
+FROM    semen_supplier
+WHERE   id                  != in_semen_supplier_id AND 
+        UPPER(name)         = in_name_upper
+LIMIT   1;
+
+
+IF cur_semen_supplier_id > 0 THEN 
+    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
+    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
+    
+    LEAVE process_user;
+END IF;
+
+
+
 
 
 /* Only users of the account who added this entry can update.

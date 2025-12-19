@@ -1,7 +1,7 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS account_selection_add $$
-CREATE PROCEDURE account_selection_add(
+DROP PROCEDURE IF EXISTS account_selection_delete $$
+CREATE PROCEDURE account_selection_delete(
     in_user_id              INT,
     
     in_feed_brand_id        INT,
@@ -16,7 +16,7 @@ BEGIN
  * 
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
- * @since September 10, 2025
+ * @since December 19, 2025
  *
  */
 
@@ -71,53 +71,35 @@ END IF;
 
 
 IF in_feed_supplier_id > 0 THEN 
-    SELECT  COUNT(*) 
-    INTO    cur_count
-    FROM    account_selection
-    WHERE   account_id =  cur_user_account_id AND 
-            feed_supplier_id = in_feed_supplier_id AND
-            flag & FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED = 0;
-            
-
-    IF cur_count = 0 THEN 
-        INSERT INTO account_selection(
-            account_id,
-            feed_supplier_id,
-            
-            added_by_user_id
-        ) VALUES (
-            cur_user_account_id,
-            in_feed_supplier_id,
-            
-            in_user_id
-        );
-    END IF;
+    /* The already deleted entries, should not be updated
+    to preserve who and when the entries were deleted.
+    */
+    
+    UPDATE account_selection SET
+        flag = flag | FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED,
+        last_update_user_id = in_user_id,
+        dt_last_update = CURRENT_TIMESTAMP
+    
+    WHERE account_id = cur_user_account_id          AND 
+          feed_supplier_id = in_feed_supplier_id    AND 
+          (flag & FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED) = 0;
 
 END IF;
 
 
 IF in_semen_supplier_id > 0 THEN 
-    SELECT  COUNT(*) 
-    INTO    cur_count
-    FROM    account_selection
-    WHERE   account_id =  cur_user_account_id AND 
-            semen_supplier_id = in_semen_supplier_id AND
-            flag & FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED = 0;
-            
-
-    IF cur_count = 0 THEN 
-        INSERT INTO account_selection(
-            account_id,
-            semen_supplier_id,
-            
-            added_by_user_id
-        ) VALUES (
-            cur_user_account_id,
-            in_semen_supplier_id,
-            
-            in_user_id
-        );
-    END IF;
+    /* The already deleted entries, should not be updated
+    to preserve who and when the entries were deleted.
+    */
+    
+    UPDATE account_selection SET
+        flag = flag | FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED,
+        last_update_user_id = in_user_id,
+        dt_last_update = CURRENT_TIMESTAMP
+    
+    WHERE account_id = cur_user_account_id          AND 
+          semen_supplier_id = in_semen_supplier_id  AND 
+          (flag & FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED) = 0;
 
 END IF;
 

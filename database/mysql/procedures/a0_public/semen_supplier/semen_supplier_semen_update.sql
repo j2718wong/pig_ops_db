@@ -49,10 +49,14 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_user_flag                           INT             DEFAULT 0;
 
 
+DECLARE in_name_upper                           VARCHAR(50)     DEFAULT '';
+
+
 DECLARE cur_added_by_user_id                    INT             DEFAULT 0;
 DECLARE cur_user_orig_account_id                INT             DEFAULT 0;
 
 
+DECLARE cur_semen_supplier_id                   INT             DEFAULT 0;
 DECLARE cur_semen_supplier_semen_id             INT             DEFAULT 0;
 DECLARE cur_semen_supplier_semen_flag           INT             DEFAULT 0;
 DECLARE cur_semen_supplier_semen_name           VARCHAR(50)     DEFAULT '';
@@ -89,11 +93,14 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+
 /* Get the account_id of the user who originally entered this entry. */
-SELECT  flag,
+SELECT  semen_supplier_id,
+        flag,
         added_by_user_id
         
-INTO    cur_semen_supplier_semen_flag,
+INTO    cur_semen_supplier_id,
+        cur_semen_supplier_semen_flag,
         cur_added_by_user_id
         
 FROM    semen_supplier_semen
@@ -103,6 +110,30 @@ SELECT  account_id
 INTO    cur_user_orig_account_id
 FROM    user
 WHERE   id = cur_added_by_user_id;
+
+
+/* All public object names are in UPPER case. Except address names.*/
+SET in_name_upper = UPPER(in_name);
+
+
+/* Check for duplicate entry */
+
+SELECT  id
+INTO    cur_semen_supplier_semen_id
+FROM    semen_supplier_semen
+WHERE   semen_supplier_id   = cur_semen_supplier_id AND 
+        id                  != in_semen_sup_semen_id AND 
+        UPPER(name)         = in_name_upper
+LIMIT   1;
+
+
+IF cur_semen_supplier_semen_id > 0 THEN 
+    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
+    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
+    
+    LEAVE process_user;
+END IF;
+
 
 
 /* Get user flag*/
