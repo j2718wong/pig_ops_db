@@ -133,7 +133,7 @@ SELECT  COUNT(*)
 INTO    cur_count
 FROM    semen_supplier
 WHERE   added_by_user_id = in_user_id AND 
-        (flag & FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED) = 0;
+        (flag & 3) = 0;
 
 IF cur_count >= MAX_UNVERIFIED_ENTRIES_PER_USER THEN 
     SET res_num     = RES_NUM_CANNOT_ADD;
@@ -149,7 +149,9 @@ SELECT  COUNT(*)
 INTO    cur_count
 FROM    semen_supplier
 WHERE   added_by_user_id = in_user_id AND 
-        (flag & FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED) > 0;
+        (flag & FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED) > 0 AND 
+        deleted_by_user_id IS NOT NULL AND 
+        deleted_by_user_id != in_user_id; 
         
 IF cur_count >= MAX_DELETED_INVALID_ENTRIES_PER_USER THEN 
     SET res_num     = RES_NUM_CANNOT_ADD;

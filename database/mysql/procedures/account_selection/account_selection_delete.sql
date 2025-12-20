@@ -32,6 +32,15 @@ DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 DECLARE FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED   INT             DEFAULT 1;
 
 
+/* semen_supplier.flag bits*/
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED     INT             DEFAULT 2;
+
+
+/* semen_supplier_semen.flag bits*/
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_DELETED      INT       DEFAULT 1;
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED     INT       DEFAULT 2;
+
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -100,7 +109,49 @@ IF in_semen_supplier_id > 0 THEN
     WHERE account_id = cur_user_account_id          AND 
           semen_supplier_id = in_semen_supplier_id  AND 
           (flag & FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED) = 0;
+    
+    
+    SELECT  COUNT(*)
+    INTO    cur_count
+    FROM    account_selection
+    WHERE   semen_supplier_id = in_semen_supplier_id AND 
+            account_id != cur_user_account_id;
 
+
+    /* Delete the semen_supplier on these condiitons:
+    1.) The account who created it, is the one hwo deleted it.
+    Nobody else is using it.
+    
+    2.) The semen_supplier is not verified.
+    semen_supplier.flag.FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED = 0
+    
+    
+    
+    */
+    IF cur_count = 0 THEN
+        UPDATE semen_supplier SET 
+            flag = flag | FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED,
+            deleted_by_user_id = in_user_id,
+            dt_last_update = CURRENT_TIMESTAMP
+        WHERE id = in_semen_supplier_id;
+        
+        
+        /* Delete semen_supplier_semen of the deleted semen_supplier if 
+        nobody is using them
+
+        */
+        
+        UPDATE semen_supplier_semen SET 
+            flag = flag | FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_DELETED,
+            last_update_user_id = in_user_id,
+            dt_last_update = CURRENT_TIMESTAMP
+        WHERE semen_supplier_id = in_semen_supplier_id AND 
+            usage_counter = 0;
+        
+        
+    END IF;
+    
+    
 END IF;
 
 

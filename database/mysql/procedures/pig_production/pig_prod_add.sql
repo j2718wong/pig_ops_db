@@ -46,6 +46,18 @@ DECLARE INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL   VARCHAR(4)      DEFAULT 'AI_X';
 DECLARE INSEMINATION_TYPE_ARTIFICIAL_INTERNAL   VARCHAR(4)      DEFAULT 'AI_N';
 
 
+/* semen_supplier.flag bits*/
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED     INT             DEFAULT 2;
+
+
+/* semen_supplier_semen.flag bits*/
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_DELETED  INT             DEFAULT 1;
+DECLARE FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED INT             DEFAULT 2;
+
+
+
+
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
 DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
 DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
@@ -65,6 +77,11 @@ DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 
 /* Date insemination is day 0.*/
 DECLARE PIG_NUM_DAYS_GESTATION                  INT             DEFAULT 114;
+
+
+DECLARE MIN_COUNT_ACCOUNT_SEMEN_SUPPLIER_IS_VERIFIED  INT       DEFAULT 3;
+DECLARE MIN_COUNT_ACCOUNT_SEMEN_IS_VERIFIED     INT             DEFAULT 3;
+
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
@@ -87,6 +104,12 @@ DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_ai_id                      INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
+
+DECLARE cur_count                               INT             DEFAULT 0;
+DECLARE cur_count_semen_sup_semen_usage         INT             DEFAULT 0;
+DECLARE cur_count_semen_sup_semen_account       INT             DEFAULT 0;
+DECLARE cur_flag_bit                            INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -219,7 +242,6 @@ ELSE
     /* Check if semen is coming from external supplier*/
     IF in_semen_sup_semen_id > 0 THEN 
         SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL;
-        
     ELSE
         IF in_semen_ai_boar_id > 0 THEN 
             SET cur_insemination_type = INSEMINATION_TYPE_ARTIFICIAL_INTERNAL;
@@ -278,6 +300,89 @@ ELSE
     );
 
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_id;
+    
+    
+    
+    IF in_semen_supplier_id > 0 THEN 
+    
+        /* Insert INTO account_selection*/
+        SELECT  COUNT(*) 
+        INTO    cur_count
+        FROM    account_selection
+        WHERE   account_id =  cur_user_account_id AND 
+                semen_supplier_id = in_semen_supplier_id;
+                
+        IF cur_count = 0 THEN 
+            INSERT INTO account_selection(
+                account_id,
+                semen_supplier_id,
+                added_by_user_id
+            ) VALUES (
+                cur_user_account_id,
+                in_semen_supplier_id,
+                in_user_id
+            );
+        END IF;
+        
+        
+        SELECT  COUNT(*) 
+        INTO    cur_count
+        FROM    account_selection
+        WHERE   semen_supplier_id = in_semen_supplier_id;
+                
+        /* Update semen_supplier.flag.FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED*/
+        IF cur_count >= MIN_COUNT_ACCOUNT_SEMEN_SUPPLIER_IS_VERIFIED THEN
+            UPDATE semen_supplier SET 
+                flag = flag | FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED
+            WHERE id = in_semen_supplier_id;
+        END IF;
+        
+        
+        SELECT  COUNT(*) 
+        INTO    cur_count
+        FROM    account_selection
+        WHERE   account_id =  cur_user_account_id AND 
+                semen_sup_semen_id = in_semen_sup_semen_id;
+                
+        IF cur_count = 0 THEN 
+            INSERT INTO account_selection(
+                account_id,
+                semen_sup_semen_id,
+                added_by_user_id
+            ) VALUES (
+                cur_user_account_id,
+                in_semen_sup_semen_id,
+                in_user_id
+            );
+        END IF;
+        
+        
+        SELECT  COUNT(*)
+        INTO    cur_count_semen_sup_semen_account
+        FROM    account_selection
+        WHERE   semen_sup_semen_id = in_semen_sup_semen_id;
+    
+        /* Need to count the usage of this.*/
+        SELECT COUNT(*) 
+        INTO cur_count_semen_sup_semen_usage 
+        FROM pig_production
+        WHERE semen_sup_semen_id = in_semen_sup_semen_id;
+            
+        
+        IF cur_count_semen_sup_semen_account >= MIN_COUNT_ACCOUNT_SEMEN_IS_VERIFIED THEN 
+            SET cur_flag_bit = FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED;
+        END IF;
+        
+        
+        UPDATE semen_supplier_semen SET 
+            account_counter     = cur_count_semen_sup_semen_account,
+            usage_counter       = cur_count_semen_sup_semen_usage,
+            flag                = flag | cur_flag_bit
+        WHERE id = in_semen_sup_semen_id;
+        
+        
+    
+    END IF;
     
     
     INSERT INTO pig_prod_ai(

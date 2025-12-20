@@ -5,6 +5,8 @@ CREATE PROCEDURE semen_supplier_update(
     in_user_id              INT,
     
     in_semen_supplier_id    INT, 
+    
+    in_address_level_3_id   INT,
 
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
@@ -54,8 +56,18 @@ DECLARE in_name_upper                           VARCHAR(50)     DEFAULT '';
 
 
 DECLARE cur_semen_supplier_id                   INT             DEFAULT 0;
+DECLARE cur_semen_supplier_country_id           INT             DEFAULT 0;
+DECLARE cur_semen_supplier_address_level_1_id   INT             DEFAULT 0;
+DECLARE cur_semen_supplier_address_level_2_id   INT             DEFAULT 0;
+DECLARE cur_semen_supplier_address_level_3_id   INT             DEFAULT 0;
+
+
 DECLARE cur_semen_supplier_flag                 INT             DEFAULT 0;
 DECLARE cur_semen_supplier_name                 VARCHAR(50)     DEFAULT '';
+DECLARE cur_semen_supplier_contact_number       VARCHAR(20)     DEFAULT NULL;
+DECLARE cur_semen_supplier_whatsapp             VARCHAR(20)     DEFAULT NULL;
+DECLARE cur_semen_supplier_messenger            VARCHAR(50)     DEFAULT NULL;
+
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -112,7 +124,7 @@ FROM    user
 WHERE   id = in_user_id;
 
 
-
+SET in_name_upper = UPPER(in_name);
 
 /* Check for duplicate entry */
 
@@ -165,8 +177,10 @@ END IF;
 
 
 
-UPDATE semen_supplier SET    
-    name                = in_name,
+UPDATE semen_supplier SET
+    address_level_3_id  = in_address_level_3_id,
+
+    name                = in_name_upper,
     contact_number      = in_contact_number,
     whatsapp            = in_whatsapp,
     messenger           = in_messenger,
@@ -180,11 +194,30 @@ END process_user;
 
 
 SELECT
+    country_id,
+    address_level_1_id,
+    address_level_2_id,
+    address_level_3_id,
+    
     flag,
-    name
+    name,
+    contact_number,
+    whatsapp,
+    messenger
+    
 INTO 
+    cur_semen_supplier_country_id,
+    
+    cur_semen_supplier_address_level_1_id,
+    cur_semen_supplier_address_level_2_id,
+    cur_semen_supplier_address_level_3_id,
+    
     cur_semen_supplier_flag,
-    cur_semen_supplier_name
+    cur_semen_supplier_name,
+    cur_semen_supplier_contact_number,
+    cur_semen_supplier_whatsapp,
+    cur_semen_supplier_messenger
+    
 FROM semen_supplier
 WHERE id = in_semen_supplier_id;
 
@@ -193,9 +226,18 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_semen_supplier_id               AS semen_supplier_id,
-    cur_semen_supplier_flag             AS semen_supplier_flag,
-    cur_semen_supplier_name             AS semen_supplier_name;
+    
+    cur_semen_supplier_country_id           AS country_id,
+    cur_semen_supplier_address_level_1_id   AS level_1_id,
+    cur_semen_supplier_address_level_2_id   AS level_2_id,
+    cur_semen_supplier_address_level_3_id   AS level_3_id,
+    
+    in_semen_supplier_id                AS semen_supplier_id,
+    cur_semen_supplier_flag             AS flag,
+    cur_semen_supplier_name             AS name,
+    cur_semen_supplier_contact_number   AS contact_number,
+    cur_semen_supplier_whatsapp         AS whatsapp,
+    cur_semen_supplier_messenger        AS messenger;
 
 END $$
 
