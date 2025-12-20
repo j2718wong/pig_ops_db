@@ -7,6 +7,9 @@ CREATE PROCEDURE semen_supplier_update(
     in_semen_supplier_id    INT, 
     
     in_address_level_3_id   INT,
+    
+    in_latitude             DECIMAL(10,5),
+    in_longitude            DECIMAL(10,5),
 
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
@@ -60,6 +63,9 @@ DECLARE cur_semen_supplier_country_id           INT             DEFAULT 0;
 DECLARE cur_semen_supplier_address_level_1_id   INT             DEFAULT 0;
 DECLARE cur_semen_supplier_address_level_2_id   INT             DEFAULT 0;
 DECLARE cur_semen_supplier_address_level_3_id   INT             DEFAULT 0;
+DECLARE cur_semen_supplier_address_latitude     DECIMAL(10,5)   DEFAULT NULL;
+DECLARE cur_semen_supplier_address_longitude    DECIMAL(10,5)   DEFAULT NULL;
+
 
 
 DECLARE cur_semen_supplier_flag                 INT             DEFAULT 0;
@@ -179,6 +185,9 @@ END IF;
 
 UPDATE semen_supplier SET
     address_level_3_id  = in_address_level_3_id,
+    
+    latitude            = in_latitude,
+    longitude           = in_longitude,
 
     name                = in_name_upper,
     contact_number      = in_contact_number,
@@ -199,6 +208,9 @@ SELECT
     address_level_2_id,
     address_level_3_id,
     
+    latitude,
+    longitude,
+    
     flag,
     name,
     contact_number,
@@ -211,6 +223,9 @@ INTO
     cur_semen_supplier_address_level_1_id,
     cur_semen_supplier_address_level_2_id,
     cur_semen_supplier_address_level_3_id,
+    
+    cur_semen_supplier_address_latitude,
+    cur_semen_supplier_address_longitude,
     
     cur_semen_supplier_flag,
     cur_semen_supplier_name,
@@ -227,17 +242,23 @@ SELECT
     res_desc                            AS result_desc,
     
     
-    cur_semen_supplier_country_id           AS country_id,
-    cur_semen_supplier_address_level_1_id   AS level_1_id,
-    cur_semen_supplier_address_level_2_id   AS level_2_id,
-    cur_semen_supplier_address_level_3_id   AS level_3_id,
-    
     in_semen_supplier_id                AS semen_supplier_id,
     cur_semen_supplier_flag             AS flag,
     cur_semen_supplier_name             AS name,
     cur_semen_supplier_contact_number   AS contact_number,
     cur_semen_supplier_whatsapp         AS whatsapp,
-    cur_semen_supplier_messenger        AS messenger;
+    cur_semen_supplier_messenger        AS messenger,
+    
+    
+    cur_semen_supplier_country_id           AS country_id,
+    cur_semen_supplier_address_level_1_id   AS level_1_id,
+    cur_semen_supplier_address_level_2_id   AS level_2_id,
+    cur_semen_supplier_address_level_3_id   AS level_3_id,
+    
+    cur_semen_supplier_address_latitude     AS latitude,
+    cur_semen_supplier_address_longitude    AS longitude;
+    
+    
 
 END $$
 
