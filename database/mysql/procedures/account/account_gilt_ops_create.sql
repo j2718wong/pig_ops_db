@@ -22,7 +22,7 @@ DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
 
 
 
-/* Default account lactating piglets operation; numdays since birth*/
+/* Default account lactating piglets operation; num_days since birth*/
 DECLARE GILT_OPS_NUM_DAYS_HCV                   INT             DEFAULT 161;
 DECLARE GILT_OPS_NUM_DAYS_PLE                   INT             DEFAULT 182;
 DECLARE GILT_OPS_NUM_DAYS_PCV                   INT             DEFAULT 189;

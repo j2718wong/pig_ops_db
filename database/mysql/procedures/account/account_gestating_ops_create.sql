@@ -21,7 +21,7 @@ DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
 DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 
 
-/* Default account gestating operation; numdays since insemination*/
+/* Default account gestating operation; num_days since insemination*/
 DECLARE GESTATING_OPS_NUM_DAYS_CHECK_PREGNANT   INT             DEFAULT 21;
 DECLARE GESTATING_OPS_NUM_DAYS_INJECT_IRON      INT             DEFAULT 80;
 DECLARE GESTATING_OPS_NUM_DAYS_DEWORM           INT             DEFAULT 100;

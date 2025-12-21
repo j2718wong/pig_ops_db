@@ -47,7 +47,17 @@ DECLARE ACCOUNT_STATUS_ID_TRIAL_EXPIRED         INT             DEFAULT 2;
 DECLARE ACCOUNT_STATUS_ID_UNPAID_BILL           INT             DEFAULT 3;
 
 
-/* account.flag_setting bits*/
+/* account.flag_setting bits
+FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH
+0 = Date of birth is counted as DAY 0
+1 = Date of birth is counted as DAY 1; default
+
+FLAG_BIT_DAY_1_ON_DATE_OF_INSEM
+0 = Date of insemination is counted as DAY 0; default
+1 = Date of insemination is counted as DAY 1;
+
+
+*/
 DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH         INT             DEFAULT 1;
 DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_INSEM         INT             DEFAULT 2;
 
@@ -138,16 +148,14 @@ IF cur_account_id > 0 THEN
 END IF;
 
 
-/* Note: 
-    FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH is SET on account creation
-    FLAG_BIT_DAY_1_ON_DATE_OF_INSEM is CLEAR on account creation.
-*/
+
 
 
 INSERT INTO account(
     name,
     country_id,
     flag,
+	
     flag_settings,
     
     status_id,
@@ -157,6 +165,7 @@ INSERT INTO account(
     in_name,
     in_country_id,
     1,
+	
     FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH,
     
     ACCOUNT_STATUS_ID_ON_TRIAL,

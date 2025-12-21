@@ -22,7 +22,7 @@ DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
 
 
 
-/* Default account lactating piglets operation; numdays since birth*/
+/* Default account lactating piglets operation; num_days since birth*/
 DECLARE LACTATING_OPS_NUM_DAYS_CUT_TEETH_AND_TAIL INT           DEFAULT 3;
 DECLARE LACTATING_OPS_NUM_DAYS_INJECT_IRON_1    INT             DEFAULT 3;
 DECLARE LACTATING_OPS_NUM_DAYS_INJECT_IRON_2    INT             DEFAULT 13;
@@ -32,7 +32,7 @@ DECLARE LACTATING_OPS_NUM_DAYS_CASTRATION       INT             DEFAULT 22;
 DECLARE LACTATING_OPS_NUM_DAYS_DEWORM           INT             DEFAULT 25;
 
 
-/* Default account lactating sow operation; numdays since birth*/
+/* Default account lactating sow operation; num_days since birth*/
 DECLARE LACTATING_SOW_OPS_NUM_DAYS_DEWORM       INT             DEFAULT 30;
 
 
