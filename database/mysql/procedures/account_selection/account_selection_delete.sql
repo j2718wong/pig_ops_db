@@ -32,9 +32,9 @@ DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 DECLARE FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED   INT             DEFAULT 1;
 
 
-/* semen_supplier.flag bits*/
-DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
-DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED     INT             DEFAULT 2;
+/* supplier.flag bits*/
+DECLARE FLAG_BIT_SUPPLIER_IS_DELETED            INT             DEFAULT 1;
+DECLARE FLAG_BIT_SUPPLIER_IS_VERIFIED           INT             DEFAULT 2;
 
 
 /* semen_supplier_semen.flag bits*/
@@ -111,26 +111,35 @@ IF in_semen_supplier_id > 0 THEN
           (flag & FLAG_BIT_ACCOUNT_SELECTION_IS_DELETED) = 0;
     
     
+    /* Note a feed supplier, gilt supplier and semen supplier can be
+    one entity. They all point to common_supplier table.
+    */
+    
     SELECT  COUNT(*)
     INTO    cur_count
     FROM    account_selection
-    WHERE   semen_supplier_id = in_semen_supplier_id AND 
+    WHERE   (
+            feed_supplier_id    = in_semen_supplier_id OR
+            semen_supplier_id   = in_semen_supplier_id OR 
+            gilt_supplier_id    = in_semen_supplier_id
+            )
+            AND 
             account_id != cur_user_account_id;
 
 
-    /* Delete the semen_supplier on these condiitons:
-    1.) The account who created it, is the one hwo deleted it.
+    /* Delete the supplier on these condiitons:
+    1.) The account who created it, is the one who deleted it.
     Nobody else is using it.
     
-    2.) The semen_supplier is not verified.
-    semen_supplier.flag.FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED = 0
+    2.) The supplier is not verified.
+    supplier.flag.FLAG_BIT_SUPPLIER_IS_VERIFIED = 0
     
     
     
     */
     IF cur_count = 0 THEN
-        UPDATE semen_supplier SET 
-            flag = flag | FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED,
+        UPDATE common_supplier SET 
+            flag = flag | FLAG_BIT_SUPPLIER_IS_DELETED,
             deleted_by_user_id = in_user_id,
             dt_last_update = CURRENT_TIMESTAMP
         WHERE id = in_semen_supplier_id;

@@ -9,6 +9,9 @@ CREATE PROCEDURE feed_supplier_add(
     in_address_level_2_id   INT,
     in_address_level_3_id   INT,
     
+    in_latitude             DECIMAL(10,5),
+    in_longitude            DECIMAL(10,5),
+    
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
     in_whatsapp             VARCHAR(20),
@@ -157,6 +160,9 @@ INSERT INTO feed_supplier(
     address_level_2_id,
     address_level_3_id,
     
+    latitude,
+    longitude,
+    
     name,
     contact_number,
     whatsapp,
@@ -168,6 +174,9 @@ INSERT INTO feed_supplier(
    in_address_level_1_id,
    in_address_level_2_id,
    in_address_level_3_id,
+   
+   in_latitude,
+   in_longitude,
    
    in_name,
    in_contact_number,

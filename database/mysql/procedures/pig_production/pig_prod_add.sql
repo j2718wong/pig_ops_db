@@ -46,9 +46,9 @@ DECLARE INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL   VARCHAR(4)      DEFAULT 'AI_X';
 DECLARE INSEMINATION_TYPE_ARTIFICIAL_INTERNAL   VARCHAR(4)      DEFAULT 'AI_N';
 
 
-/* semen_supplier.flag bits*/
-DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_DELETED      INT             DEFAULT 1;
-DECLARE FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED     INT             DEFAULT 2;
+/* supplier.flag bits*/
+DECLARE FLAG_BIT_SUPPLIER_IS_DELETED            INT             DEFAULT 1;
+DECLARE FLAG_BIT_SUPPLIER_IS_VERIFIED           INT             DEFAULT 2;
 
 
 /* semen_supplier_semen.flag bits*/
@@ -79,7 +79,7 @@ DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
 DECLARE PIG_NUM_DAYS_GESTATION                  INT             DEFAULT 114;
 
 
-DECLARE MIN_COUNT_ACCOUNT_SEMEN_SUPPLIER_IS_VERIFIED  INT       DEFAULT 3;
+DECLARE MIN_COUNT_ACCOUNT_SUPPLIER_IS_VERIFIED  INT             DEFAULT 3;
 DECLARE MIN_COUNT_ACCOUNT_SEMEN_IS_VERIFIED     INT             DEFAULT 3;
 
 
@@ -305,7 +305,7 @@ ELSE
     
     IF in_semen_supplier_id > 0 THEN 
     
-        /* Insert INTO account_selection*/
+        /* Insert account_id INTO account_selection.semen_supplier_id*/
         SELECT  COUNT(*) 
         INTO    cur_count
         FROM    account_selection
@@ -325,19 +325,25 @@ ELSE
         END IF;
         
         
+        /*Compute common_supplier.flag.FLAG_BIT_SUPPLIER_IS_VERIFIED*/
         SELECT  COUNT(*) 
         INTO    cur_count
         FROM    account_selection
-        WHERE   semen_supplier_id = in_semen_supplier_id;
+        WHERE   (feed_supplier_id = in_semen_supplier_id OR
+                semen_supplier_id = in_semen_supplier_id OR
+                gilt_supplier_id  = in_semen_supplier_id) AND 
                 
-        /* Update semen_supplier.flag.FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED*/
-        IF cur_count >= MIN_COUNT_ACCOUNT_SEMEN_SUPPLIER_IS_VERIFIED THEN
-            UPDATE semen_supplier SET 
-                flag = flag | FLAG_BIT_SEMEN_SUPPLIER_IS_VERIFIED
+                account_id !=  cur_user_account_id;
+                
+        /* Update common_supplier.flag.FLAG_BIT_SUPPLIER_IS_VERIFIED*/
+        IF cur_count >= MIN_COUNT_ACCOUNT_SUPPLIER_IS_VERIFIED THEN
+            UPDATE common_supplier SET 
+                flag = flag | FLAG_BIT_SUPPLIER_IS_VERIFIED
             WHERE id = in_semen_supplier_id;
         END IF;
         
         
+        /* Insert account_id INTO account_selection.semen_sup_semen_id*/
         SELECT  COUNT(*) 
         INTO    cur_count
         FROM    account_selection
@@ -362,12 +368,6 @@ ELSE
         FROM    account_selection
         WHERE   semen_sup_semen_id = in_semen_sup_semen_id;
     
-        /* Need to count the usage of this.*/
-        SELECT COUNT(*) 
-        INTO cur_count_semen_sup_semen_usage 
-        FROM pig_production
-        WHERE semen_sup_semen_id = in_semen_sup_semen_id;
-            
         
         IF cur_count_semen_sup_semen_account >= MIN_COUNT_ACCOUNT_SEMEN_IS_VERIFIED THEN 
             SET cur_flag_bit = FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED;
@@ -376,9 +376,22 @@ ELSE
         
         UPDATE semen_supplier_semen SET 
             account_counter     = cur_count_semen_sup_semen_account,
-            usage_counter       = cur_count_semen_sup_semen_usage,
+            usage_counter       = usage_counter + 1,
             flag                = flag | cur_flag_bit
         WHERE id = in_semen_sup_semen_id;
+        
+        
+        
+        /* Update supplier account counter and usage*/
+        SELECT  COUNT(*) 
+        INTO    cur_count
+        FROM    account_selection
+        WHERE   semen_supplier_id = in_semen_supplier_id;
+        
+        UPDATE  common_supplier SET 
+            ss_account_counter  = cur_count,
+            ss_usage_counter    = ss_usage_counter + 1
+        WHERE id = in_semen_supplier_id;
         
         
     
