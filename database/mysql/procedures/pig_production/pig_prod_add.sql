@@ -236,6 +236,21 @@ IF in_boar_id IS NOT NULL THEN
 
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_id;
 
+    UPDATE sow_boar SET
+        last_prod_id        = cur_pig_prod_id,
+        mate_count          = mate_count + 1,
+        date_last_mate      = in_date_insemination,
+        last_mate_sow_boar_id= in_sow_id
+    WHERE id = in_boar_id;
+
+    UPDATE sow_boar SET
+        last_prod_id        = cur_pig_prod_id,
+        mate_count          = mate_count + 1,
+        date_last_mate      = in_date_insemination,
+        last_mate_sow_boar_id= in_boar_id
+    WHERE id = in_sow_id;
+
+
 ELSE
     /* artificial insemination */
     
