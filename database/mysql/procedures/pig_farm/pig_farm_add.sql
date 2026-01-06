@@ -128,6 +128,16 @@ INSERT INTO pig_farm(
 SELECT LAST_INSERT_ID() INTO cur_pig_farm_id;
 
 
+/*Insert into user_pig_farm*/
+INSERT INTO user_pig_farm(
+    pig_farm_id,
+    user_id,
+    added_by_user_id
+) VALUES (
+    cur_pig_farm_id,
+    in_user_id,
+    in_user_id
+);
 
 
 END process_user;

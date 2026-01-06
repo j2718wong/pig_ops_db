@@ -15,6 +15,8 @@ CREATE PROCEDURE pig_prod_add(
     in_comments             VARCHAR(160),
     
     in_insem_staff_id       INT,
+    in_done_by_user         INT, 
+	
     in_date_insemination    VARCHAR(10)  /* in YYYY-MM-DD format*/
 )  
 
@@ -85,6 +87,9 @@ DECLARE MIN_COUNT_ACCOUNT_SEMEN_IS_VERIFIED     INT             DEFAULT 3;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
+DECLARE cur_user_staff_id                       INT             DEFAULT 0;
+DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT '';
+DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT '';
 
 
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
@@ -178,6 +183,55 @@ IF cur_pig_prod_id > 0 THEN
     
     LEAVE process_user;
 END IF;
+
+
+/* If done by user, user will be added to staff list.
+Note: not all staff are users
+*/
+IF in_done_by_user > 0 THEN
+    SELECT  pig_farm_staff_id,
+            name_first,
+            name_last
+    
+    INTO    cur_user_staff_id,
+            cur_user_name_first,
+            cur_user_name_last
+    FROM    user 
+    WHERE   id = in_user_id;
+    
+    
+    IF cur_user_staff_id = 0 THEN 
+        INSERT INTO pig_farm_staff (
+            account_id,
+            pig_farm_id,
+            user_id,
+            name,
+            
+            added_by_user_id
+        ) VALUES (
+            cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id,
+            in_user_id,
+            CONCAT(cur_user_name_first, ' ', cur_user_name_last),
+            
+            in_user_id
+        );
+        SELECT LAST_INSERT_ID() INTO cur_user_staff_id;
+        
+        
+        UPDATE user SET 
+            pig_farm_staff_id = cur_user_staff_id
+        WHERE id = in_user_id;
+        
+    END IF;
+    
+    
+    SET in_insem_staff_id = cur_user_staff_id;
+    
+END IF;
+
+
+
 
 
 /* Set previous pig_production of this sow to not pregnant, if status is gestating*/

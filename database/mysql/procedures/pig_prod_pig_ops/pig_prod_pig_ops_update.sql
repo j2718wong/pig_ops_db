@@ -69,6 +69,8 @@ DECLARE cur_acc_pig_ops_name                    VARCHAR(50);
 DECLARE cur_staff_name                          VARCHAR(50);
 DECLARE cur_notes                               VARCHAR(200);
 
+DECLARE added_new_staff                         INT             DEFAULT 0;
+
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -218,6 +220,9 @@ ELSE
 END IF;
 
 
+/* If done by user, user will be added to staff list.
+Note: not all staff are users
+*/
 IF in_done_by_user > 0 THEN
     SELECT  pig_farm_staff_id,
             name_first,
@@ -253,6 +258,8 @@ IF in_done_by_user > 0 THEN
             pig_farm_staff_id = cur_user_staff_id
         WHERE id = in_user_id;
         
+        SET added_new_staff = 1;
+        
     END IF;
     
     
@@ -278,7 +285,9 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    in_pig_prod_pig_ops_id              AS pig_prod_pig_ops_id;
+    in_pig_prod_pig_ops_id              AS pig_prod_pig_ops_id,
+    added_new_staff                     AS added_new_staff,
+    cur_pig_prod_pig_farm_id            AS pig_farm_id;
     
 
 END $$
