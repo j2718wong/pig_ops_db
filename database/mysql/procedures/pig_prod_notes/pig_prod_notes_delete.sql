@@ -33,7 +33,7 @@ DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
 /* pig_prod_notes.flag bits*/
-DECLARE FLAG_BIT_PIG_PROD_NOTES_IS_DELETED    	INT             DEFAULT 1;
+DECLARE FLAG_BIT_PIG_PROD_NOTES_IS_DELETED      INT             DEFAULT 1;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;

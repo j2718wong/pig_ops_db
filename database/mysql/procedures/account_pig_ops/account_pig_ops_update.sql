@@ -7,6 +7,8 @@ CREATE PROCEDURE account_pig_ops_update(
     in_account_pig_ops_id   INT,
     in_num_days_since       INT,
     
+    is_medvac               INT,
+    
     in_name                 VARCHAR(50),
     in_short_name           VARCHAR(15),
     in_description          VARCHAR(160)
@@ -31,6 +33,11 @@ DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS   INT                   DEFAULT 10;
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+
+
+/* account_pig_ops.flag bits*/
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC      INT             DEFAULT 2;
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
@@ -94,11 +101,13 @@ END IF;
 
 SELECT  operation_type,
         num_days_since,
-        version_num
+        version_num,
+        flag 
         
 INTO    cur_pig_ops_operation_type,
         cur_pig_ops_num_days_since,
-        cur_account_ver_num_gestating_ops
+        cur_account_ver_num_gestating_ops,
+        cur_account_pig_ops_flag
 
 FROM    account_pig_ops
 WHERE   id = in_account_pig_ops_id;
@@ -126,9 +135,16 @@ IF cur_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN
 END IF;
 
 
+SET cur_account_pig_ops_flag = cur_account_pig_ops_flag & ~FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC;
+IF is_medvac > 0 THEN 
+    SET cur_account_pig_ops_flag = cur_account_pig_ops_flag | FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC;
+END IF;
+
+
 UPDATE account_pig_ops SET
     num_days_since      = in_num_days_since,
     version_num         = cur_account_ver_num_gestating_ops,
+    flag                = cur_account_pig_ops_flag,
     
     name                = in_name,
     short_name          = in_short_name,

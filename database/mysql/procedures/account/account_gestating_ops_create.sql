@@ -14,11 +14,15 @@ BEGIN
  *
  */
 
+/* account_pig_ops.flag bits*/
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC      INT             DEFAULT 2;
+
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
-DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
 
 
 /* Default account gestating operation; num_days since insemination*/
@@ -52,6 +56,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name
 ) VALUES (
@@ -59,6 +65,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_GESTATING,
     1,
     GESTATING_OPS_NUM_DAYS_INJECT_IRON,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "Inject Iron",
     "Inject Iron"
 );
@@ -68,6 +76,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name
 ) VALUES (
@@ -75,6 +85,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_GESTATING,
     1,
     GESTATING_OPS_NUM_DAYS_DEWORM,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "Deworm",
     "Deworm"
 );

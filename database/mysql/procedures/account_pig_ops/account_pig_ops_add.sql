@@ -6,6 +6,8 @@ CREATE PROCEDURE account_pig_ops_add(
     in_operation_type       INT,
     in_num_days_since       INT,
     
+    is_medvac               INT,
+    
     in_name                 VARCHAR(50),
     in_short_name           VARCHAR(15),
     in_description          VARCHAR(160)
@@ -49,6 +51,7 @@ account.flag_settings FLAG_BIT_DAY_1_ON_DATE_OF_INSEM flag.
 
 This flag is defaulted to 0 during account creation. 
 
+3.) The is_medvac flag is is short for medicine/vaccine flag.
 */
 
 
@@ -65,6 +68,12 @@ DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
 DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
+
+
+
+/* account_pig_ops.flag bits*/
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC      INT             DEFAULT 2;
 
 
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
@@ -140,11 +149,19 @@ WHERE   id = cur_user_account_id;
 SET cur_account_ver_num_gestating_ops = cur_account_ver_num_gestating_ops + 1;
 
 
+SET cur_account_pig_ops_flag = 0;
+
+IF is_medvac > 0 THEN
+    SET cur_account_pig_ops_flag = FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC;
+END IF;
+
+
 INSERT INTO account_pig_ops(
     account_id,
     operation_type,
     num_days_since,
     version_num,
+    flag,
     
     name,
     short_name,
@@ -156,6 +173,7 @@ INSERT INTO account_pig_ops(
     in_operation_type,
     in_num_days_since,
     cur_account_ver_num_gestating_ops,
+    cur_account_pig_ops_flag,
     
     in_name,
     in_short_name,

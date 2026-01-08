@@ -16,7 +16,7 @@ CREATE PROCEDURE pig_prod_add(
     
     in_insem_staff_id       INT,
     in_done_by_user         INT, 
-	
+    
     in_date_insemination    VARCHAR(10)  /* in YYYY-MM-DD format*/
 )  
 
@@ -75,7 +75,7 @@ DECLARE SOW_STATUS_ID_GESTATING                 INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
-DECLARE PIG_OPERATION_TYPE_GROWING              INT             DEFAULT 4;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
 
 /* Date insemination is day 0.*/
 DECLARE PIG_NUM_DAYS_GESTATION                  INT             DEFAULT 114;

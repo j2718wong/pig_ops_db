@@ -15,6 +15,11 @@ BEGIN
  */
 
 
+/* account_pig_ops.flag bits*/
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC      INT             DEFAULT 2;
+
+
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
@@ -44,6 +49,7 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    
     name,
     short_name,
     description
@@ -52,6 +58,7 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
     LACTATING_OPS_NUM_DAYS_CUT_TEETH_AND_TAIL,
+    
     "Cut Teeth",
     "Cut TT",
     "Cut Teeth and Tail"
@@ -62,6 +69,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name
 ) VALUES (
@@ -69,6 +78,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
     LACTATING_OPS_NUM_DAYS_INJECT_IRON_1,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+
     "Inject Iron_1",
     "InjIron1"
 );
@@ -78,6 +89,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name
 ) VALUES (
@@ -85,6 +98,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
     LACTATING_OPS_NUM_DAYS_INJECT_IRON_2,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "Inject Iron_2",
     "InjIron2"
 );
@@ -93,6 +108,8 @@ INSERT INTO account_pig_ops (
     account_id,
     operation_type,
     version_num,
+    flag,
+    
     num_days_since,
     name,
     short_name
@@ -101,6 +118,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
     LACTATING_OPS_NUM_DAYS_INJECT_VITA_1,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "Inject Vitamins_1",
     "InjVita1"
 );
@@ -111,6 +130,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name
 ) VALUES (
@@ -118,6 +139,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
     LACTATING_OPS_NUM_DAYS_INJECT_VITA_2,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "Inject Vitamins_2",
     "InjVita2"
 );
@@ -128,6 +151,7 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    
     name,
     short_name
 ) VALUES (
@@ -135,6 +159,7 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
     LACTATING_OPS_NUM_DAYS_CASTRATION,
+    
     "Castration",
     "Castration"
 );
@@ -145,6 +170,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name
 ) VALUES (
@@ -152,6 +179,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
     LACTATING_OPS_NUM_DAYS_DEWORM,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "Deworm",
     "Deworm"
 );
@@ -167,6 +196,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name
 ) VALUES (
@@ -174,6 +205,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_LACTATING_SOW,
     1,
     LACTATING_SOW_OPS_NUM_DAYS_DEWORM,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "Deworm",
     "Deworm"
 );

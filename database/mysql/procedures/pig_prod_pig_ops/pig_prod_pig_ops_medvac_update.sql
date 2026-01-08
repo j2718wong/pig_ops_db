@@ -1,15 +1,23 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_prod_pig_ops_update $$
-CREATE PROCEDURE pig_prod_pig_ops_update(
-    in_user_id                  INT,
+DROP PROCEDURE IF EXISTS pig_prod_pig_ops_medvac_update $$
+CREATE PROCEDURE pig_prod_pig_ops_medvac_update(
+    in_user_id              INT,
    
-    in_pig_prod_pig_ops_id      INT,
-    in_staff_id                 INT,
-    in_done_by_user             INT, 
+    in_pig_prod_pig_ops_id  INT,
+    in_staff_id             INT,
+    in_done_by_user         INT,
+
+    in_medvac_type_id       INT,
+    in_medvac_brand_id      INT,
+    in_medvac_name          VARCHAR(80),
     
-    in_date                     VARCHAR(10),
-    in_notes                    VARCHAR(160)
+    in_quantity             INT,
+    in_unit                 VARCHAR(20),
+    
+
+    in_date                 VARCHAR(10),
+    in_notes                VARCHAR(160)
 )  
 
 BEGIN
@@ -39,7 +47,7 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
-DECLARE PIG_OPERATION_TYPE_GILT_OPS              INT             DEFAULT 4;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
@@ -57,13 +65,17 @@ DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_ops_sow_boar_id        INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_ops_operation_type     INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_ops_notes_id           INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_ops_pig_medvac_id      INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE cur_prod_pig_ops_id                     INT             DEFAULT 0;
 
+DECLARE cur_medvac_id                           INT             DEFAULT 0;
 
 DECLARE cur_acc_pig_ops_name                    VARCHAR(50);
 DECLARE cur_staff_name                          VARCHAR(50);
@@ -85,16 +97,24 @@ SELECT
         b.account_id,
         b.pig_farm_id,
         a.pig_prod_id,
+        b.sow_id,           /*This is pig_production.sow_id*/
+        a.sow_boar_id,      /*This is pig_prod_pig_ops.sow_boar_id*/
+        
         a.operation_type,
         b.prod_status_id,
-        a.notes_id
+        a.notes_id,
+        a.pig_medvac_id
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
         cur_pig_prod_id,
+        cur_pig_prod_sow_id,
+        cur_pig_prod_pig_ops_sow_boar_id,
+        
         cur_pig_prod_pig_ops_operation_type,
         cur_pig_prod_status_id,
-        cur_pig_prod_pig_ops_notes_id
+        cur_pig_prod_pig_ops_notes_id,
+        cur_pig_prod_pig_ops_pig_medvac_id
         
 FROM    pig_prod_pig_ops a
 LEFT OUTER JOIN pig_production b ON a.pig_prod_id = b.id
@@ -208,6 +228,8 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
     UPDATE pig_prod_pig_ops SET
         notes_id            = cur_pig_prod_notes_id
     WHERE id = in_pig_prod_pig_ops_id;
+    
+    SET cur_pig_prod_pig_ops_notes_id = cur_pig_prod_notes_id;
 
 ELSE
     UPDATE pig_prod_notes SET 
@@ -276,6 +298,148 @@ UPDATE pig_prod_pig_ops SET
     dt_last_update      = CURRENT_TIMESTAMP
 
 WHERE id = in_pig_prod_pig_ops_id;
+
+
+IF cur_pig_prod_pig_ops_pig_medvac_id IS NULL THEN 
+    IF cur_pig_prod_pig_ops_operation_type IN (
+                                    PIG_OPERATION_TYPE_GESTATING,
+                                    PIG_OPERATION_TYPE_LACTATING_SOW) THEN
+
+        INSERT INTO pig_medvac(
+    
+            pig_prod_pig_ops_id,
+            
+            sow_boar_id,
+            
+            date_medvac,
+            medvac_type_id,
+            medvac_brand_id,
+            
+            quantity,
+            unit,
+            
+            staff_id,
+            
+            added_by_user_id,
+            notes_id
+
+        ) VALUES (
+            in_pig_prod_pig_ops_id,
+            
+            cur_pig_prod_sow_id,
+            
+            in_date,
+            in_medvac_type_id,
+            in_medvac_brand_id,
+            
+            in_quantity,
+            in_unit,
+            
+            in_staff_id,
+            
+            in_user_id,
+            cur_pig_prod_pig_ops_notes_id
+        );
+
+        SELECT LAST_INSERT_ID() INTO cur_medvac_id;
+        
+        UPDATE pig_prod_pig_ops SET 
+            pig_medvac_id = cur_medvac_id
+        WHERE id = in_pig_prod_pig_ops_id;
+        
+    END IF;
+    
+    IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS THEN
+        INSERT INTO pig_medvac(
+    
+            pig_prod_pig_ops_id,
+            
+            pig_prod_id,
+            
+            date_medvac,
+            medvac_type_id,
+            medvac_brand_id,
+            
+            quantity,
+            unit,
+            
+            staff_id,
+            
+            added_by_user_id,
+            notes_id
+
+        ) VALUES (
+            in_pig_prod_pig_ops_id,
+            
+            cur_pig_prod_id,
+            
+            in_date_medvac,
+            in_medvac_type_id,
+            in_medvac_brand_id,
+            
+            in_quantity,
+            in_unit,
+            
+            in_staff_id,
+            
+            in_user_id,
+            cur_pig_prod_pig_ops_notes_id
+        );
+
+        SELECT LAST_INSERT_ID() INTO cur_medvac_id;
+        
+        UPDATE pig_prod_pig_ops SET 
+            pig_medvac_id = cur_medvac_id
+        WHERE id = in_pig_prod_pig_ops_id;
+    END IF;
+    
+    
+    IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_GILT_OPS THEN
+        INSERT INTO pig_medvac(
+    
+            pig_prod_pig_ops_id,
+            
+            sow_boar_id,
+            
+            date_medvac,
+            medvac_type_id,
+            medvac_brand_id,
+            
+            quantity,
+            unit,
+            
+            staff_id,
+            
+            added_by_user_id,
+            notes_id
+
+        ) VALUES (
+            in_pig_prod_pig_ops_id,
+            
+            cur_pig_prod_pig_ops_sow_boar_id,
+            
+            in_date_medvac,
+            in_medvac_type_id,
+            in_medvac_brand_id,
+            
+            in_quantity,
+            in_unit,
+            
+            in_staff_id,
+            
+            in_user_id,
+            cur_pig_prod_pig_ops_notes_id
+        );
+
+        SELECT LAST_INSERT_ID() INTO cur_medvac_id;
+        
+        UPDATE pig_prod_pig_ops SET 
+            pig_medvac_id = cur_medvac_id
+        WHERE id = in_pig_prod_pig_ops_id;
+    END IF;
+    
+    
+END IF;
 
 
 END process_user;

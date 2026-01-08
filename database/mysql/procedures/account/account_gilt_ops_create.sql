@@ -14,6 +14,9 @@ BEGIN
  *
  */
 
+/* account_pig_ops.flag bits*/
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED     INT             DEFAULT 1;
+DECLARE FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC      INT             DEFAULT 2;
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
@@ -37,6 +40,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name,
     description
@@ -45,6 +50,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_GILT_OPS,
     1,
     GILT_OPS_NUM_DAYS_HCV,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "HCV Vaccine",
     "HCV Vac",
     "Inject HCV vaccine"
@@ -56,6 +63,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name,
     description
@@ -64,6 +73,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_GILT_OPS,
     1,
     GILT_OPS_NUM_DAYS_PLE,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "PLE Vaccine",
     "PLE Vac",
     "Inject PLE vaccine"
@@ -76,6 +87,8 @@ INSERT INTO account_pig_ops (
     operation_type,
     version_num,
     num_days_since,
+    flag,
+    
     name,
     short_name,
     description
@@ -84,6 +97,8 @@ INSERT INTO account_pig_ops (
     PIG_OPERATION_TYPE_GILT_OPS,
     1,
     GILT_OPS_NUM_DAYS_PCV,
+    FLAG_BIT_ACCOUNT_PIG_OPS_IS_MEDVAC,
+    
     "PCV Vaccine",
     "PCV Vac",
     "Inject PCV vaccine"

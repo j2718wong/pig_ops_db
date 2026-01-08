@@ -8,6 +8,8 @@ CREATE PROCEDURE pig_prod_notes_add(
     in_sow_boar_id          INT,
     in_production_group_id  INT,
     
+    in_is_health_issue      INT,
+    
     in_date_notes           VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
@@ -29,6 +31,11 @@ DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
 
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
 
+/* pig_prod_notes.flag bits*/
+DECLARE FLAG_BIT_PIG_PROD_NOTES_IS_DELETED      INT             DEFAULT 1;
+DECLARE FLAG_BIT_NOTES_IS_PIG_HEALTH_ISSUE      INT             DEFAULT 2;
+
+
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
@@ -48,6 +55,7 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
+DECLARE cur_flag                                INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -138,12 +146,17 @@ IF in_pig_prod_id > 0 THEN
 END IF;
 
 
+IF  in_is_health_issue > 0 THEN 
+    SET cur_flag = FLAG_BIT_NOTES_IS_PIG_HEALTH_ISSUE;
+END IF;
+
 INSERT INTO pig_prod_notes (
     account_id,
     pig_farm_id,
     pig_prod_id,
     sow_boar_id,
     production_group_id,
+    flag,
     
     notes,
     date_notes,
@@ -155,6 +168,7 @@ INSERT INTO pig_prod_notes (
     in_pig_prod_id,
     in_sow_boar_id,
     in_production_group_id,
+    cur_flag,
     
     in_notes,
     in_date_notes,
