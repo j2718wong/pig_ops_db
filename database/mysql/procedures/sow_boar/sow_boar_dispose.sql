@@ -99,7 +99,7 @@ END IF;
 UPDATE sow_boar SET
     date_dispose        = in_date_dispose,
     dispose_notes_id    = cur_pig_prod_notes_id,
-    sow_status_id       = in_dispose_status_id,
+    dispose_status_id   = in_dispose_status_id,
     is_disposed         = 1,
     
     last_update_user_id = in_user_id,

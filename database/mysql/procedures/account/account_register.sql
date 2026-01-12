@@ -26,8 +26,6 @@ DECLARE RES_NUM_SUCCESS                             INT         DEFAULT 0;
 DECLARE RES_NUM_ACCOUNT_ALREADY_REGISTERED_FOR_USER INT         DEFAULT 21;
 DECLARE RES_NUM_DUPLICATE_ENTRY                     INT         DEFAULT 22;
 
-/* User flag*/
-DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 
 DECLARE BUSINESS_OBJ_ID_ACCOUNT                 INT             DEFAULT 2;
@@ -38,8 +36,30 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 
+/* user.flag bits*/
+DECLARE FLAG_BIT_USER_IS_ACTIVE                 INT             DEFAULT 1;
+DECLARE FLAG_BIT_USER_EMAIL_VERIFIED            INT             DEFAULT 2;
+DECLARE FLAG_BIT_USER_MOBILE_NUM_VERIFIED       INT             DEFAULT 4;
+DECLARE FLAG_BIT_USER_IS_DELETED                INT             DEFAULT 8;
 
-/* account.flag bits*/
+DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
+
+
+/* account.flag bits
+bit 0: FLAG_BIT_ACCOUNT_ENABLE
+bit 1:
+bit 2:
+bit 3:  
+
+bit 4:  FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED
+0 = not exempted has to pay bill
+1 = exempted
+
+
+
+bit 16: COMPANY_OWNED ACCOUNT
+
+*/
 DECLARE FLAG_BIT_ACCOUNT_ENABLE                 INT             DEFAULT 1;
 
 DECLARE ACCOUNT_STATUS_ID_ON_TRIAL              INT             DEFAULT 1;
@@ -47,12 +67,17 @@ DECLARE ACCOUNT_STATUS_ID_TRIAL_EXPIRED         INT             DEFAULT 2;
 DECLARE ACCOUNT_STATUS_ID_UNPAID_BILL           INT             DEFAULT 3;
 
 
+
+
+
+
+
 /* account.flag_setting bits
-FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH
+bit 0: FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH
 0 = Date of birth is counted as DAY 0
 1 = Date of birth is counted as DAY 1; default
 
-FLAG_BIT_DAY_1_ON_DATE_OF_INSEM
+bit 1: FLAG_BIT_DAY_1_ON_DATE_OF_INSEM
 0 = Date of insemination is counted as DAY 0; default
 1 = Date of insemination is counted as DAY 1;
 
@@ -155,22 +180,27 @@ INSERT INTO account(
     name,
     country_id,
     flag,
-	
+    
     flag_settings,
     
     status_id,
     date_trial_start,
-    date_trial_end
+    date_trial_end,
+    
+    added_by_user_id
+    
 ) VALUES (
     in_name,
     in_country_id,
     1,
-	
+    
     FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH,
     
     ACCOUNT_STATUS_ID_ON_TRIAL,
     CURRENT_DATE,
     DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY)
+    
+    in_user_id
 );
 
 SELECT LAST_INSERT_ID() INTO cur_account_id;

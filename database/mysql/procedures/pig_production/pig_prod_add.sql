@@ -129,7 +129,7 @@ SET res_code    = "SUCCESS";
 SELECT  a.account_id,
         a.pig_farm_id,
         a.farm_sow_id,
-        a.last_prod_id,
+        a.last_pig_production_id,
         b.prod_status_id
 INTO    cur_sow_boar_account_id,
         cur_sow_boar_pig_farm_id,
@@ -137,7 +137,7 @@ INTO    cur_sow_boar_account_id,
         cur_sow_boar_last_prod_id,
         cur_sow_boar_last_prod_status_id
 FROM    sow_boar a
-LEFT OUTER JOIN pig_production b ON a.last_prod_id = b.id
+LEFT OUTER JOIN pig_production b ON a.last_pig_production_id = b.id
 WHERE   a.id = in_sow_id
 LIMIT   1;
 
@@ -291,17 +291,17 @@ IF in_boar_id IS NOT NULL THEN
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_id;
 
     UPDATE sow_boar SET
-        last_prod_id        = cur_pig_prod_id,
-        mate_count          = mate_count + 1,
-        date_last_mate      = in_date_insemination,
-        last_mate_sow_boar_id= in_sow_id
+        last_pig_production_id  = cur_pig_prod_id,
+        mate_count              = mate_count + 1,
+        date_last_mate          = in_date_insemination,
+        last_mate_sow_boar_id   = in_sow_id
     WHERE id = in_boar_id;
 
     UPDATE sow_boar SET
-        last_prod_id        = cur_pig_prod_id,
-        mate_count          = mate_count + 1,
-        date_last_mate      = in_date_insemination,
-        last_mate_sow_boar_id= in_boar_id
+        last_pig_production_id  = cur_pig_prod_id,
+        mate_count              = mate_count + 1,
+        date_last_mate          = in_date_insemination,
+        last_mate_sow_boar_id   = in_boar_id
     WHERE id = in_sow_id;
 
 
@@ -525,7 +525,7 @@ WHERE id = cur_sow_boar_pig_farm_id;
 
 /* Update sow status*/
 UPDATE sow_boar SET
-    last_prod_id    = cur_pig_prod_id,
+    last_pig_production_id    = cur_pig_prod_id,
     sow_status_id   = SOW_STATUS_ID_GESTATING
 WHERE id = in_sow_id;
 

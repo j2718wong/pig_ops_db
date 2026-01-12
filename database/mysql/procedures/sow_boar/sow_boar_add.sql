@@ -5,7 +5,6 @@ CREATE PROCEDURE sow_boar_add(
     in_user_id              INT,
     
     in_pig_farm_id          INT,
-    in_farm_birth_prod_id   INT,
     in_line_id              INT,
     in_sow_status_id        INT,
     
@@ -17,7 +16,6 @@ CREATE PROCEDURE sow_boar_add(
     in_number               VARCHAR(10),
     in_name                 VARCHAR(20),
     in_date_of_birth        VARCHAR(10),
-    in_date_eartag          VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
 
@@ -160,7 +158,6 @@ IF in_sex = 'F' THEN
         pig_farm_id,
         farm_sow_id,
         
-        farm_birth_prod_id,
         line_id,
         sow_status_id,
         is_external,
@@ -172,7 +169,6 @@ IF in_sex = 'F' THEN
         number,
         name,
         date_of_birth,
-        date_eartag,
         
         added_by_user_id
     ) VALUES (
@@ -180,7 +176,6 @@ IF in_sex = 'F' THEN
         in_pig_farm_id,
         cur_pig_farm_last_sow_id,
         
-        in_farm_birth_prod_id,
         in_line_id,
         in_sow_status_id,
         in_is_external,
@@ -192,7 +187,6 @@ IF in_sex = 'F' THEN
         in_number,
         in_name,
         in_date_of_birth,
-        in_date_eartag,
         
         in_user_id
     );
@@ -206,7 +200,6 @@ ELSE
         pig_farm_id,
         farm_boar_id,
         
-        farm_birth_prod_id,
         line_id,
         sow_status_id,
         is_external,
@@ -217,15 +210,13 @@ ELSE
         number,
         name,
         date_of_birth,
-        date_eartag,
         
         added_by_user_id
     ) VALUES (
         cur_user_account_id,
         in_pig_farm_id,
-        cur_pig_farm_last_boar_id,
-        
-        in_farm_birth_prod_id,
+        cur_pig_farm_last_boar_id,        
+
         in_line_id,
         NULL,
         in_is_external,
@@ -236,7 +227,6 @@ ELSE
         in_number,
         in_name,
         in_date_of_birth,
-        in_date_eartag,
         
         in_user_id
     );

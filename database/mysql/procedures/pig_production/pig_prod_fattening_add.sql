@@ -64,7 +64,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
 
 
-DECLARE cur_pig_farm_last_prod_id               INT             DEFAULT 0;
+DECLARE cur_pig_farm_last_pig_production_id               INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
@@ -129,12 +129,12 @@ IF cur_pig_prod_id > 0 THEN
 END IF;
 
 
-SELECT  last_prod_id
-INTO    cur_pig_farm_last_prod_id
+SELECT  last_pig_production_id
+INTO    cur_pig_farm_last_pig_production_id
 FROM    pig_farm
 WHERE   id = in_pig_farm_id;
 
-SET cur_pig_farm_last_prod_id = cur_pig_farm_last_prod_id + 1;
+SET cur_pig_farm_last_pig_production_id = cur_pig_farm_last_pig_production_id + 1;
 
 
 
@@ -155,7 +155,7 @@ INSERT INTO pig_production (
 ) VALUES (
     cur_user_account_id,
     cur_sow_boar_pig_farm_id,
-    cur_pig_farm_last_prod_id,
+    cur_pig_farm_last_pig_production_id,
     FLAG_BIT_PIGLETS_ARE_EXTERNAL,
     PRODUCTION_STATUS_ID_GROWING,
     
@@ -183,7 +183,7 @@ INSERT INTO pig_prod_pig_add (
     account_id,
     pig_farm_id,
     pig_prod_id,
-	
+    
     date_added,
     num_pigs_added,
     added_by_user_id
@@ -191,7 +191,7 @@ INSERT INTO pig_prod_pig_add (
     cur_pig_farm_account_id,
     in_pig_farm_id,
     cur_pig_prod_id,
-	
+    
     in_date_added,
     in_num_pigs_added,
     in_user_id
@@ -201,7 +201,7 @@ INSERT INTO pig_prod_pig_add (
 
 /* Increment pig_farm.last_prod_id*/
 UPDATE pig_farm SET 
-    last_prod_id    = cur_pig_farm_last_prod_id
+    last_prod_id    = cur_pig_farm_last_pig_production_id
 WHERE id = cur_sow_boar_pig_farm_id;
 
 

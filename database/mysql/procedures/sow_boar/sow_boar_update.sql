@@ -5,7 +5,6 @@ CREATE PROCEDURE sow_boar_update(
     in_user_id              INT,
     
     in_sow_boar_id          INT,
-    in_farm_birth_prod_id   INT,
     in_line_id              INT,
     in_sow_status_id        INT,
     in_is_external          INT,
@@ -129,10 +128,9 @@ END IF;
 
 
 UPDATE sow_boar SET
-    farm_birth_prod_id  = in_farm_birth_prod_id,
     line_id             = in_line_id,
     sow_status_id       = in_sow_status_id,
-    flag                = cur_sow_boar_flag,
+
     is_external         = in_is_external,
     is_production_ready = in_is_production_ready,
     
@@ -191,18 +189,24 @@ END IF;
 - change in sow date_of_birth (need to recalculate the dates);
 */
 
-SELECT  flag_settings
-INTO    cur_account_flag_settings
-FROM    account 
-WHERE   id = cur_pig_farm_account_id;
-
 
 IF cur_sow_boar_sex = 'F' THEN 
+    IF in_date_of_birth IS NULL THEN 
+        LEAVE process_user; /* Nothing to do*/
+    END IF;
+    
+
+    SELECT  flag_settings
+    INTO    cur_account_flag_settings
+    FROM    account 
+    WHERE   id = cur_sow_boar_account_id;
+
+
     /* Count if there is an account gilt pig ops.*/
     SELECT  COUNT(*) 
     INTO    cur_count 
     FROM    account_pig_ops
-    WHERE   account_id = cur_pig_farm_account_id AND 
+    WHERE   account_id = cur_sow_boar_account_id AND 
             operation_type = PIG_OPERATION_TYPE_GILT_OPS;
             
     IF cur_count > 0 THEN 
@@ -214,7 +218,7 @@ IF cur_sow_boar_sex = 'F' THEN
         WHERE   sow_boar_id = in_sow_boar_id AND 
                 operation_type = PIG_OPERATION_TYPE_GILT_OPS;
         
-        IF cur_count = 0 AND  in_date_of_birth IS NOT NULL THEN 
+        IF cur_count = 0 THEN 
             CALL gilt_pig_ops_add(
                 in_user_id,
                 cur_user_account_id,
@@ -225,22 +229,27 @@ IF cur_sow_boar_sex = 'F' THEN
         
         END IF;
         
-        IF cur_count > 0 AND in_date_of_birth IS NOT NULL THEN 
+        IF cur_count > 0 THEN 
             
-            /* Need to adjust Day 1 counting.*/
-            IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN 
-                UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
-                    a.date_target = DATE_ADD(in_date_of_birth, INTERVAL b.num_days_since DAY)
-                WHERE   a.sow_boar_id = in_sow_boar_id AND 
-                        a.operation_type = PIG_OPERATION_TYPE_GILT_OPS AND
-                        a.account_pig_ops_id = b.id;
+            /* Chnage only if there is an update of gilt date_of_birth */
+            IF cur_sow_boar_date_of_birth != in_date_of_birth THEN 
             
-            ELSE
-                UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
-                    a.date_target = DATE_ADD(in_date_actual_birth, INTERVAL b.num_days_since - 1 DAY)
-                WHERE   a.sow_boar_id = in_sow_boar_id AND 
-                        a.operation_type = PIG_OPERATION_TYPE_GILT_OPS AND
-                        a.account_pig_ops_id = b.id;
+                /* Need to adjust Day 1 counting.*/
+                IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN 
+                    UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                        a.date_target = DATE_ADD(in_date_of_birth, INTERVAL b.num_days_since DAY)
+                    WHERE   a.sow_boar_id = in_sow_boar_id AND 
+                            a.operation_type = PIG_OPERATION_TYPE_GILT_OPS AND
+                            a.account_pig_ops_id = b.id;
+                
+                ELSE
+                    UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                        a.date_target = DATE_ADD(in_date_of_birth, INTERVAL b.num_days_since - 1 DAY)
+                    WHERE   a.sow_boar_id = in_sow_boar_id AND 
+                            a.operation_type = PIG_OPERATION_TYPE_GILT_OPS AND
+                            a.account_pig_ops_id = b.id;
+                END IF;
+            
             END IF;
         
         END IF;
