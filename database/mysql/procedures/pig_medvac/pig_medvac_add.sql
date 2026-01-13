@@ -7,6 +7,8 @@ CREATE PROCEDURE pig_medvac_add(
 
     in_sow_boar_id          INT,
     in_pig_prod_id          INT,
+    in_pig_prod_pig_ops_id  INT,
+    in_health_issue_id      INT,
     
     in_date_medvac          VARCHAR(10),
     in_medvac_type_id       INT,
@@ -244,13 +246,16 @@ INSERT INTO pig_medvac(
     sow_boar_id,
     pig_prod_id,
     
+    prod_pig_ops_id,
+    health_issue_id,
+    
     date_medvac,
     medvac_type_id,
     medvac_brand_id,
     medvac_name,
     
-    quantity,
-    unit,
+    
+    notes,
     
     staff_id,
     
@@ -262,13 +267,17 @@ INSERT INTO pig_medvac(
     in_sow_boar_id,
     in_pig_prod_id,
     
+    in_pig_prod_pig_ops_id,
+    in_health_issue_id,
+    
+    
     in_date_medvac,
     in_medvac_type_id,
     in_medvac_brand_id,
     in_name_upper,
     
-    in_quantity,
-    in_unit,
+
+    in_notes,
     
     in_staff_id,
     
@@ -278,29 +287,7 @@ INSERT INTO pig_medvac(
 SELECT LAST_INSERT_ID() INTO cur_medvac_id;
 
 
-IF in_notes  IS NOT NULL THEN
-    INSERT INTO pig_prod_notes (
-        medvac_id,
-        
-        notes,
-        date_notes,
-        added_by_user_id
-        
-    ) VALUES (
-        cur_medvac_id,
-        
-        in_notes,
-        in_date_medvac,
-        in_user_id
-    );
 
-    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
-    
-    UPDATE pig_medvac SET
-        notes_id            = cur_pig_prod_notes_id
-    WHERE id = cur_medvac_id;
-
-END IF;
 
 /* Insert INTO account_selection*/
 SELECT  COUNT(*) 
