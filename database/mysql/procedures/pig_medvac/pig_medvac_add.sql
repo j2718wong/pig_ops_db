@@ -11,12 +11,9 @@ CREATE PROCEDURE pig_medvac_add(
     in_health_issue_id      INT,
     
     in_date_medvac          VARCHAR(10),
-    in_medvac_type_id       INT,
     in_medvac_brand_id      INT,
-    in_medvac_name          VARCHAR(80),
-    
-    in_quantity             INT,
-    in_unit                 VARCHAR(20),
+    in_medvac_type_id       INT,
+    in_acc_medvac_id        INT,
     
     in_staff_id             INT,
     in_done_by_user         INT,
@@ -37,7 +34,8 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_MEDVAC  INT          DEFAULT 20;
-DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 21;
+DECLARE RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC INT         DEFAULT 21;
+DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 22;
 
 
 DECLARE BUSINESS_OBJ_ID_FEED_BUY                INT             DEFAULT 17;
@@ -55,16 +53,25 @@ DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
 
+
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-/* feed_brand.flag bits*/
-DECLARE FLAG_BIT_MEDVAC_BRAND_IS_DELETED          INT             DEFAULT 1;
-DECLARE FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED         INT             DEFAULT 2;
+/* medvac_brand.flag bits*/
+DECLARE FLAG_BIT_MEDVAC_BRAND_IS_DELETED        INT         	DEFAULT 1;
+DECLARE FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED       INT           	DEFAULT 2;
 
-DECLARE MIN_COUNT_ACCOUNT_MEDVAC_BRAND_IS_VERIFIED    INT         DEFAULT 3;
+
+/* medvac_type.flag bits*/
+DECLARE FLAG_BIT_MEDVAC_TYPE_IS_DELETED          INT         	DEFAULT 1;
+DECLARE FLAG_BIT_MEDVAC_TYPE_IS_VERIFIED         INT           	DEFAULT 2;
+
+
+
+DECLARE MIN_COUNT_MEDVAC_BRAND_IS_VERIFIED    	INT      		DEFAULT 3;
+DECLARE MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED    	INT        		DEFAULT 3;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -77,6 +84,7 @@ DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT '';
 
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
 DECLARE cur_sow_boar_pig_farm_id                INT             DEFAULT 0;
+DECLARE cur_sow_boar_is_disposed                INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
@@ -101,16 +109,18 @@ SET res_code    = "SUCCESS";
 
 IF in_sow_boar_id > 0 THEN 
     SELECT  account_id,
-            pig_farm_id
+            pig_farm_id,
+			is_disposed
             
     INTO    cur_sow_boar_account_id,
-            cur_sow_boar_pig_farm_id
+            cur_sow_boar_pig_farm_id,
+			cur_sow_boar_is_disposed
     
     FROM    sow_boar
     WHERE   id = in_sow_boar_id;
 ELSE
     SELECT  account_id,
-            pig_farm_id
+            pig_farm_id,
             
     INTO    cur_sow_boar_account_id,
             cur_sow_boar_pig_farm_id
@@ -144,6 +154,7 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/* Check pig_production status*/
 IF in_pig_prod_id > 0 THEN
     IF cur_pig_prod_status_id IN (  PRODUCTION_STATUS_ID_TERMINATED,
                                     PRODUCTION_STATUS_ID_NOT_PREGNANT,
@@ -155,6 +166,19 @@ IF in_pig_prod_id > 0 THEN
         LEAVE process_user;
     END IF;
 END IF;
+
+
+/* Check sow_boar status*/
+IF in_sow_boar_id > 0 THEN 
+	IF cur_sow_boar_is_disposed > 0 THEN 
+		SET res_num     = RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC;
+        SET res_code    = "RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC";
+        
+        LEAVE process_user;
+	END IF;
+	
+END IF;
+
 
 
 SET in_name_upper = UPPER(in_medvac_name);
@@ -320,12 +344,55 @@ WHERE id = in_medvac_brand_id;
 
 
 /* Update feed_brand.flag.FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED*/
-IF cur_count >= MIN_COUNT_ACCOUNT_MEDVAC_BRAND_IS_VERIFIED THEN 
+IF cur_count >= MIN_COUNT_MEDVAC_BRAND_IS_VERIFIED THEN 
     UPDATE medvac_brand SET
         flag = flag | FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED
     WHERE id = in_medvac_brand_id;
 
 END IF;
+
+
+
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    account_selection
+WHERE   account_id =  cur_sow_boar_account_id AND 
+        medvac_type_id = in_medvac_type_id;
+        
+
+IF cur_count = 0 THEN 
+    INSERT INTO account_selection(
+        account_id,
+        medvac_type_id
+    ) VALUES (
+        cur_sow_boar_account_id,
+        in_medvac_type_id
+    );
+END IF;
+
+
+/* Update medvac_type counter. */
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    account_selection
+WHERE   medvac_type_id = in_medvac_type_id;
+
+UPDATE  medvac_type SET
+    account_counter = cur_count
+WHERE id = in_medvac_type_id;
+
+
+/* Update feed_brand.flag.MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED*/
+IF cur_count >= MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED THEN 
+    UPDATE medvac_type SET
+        flag = flag | MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED
+    WHERE id = in_medvac_type_id;
+
+END IF;
+
+
+
+
 
 
 END process_user;

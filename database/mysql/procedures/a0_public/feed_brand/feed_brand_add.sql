@@ -153,27 +153,6 @@ INSERT INTO feed_brand(
 SELECT LAST_INSERT_ID() INTO cur_feed_brand_id;
 
 
-SET cur_count = 0;
-
-/* Insert INTO account_selection*/
-SELECT  COUNT(*) 
-INTO    cur_count
-FROM    account_selection
-WHERE   account_id =  cur_user_account_id AND 
-        feed_brand_id = cur_feed_brand_id;
-        
-
-IF cur_count = 0 THEN 
-    INSERT INTO account_selection(
-        account_id,
-        feed_brand_id
-    ) VALUES (
-        cur_user_account_id,
-        cur_feed_brand_id
-    );
-END IF;
-
-
 
 END process_user;
 

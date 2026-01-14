@@ -11,7 +11,7 @@ CREATE PROCEDURE common_supplier_add(
     
     in_is_feed_supplier     INT,
     in_is_gilt_supplier     INT,
-    in_is_semen_supplier   INT,
+    in_is_semen_supplier   	INT,
     
     in_latitude             DECIMAL(10,5),
     in_longitude            DECIMAL(10,5),

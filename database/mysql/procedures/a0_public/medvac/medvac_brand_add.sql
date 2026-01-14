@@ -34,7 +34,7 @@ DECLARE FLAG_BIT_MEDVAC_BRAND_IS_DELETED     	INT             DEFAULT 1;
 DECLARE FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED       INT             DEFAULT 2;
 
 
-DECLARE MAX_UNVERIFIED_ENTRIES_PER_USER         INT             DEFAULT 2;
+DECLARE MAX_UNVERIFIED_ENTRIES_PER_USER         INT             DEFAULT 3;
 DECLARE MAX_DELETED_INVALID_ENTRIES_PER_USER    INT             DEFAULT 3;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -152,26 +152,6 @@ INSERT INTO medvac_brand(
 
 SELECT LAST_INSERT_ID() INTO cur_medvac_brand_id;
 
-
-SET cur_count = 0;
-
-/* Insert INTO account_selection*/
-SELECT  COUNT(*) 
-INTO    cur_count
-FROM    account_selection
-WHERE   account_id =  cur_user_account_id AND 
-        medvac_brand_id = cur_medvac_brand_id;
-        
-
-IF cur_count = 0 THEN 
-    INSERT INTO account_selection(
-        account_id,
-        medvac_brand_id
-    ) VALUES (
-        cur_user_account_id,
-        cur_medvac_brand_id
-    );
-END IF;
 
 
 
