@@ -60,18 +60,18 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 /* medvac_brand.flag bits*/
-DECLARE FLAG_BIT_MEDVAC_BRAND_IS_DELETED        INT         	DEFAULT 1;
-DECLARE FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED       INT           	DEFAULT 2;
+DECLARE FLAG_BIT_MEDVAC_BRAND_IS_DELETED        INT             DEFAULT 1;
+DECLARE FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED       INT             DEFAULT 2;
 
 
 /* medvac_type.flag bits*/
-DECLARE FLAG_BIT_MEDVAC_TYPE_IS_DELETED          INT         	DEFAULT 1;
-DECLARE FLAG_BIT_MEDVAC_TYPE_IS_VERIFIED         INT           	DEFAULT 2;
+DECLARE FLAG_BIT_MEDVAC_TYPE_IS_DELETED          INT            DEFAULT 1;
+DECLARE FLAG_BIT_MEDVAC_TYPE_IS_VERIFIED         INT            DEFAULT 2;
 
 
 
-DECLARE MIN_COUNT_MEDVAC_BRAND_IS_VERIFIED    	INT      		DEFAULT 3;
-DECLARE MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED    	INT        		DEFAULT 3;
+DECLARE MIN_COUNT_MEDVAC_BRAND_IS_VERIFIED      INT             DEFAULT 3;
+DECLARE MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED       INT             DEFAULT 3;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -96,7 +96,6 @@ DECLARE cur_medvac_id                           INT             DEFAULT 0;
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 DECLARE cur_count                               INT             DEFAULT 0;
 
-DECLARE in_name_upper                           VARCHAR(80)     DEFAULT '';
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -110,17 +109,17 @@ SET res_code    = "SUCCESS";
 IF in_sow_boar_id > 0 THEN 
     SELECT  account_id,
             pig_farm_id,
-			is_disposed
+            is_disposed
             
     INTO    cur_sow_boar_account_id,
             cur_sow_boar_pig_farm_id,
-			cur_sow_boar_is_disposed
+            cur_sow_boar_is_disposed
     
     FROM    sow_boar
     WHERE   id = in_sow_boar_id;
 ELSE
     SELECT  account_id,
-            pig_farm_id,
+            pig_farm_id
             
     INTO    cur_sow_boar_account_id,
             cur_sow_boar_pig_farm_id
@@ -170,18 +169,16 @@ END IF;
 
 /* Check sow_boar status*/
 IF in_sow_boar_id > 0 THEN 
-	IF cur_sow_boar_is_disposed > 0 THEN 
-		SET res_num     = RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC;
+    IF cur_sow_boar_is_disposed > 0 THEN 
+        SET res_num     = RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC;
         SET res_code    = "RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC";
         
         LEAVE process_user;
-	END IF;
-	
+    END IF;
+    
 END IF;
 
 
-
-SET in_name_upper = UPPER(in_medvac_name);
 
 
 /* Check for duplicate entry */
@@ -189,10 +186,11 @@ IF in_sow_boar_id > 0 THEN
     SELECT  id
     INTO    cur_medvac_id
     FROM    pig_medvac
-    WHERE   sow_boar_id = in_sow_boar_id AND
-            date_medvac = in_date_medvac AND 
+    WHERE   sow_boar_id = in_sow_boar_id        AND
+            date_medvac = in_date_medvac        AND 
             medvac_brand_id = in_medvac_brand_id AND
-            medvac_name = in_name_upper
+            medvac_type_id = in_medvac_type_id  AND
+            acc_medvac_id = in_acc_medvac_id
     LIMIT   1;
 ELSE
     SELECT  id
@@ -201,7 +199,8 @@ ELSE
     WHERE   pig_prod_id = in_pig_prod_id AND
             date_medvac = in_date_medvac AND 
             medvac_brand_id = in_medvac_brand_id AND
-            medvac_name = in_name_upper
+            medvac_type_id = in_medvac_type_id  AND
+            acc_medvac_id = in_acc_medvac_id
     LIMIT   1;
 
 END IF;
@@ -270,13 +269,13 @@ INSERT INTO pig_medvac(
     sow_boar_id,
     pig_prod_id,
     
-    prod_pig_ops_id,
+    pig_prod_pig_ops_id,
     health_issue_id,
     
     date_medvac,
     medvac_type_id,
     medvac_brand_id,
-    medvac_name,
+    acc_medvac_id,
     
     
     notes,
@@ -298,7 +297,7 @@ INSERT INTO pig_medvac(
     in_date_medvac,
     in_medvac_type_id,
     in_medvac_brand_id,
-    in_name_upper,
+    in_acc_medvac_id,
     
 
     in_notes,
