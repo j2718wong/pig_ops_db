@@ -13,6 +13,9 @@ CREATE PROCEDURE sow_boar_add(
     in_is_external          INT,
     in_is_production_ready  INT,
     
+    in_parent_sow_id        INT,
+    in_parent_boar_id       INT,
+    
     in_number               VARCHAR(10),
     in_name                 VARCHAR(20),
     in_date_of_birth        VARCHAR(10),
@@ -164,6 +167,9 @@ IF in_sex = 'F' THEN
         is_production_ready,
         num_nipples,
         
+        parent_sow_id,
+        parent_boar_id,
+        
         sex,
         
         number,
@@ -181,6 +187,9 @@ IF in_sex = 'F' THEN
         in_is_external,
         in_is_production_ready,
         in_num_nipples,
+        
+        in_parent_sow_id,
+        in_parent_boar_id,
         
         in_sex,
         

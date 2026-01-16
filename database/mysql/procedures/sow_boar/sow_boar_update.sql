@@ -10,6 +10,9 @@ CREATE PROCEDURE sow_boar_update(
     in_is_external          INT,
     in_is_production_ready  INT,
     
+    in_parent_sow_id        INT,
+    in_parent_boar_id       INT,
+    
     in_number               VARCHAR(10),
     in_name                 VARCHAR(20),
     in_date_of_birth        VARCHAR(10),
@@ -133,6 +136,10 @@ UPDATE sow_boar SET
 
     is_external         = in_is_external,
     is_production_ready = in_is_production_ready,
+    
+    
+    parent_sow_id       = in_parent_sow_id,
+    parent_boar_id      = in_parent_boar_id,
     
     number              = in_number,
     name                = in_name,
