@@ -54,8 +54,6 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
-
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
@@ -125,7 +123,7 @@ END IF;
 
 
 /* Check pig_production status*/
-IF in_pig_prod_id > 0 THEN
+IF cur_pig_prod_id > 0 THEN
     IF cur_pig_prod_status_id IN (  PRODUCTION_STATUS_ID_TERMINATED,
                                     PRODUCTION_STATUS_ID_NOT_PREGNANT,
                                     PRODUCTION_STATUS_ID_HARVESTED,
@@ -139,7 +137,7 @@ END IF;
 
 
 /* Check sow_boar status*/
-IF in_sow_boar_id > 0 THEN 
+IF cur_sow_boar_id > 0 THEN 
     IF cur_sow_boar_is_disposed > 0 THEN 
         SET res_num     = RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC;
         SET res_code    = "RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC";
