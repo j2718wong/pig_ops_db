@@ -3,6 +3,8 @@
 DROP PROCEDURE IF EXISTS account_medvac_add $$
 CREATE PROCEDURE account_medvac_add(
     in_user_id              INT,
+    in_medvac_brand_id      INT,
+    in_medvac_type_id       INT,
     
     in_name                 VARCHAR(50)
 )  
@@ -111,11 +113,19 @@ END IF;
 
 INSERT INTO account_medvac(
     account_id,
+    
+    medvac_brand_id,
+    medvac_type_id,
+    
     name,
     added_by_user_id
 
 ) VALUES (
     cur_user_account_id,
+    
+    in_medvac_brand_id,
+    in_medvac_type_id,
+    
     in_name,
     in_user_id
 );

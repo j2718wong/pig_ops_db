@@ -27,23 +27,17 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_MEDVAC  INT          DEFAULT 20;
-DECLARE RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC INT         DEFAULT 21;
+DECLARE RES_NUM_PIG_PROD_INACTIVE_STATUS        INT             DEFAULT 20;
+DECLARE RES_NUM_SOW_BOAR_INACTIVE_STATUS        INT             DEFAULT 21;
+
+
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_FEED_BUY                INT             DEFAULT 17;
 
 
-DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
-DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
-DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
-DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
-DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
-DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
-DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
-DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
+
 
 
 
@@ -65,6 +59,9 @@ DECLARE cur_sow_boar_is_disposed                INT             DEFAULT 0;
 DECLARE cur_sow_boar_sow_status_id              INT             DEFAULT 0;
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
+
+
+DECLARE cur_is_active_status                    INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -124,13 +121,13 @@ END IF;
 
 /* Check pig_production status*/
 IF cur_pig_prod_id > 0 THEN
-    IF cur_pig_prod_status_id IN (  PRODUCTION_STATUS_ID_TERMINATED,
-                                    PRODUCTION_STATUS_ID_NOT_PREGNANT,
-                                    PRODUCTION_STATUS_ID_HARVESTED,
-                                    PRODUCTION_STATUS_ID_CLOSED) THEN 
-        SET res_num     = RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_MEDVAC;
-        SET res_code    = "RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_MEDVAC";
-        
+    SET cur_is_active_status = 0;
+    CALL pig_prod_check_active_status(cur_pig_prod_status_id, cur_is_active_status);
+    
+    IF cur_is_active_status = 0 THEN 
+        SET res_num     = RES_NUM_PIG_PROD_INACTIVE_STATUS;
+        SET res_code    = "RES_NUM_PIG_PROD_INACTIVE_STATUS";
+    
         LEAVE process_user;
     END IF;
 END IF;
@@ -139,8 +136,8 @@ END IF;
 /* Check sow_boar status*/
 IF cur_sow_boar_id > 0 THEN 
     IF cur_sow_boar_is_disposed > 0 THEN 
-        SET res_num     = RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC;
-        SET res_code    = "RES_NUM_DISPOSED_SOW_BOAR_CANNOT_ADD_MEDVAC";
+        SET res_num     = RES_NUM_SOW_BOAR_INACTIVE_STATUS;
+        SET res_code    = "RES_NUM_SOW_BOAR_INACTIVE_STATUS";
         
         LEAVE process_user;
     END IF;

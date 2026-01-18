@@ -27,9 +27,11 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
+DECLARE RES_NUM_PIG_PROD_INACTIVE_STATUS        INT             DEFAULT 20;
+DECLARE RES_NUM_SOW_BOAR_INACTIVE_STATUS        INT             DEFAULT 21;
 
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
+
 
 /* pig_prod_notes.flag bits*/
 DECLARE FLAG_BIT_PIG_PROD_NOTES_IS_DELETED      INT             DEFAULT 1;
@@ -41,11 +43,12 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
-
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
+
+
+DECLARE cur_account_id_to_check                 INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
@@ -53,7 +56,18 @@ DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
+
+DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
+DECLARE cur_sow_boar_pig_farm_id                INT             DEFAULT 0;
+DECLARE cur_sow_boar_is_disposed                INT             DEFAULT 0;
+
+
+DECLARE cur_is_active_status                    INT             DEFAULT 0;
+
+
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
+
 
 DECLARE cur_flag                                INT             DEFAULT 0;
 
@@ -71,6 +85,7 @@ IF in_pig_prod_id > 0 THEN
             account_id,
             pig_farm_id,
             prod_status_id
+    
     INTO    
             cur_pig_prod_account_id,
             cur_pig_prod_pig_farm_id,
@@ -79,21 +94,25 @@ IF in_pig_prod_id > 0 THEN
     FROM    pig_production 
     WHERE   id = in_pig_prod_id
     LIMIT   1;
-
+    
+    SET cur_account_id_to_check = cur_pig_prod_account_id;
 END IF;
 
 
 IF in_sow_boar_id > 0 THEN 
     SELECT  
             account_id,
-            pig_farm_id
+            pig_farm_id,
+            is_disposed
     INTO 
-            cur_pig_prod_account_id,
-            cur_pig_prod_pig_farm_id
+            cur_sow_boar_account_id,
+            cur_sow_boar_pig_farm_id,
+            cur_sow_boar_is_disposed
             
     FROM    sow_boar
     WHERE   id = in_sow_boar_id;
 
+    SET cur_account_id_to_check = cur_sow_boar_account_id;
 END IF;
 
 
@@ -110,13 +129,15 @@ IF in_production_group_id > 0 THEN
     FROM    production_group 
     WHERE   id = in_production_group_id
     LIMIT   1;
+    
+    SET cur_account_id_to_check = cur_pig_prod_account_id;
 END IF;
 
 
 CALL basic_user_check(
     in_user_id, 
     1, /* user must have an account*/
-    cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
+    cur_account_id_to_check, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_PIG_PROD_NOTES,
     FLAG_BIT_OPERATION_ADD,
@@ -138,14 +159,34 @@ END IF;
 
 IF in_pig_prod_id > 0 THEN 
 
-    IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
-        SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
-        SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
-        
+    SET cur_is_active_status = 0;
+    CALL pig_prod_check_active_status(cur_pig_prod_status_id, cur_is_active_status);
+    
+    IF cur_is_active_status = 0 THEN 
+        SET res_num     = RES_NUM_PIG_PROD_INACTIVE_STATUS;
+        SET res_code    = "RES_NUM_PIG_PROD_INACTIVE_STATUS";
+    
+        LEAVE process_user;
+    END IF;
+    
+
+END IF;
+
+
+IF in_sow_boar_id > 0 THEN 
+    IF cur_sow_boar_is_disposed > 0 THEN 
+        SET res_num     = RES_NUM_SOW_BOAR_INACTIVE_STATUS;
+        SET res_code    = "RES_NUM_SOW_BOAR_INACTIVE_STATUS";
+    
         LEAVE process_user;
     END IF;
 
 END IF;
+
+
+
+
+
 
 
 IF  in_is_health_issue > 0 THEN 
