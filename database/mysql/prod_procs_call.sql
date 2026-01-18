@@ -27,6 +27,8 @@ CALL pig_prod_add(1, 1, 6, NULL, 0, 0, "", 2, "2025-11-06");
 CALL pig_prod_add(1, 3, 6, NULL, 0, 0, "", 2, "2025-11-06");
 
 
+CALL pig_prod_add(1, 7, 12, NULL, NULL, NULL, 0, 0, "Pirmerong Takal Desidido+Kurdapya", 2, 0, "2026-01-18");
+
 
 CALL sow_update_actual_birth_date(1, '2025-01-05', 4, 3, 6);
 CALL sow_update_actual_birth_date(5, '2025-05-03', 1, 1, 2);
@@ -265,6 +267,8 @@ CALL sow_boar_balance_add(1,  1,  '2026-01-03', 1, 7);
 CALL feed_balance_add(1,  13, NULL, '2026-01-10', 9,  0,   0, 0,     0, 6,    8);
 CALL sow_boar_balance_add(1,  1,  '2026-01-10', 6, 10);
 
+CALL feed_balance_add(1,  13, NULL, '2026-01-17', 9,  0,   0, 0,     0, 2,    8);
+CALL sow_boar_balance_add(1,  1,  '2026-01-17', 4.5, 8);
 
 
 

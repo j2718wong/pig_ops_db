@@ -90,6 +90,8 @@ IF in_sow_boar_id > 0 THEN
     INTO 
             cur_pig_prod_account_id,
             cur_pig_prod_pig_farm_id
+            
+    FROM    sow_boar
     WHERE   id = in_sow_boar_id;
 
 END IF;

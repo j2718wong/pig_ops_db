@@ -44,6 +44,11 @@ DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 DECLARE RES_NUM_NOT_ALLOWED_TO_UPDATE           INT             DEFAULT 21;
 
 
+/* feed_supplier.flag bits*/
+DECLARE FLAG_BIT_FEED_SUPPLIER_IS_DELETED       INT             DEFAULT 1;
+DECLARE FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED      INT             DEFAULT 2;
+
+
 /* user.flag bits*/
 DECLARE FLAG_BIT_SYSTEM_SUPER_USER              INT             DEFAULT 131072;
 

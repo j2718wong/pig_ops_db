@@ -198,7 +198,7 @@ INSERT INTO account(
     
     ACCOUNT_STATUS_ID_ON_TRIAL,
     CURRENT_DATE,
-    DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY)
+    DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY),
     
     in_user_id
 );

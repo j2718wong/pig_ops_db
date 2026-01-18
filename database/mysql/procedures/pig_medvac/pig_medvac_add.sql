@@ -310,6 +310,12 @@ INSERT INTO pig_medvac(
 SELECT LAST_INSERT_ID() INTO cur_medvac_id;
 
 
+IF in_health_issue_id > 0 THEN 
+    UPDATE pig_prod_notes SET 
+        last_pig_medvac_id = cur_medvac_id
+    WHERE id = in_health_issue_id;
+END IF;
+
 
 
 /* Insert INTO account_selection*/
