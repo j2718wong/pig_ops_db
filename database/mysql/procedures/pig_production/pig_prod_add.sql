@@ -290,6 +290,30 @@ IF in_boar_id IS NOT NULL THEN
 
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_id;
 
+    
+    /* Insert to sow_boar_mate*/
+    INSERT INTO sow_boar_mate(
+		pig_prod_id,
+        sow_boar_id,
+        mate_sow_boar_id,
+        date_mate
+    VALUES (
+		cur_pig_prod_id,
+        in_sow_id,
+        in_boar_id,
+        in_date_insemination
+    ),
+    
+    (
+        cur_pig_prod_id,
+		in_boar_id,
+        in_sow_id,
+        in_date_insemination
+    );
+
+
+
+    /* Update sow_boar last mate*/
     UPDATE sow_boar SET
         last_pig_production_id  = cur_pig_prod_id,
         mate_count              = mate_count + 1,
@@ -503,7 +527,7 @@ IF in_comments IS NOT NULL THEN
         cur_pig_prod_id,
         
         in_comments,
-        CURRENT_DATE,
+        in_date_insemination,
         in_user_id
     );
 

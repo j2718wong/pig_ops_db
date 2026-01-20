@@ -96,6 +96,13 @@ DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 DECLARE cur_count                               INT             DEFAULT 0;
 
 
+DECLARE cur_u_brand_name                        VARCHAR(50)     DEFAULT '';
+DECLARE cur_u_type_name                         VARCHAR(50)     DEFAULT '';
+DECLARE cur_u_acc_medvac_name                   VARCHAR(50)     DEFAULT '';
+DECLARE cur_u_medvac_notes                      VARCHAR(160)    DEFAULT '';
+    
+
+
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
 DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
@@ -278,6 +285,43 @@ IF in_done_by_user > 0 THEN
 END IF;
 
 
+/* These string copies of medvac_brand, medvac_type and medvac_name
+are used for faster text search for medvac. 
+
+Everytime a user type in key words for search in medvac entry,
+it will search through these columns 
+
+1.) u_brand_name
+2.) u_type_name
+3.) u_medvac_name
+4.) u_medvac_notes
+
+The medvac text search is performed using account_id not sow_boar_id, 
+so this needs to be fast.
+
+There is also a future plan to search for multiple accounts
+with same pig_farm.address_level_2_id, which is even has more data sets to searched.
+
+*/
+
+SELECT  name
+INTO    cur_u_brand_name 
+FROM    medvac_brand
+WHERE   id = in_medvac_brand_id;
+
+
+SELECT  name
+INTO    cur_u_type_name 
+FROM    medvac_type
+WHERE   id = in_medvac_type_id;
+
+
+SELECT  name
+INTO    cur_u_acc_medvac_name 
+FROM    acc_medvac
+WHERE   id = acc_medvac_id;
+
+
 
 INSERT INTO pig_medvac(
     
@@ -294,6 +338,9 @@ INSERT INTO pig_medvac(
     medvac_brand_id,
     acc_medvac_id,
     
+    u_brand_name,
+    u_type_name,
+    u_acc_medvac_name,
     
     notes,
     
@@ -316,6 +363,9 @@ INSERT INTO pig_medvac(
     in_medvac_brand_id,
     in_acc_medvac_id,
     
+    cur_u_brand_name,
+    cur_u_type_name,
+    cur_u_acc_medvac_name,
 
     in_notes,
     
