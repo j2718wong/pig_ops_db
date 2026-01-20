@@ -318,8 +318,8 @@ WHERE   id = in_medvac_type_id;
 
 SELECT  name
 INTO    cur_u_acc_medvac_name 
-FROM    acc_medvac
-WHERE   id = acc_medvac_id;
+FROM    account_medvac
+WHERE   id = in_acc_medvac_id;
 
 
 
