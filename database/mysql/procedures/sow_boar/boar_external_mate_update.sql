@@ -1,10 +1,10 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS boar_external_mate_add $$
-CREATE PROCEDURE boar_external_mate_add(
+DROP PROCEDURE IF EXISTS boar_external_mate_update $$
+CREATE PROCEDURE boar_external_mate_update(
     in_user_id              INT,
+    in_sow_boar_mate_id     INT,
     
-    in_boar_id              INT,
     in_boar_customer_id     INT,    /* This is mapped to account_pig_buyer*/
     
     in_customer_sow_name    VARCHAR(50),
@@ -41,12 +41,8 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
-DECLARE cur_sow_boar_pig_farm_id                INT             DEFAULT 0;
-
-
-DECLARE cur_sow_boar_mate_id                    INT             DEFAULT 0;
+DECLARE cur_sow_boar_mate_notes_id              INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
@@ -63,13 +59,15 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  account_id,
-        pig_farm_id
+SELECT  b.account_id,
+        a.notes_id
         
-INTO    
-        cur_sow_boar_account_id,
-        cur_sow_boar_pig_farm_id
-WHERE   id = in_pig_farm_id
+INTO    cur_sow_boar_account_id,
+        cur_sow_boar_mate_notes_id,
+        
+FROM    sow_boar_mate a
+LEFt OUTER JOIN  sow_boar b ON a.sow_boar_id = b.id
+WHERE   a.id = in_sow_boar_mate_id
 LIMIT   1;
 
 
@@ -99,70 +97,49 @@ END IF;
 /* Check for duplicate entry. */ 
 
 
-SELECT  id
-INTO    cur_sow_boar_mate_id
-FROM    sow_boar_mate
-WHERE   sow_boar_id         = in_boar_id            AND
-        boar_customer_id    = in_boar_customer_id   AND
-        date_mate           = in_date_mate;
-        
-LIMIT 1;
-        
-
-
-IF cur_sow_boar_mate_id > 0 THEN 
-    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
-    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
-    
-    LEAVE process_user;
-END IF;
-
-
 
     
     
-INSERT INTO sow_boar_mate(
-    sow_boar_id,
-    boar_customer_id,
-    customer_sow_name,
+UPDATE sow_boar_mate(
+    boar_customer_id    = in_boar_customer_id,
+    customer_sow_name   = in_customer_sow_name,
     
-    date_mate,
+    date_mate           = in_date_mate,
     
-    added_by_user_id
-) VALUES (
-    in_boar_id,
-    in_boar_customer_id,
-    in_customer_sow_name,
-    
-    in_date_mate,
-    
-    in_user_id
-);
+    last_update_user_id = in_user_id,
+    dt_last_update      = CURRENT_TIMESTAMP
 
-SELECT LAST_INSERT_ID() INTO cur_sow_boar_mate_id;
-
+WHERE id = in_sow_boar_mate_id;
 
 IF in_notes IS NOT NULL THEN
-    INSERT INTO pig_prod_notes (
-        sow_boar_id,
-        
-        notes,
-        date_notes,
-        added_by_user_id
-        
-    ) VALUES (
-        in_boar_id,
-        
-        in_notes,
-        in_date_mate,
-        in_user_id
-    );
+    IF cur_sow_boar_mate_notes_id IS  NULL THEN 
 
-    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
-    
-    UPDATE sow_boar_mate SET
-        notes_id = cur_pig_prod_notes_id
-    WHERE id = cur_sow_boar_mate_id;
+        INSERT INTO pig_prod_notes (
+            sow_boar_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            in_boar_id,
+            
+            in_notes,
+            in_date_mate,
+            in_user_id
+        );
+
+        SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+        
+        UPDATE sow_boar_mate SET
+            notes_id = cur_pig_prod_notes_id
+        WHERE id = in_sow_boar_mate_id;
+        
+    ELSE
+        UPDATE pig_prod_notes SET
+            notes = in_notes
+        WHERE id = cur_sow_boar_mate_notes_id;
+    END IF;
 
 END IF;
 
@@ -175,9 +152,7 @@ END process_user;
 SELECT 
     res_num                             AS result_number,
     res_code                            AS result_code,
-    res_desc                            AS result_desc,
-    
-    cur_sow_boar_mate_id                AS sow_boar_mate_id;
+    res_desc                            AS result_desc;
     
 
 END $$

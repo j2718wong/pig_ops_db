@@ -293,12 +293,12 @@ IF in_boar_id IS NOT NULL THEN
     
     /* Insert to sow_boar_mate*/
     INSERT INTO sow_boar_mate(
-		pig_prod_id,
+        pig_prod_id,
         sow_boar_id,
         mate_sow_boar_id,
         date_mate
     VALUES (
-		cur_pig_prod_id,
+        cur_pig_prod_id,
         in_sow_id,
         in_boar_id,
         in_date_insemination
@@ -306,7 +306,7 @@ IF in_boar_id IS NOT NULL THEN
     
     (
         cur_pig_prod_id,
-		in_boar_id,
+        in_boar_id,
         in_sow_id,
         in_date_insemination
     );
