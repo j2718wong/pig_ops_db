@@ -16,7 +16,7 @@ CREATE PROCEDURE boar_external_mate_update(
 BEGIN
 
 /** 
- * Will add sow_boar entry.
+ * Will update sow_boar_mate.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 15, 2025
@@ -63,7 +63,7 @@ SELECT  b.account_id,
         a.notes_id
         
 INTO    cur_sow_boar_account_id,
-        cur_sow_boar_mate_notes_id,
+        cur_sow_boar_mate_notes_id
         
 FROM    sow_boar_mate a
 LEFt OUTER JOIN  sow_boar b ON a.sow_boar_id = b.id
@@ -100,7 +100,7 @@ END IF;
 
     
     
-UPDATE sow_boar_mate(
+UPDATE sow_boar_mate SET
     boar_customer_id    = in_boar_customer_id,
     customer_sow_name   = in_customer_sow_name,
     

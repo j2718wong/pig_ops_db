@@ -9,6 +9,12 @@ CREATE PROCEDURE account_pig_buyer_add(
     in_address_level_2_id   INT,
     in_address_level_3_id   INT,
     
+    in_latitude             DECIMAL(10,5),
+    in_longitude            DECIMAL(10,5),
+    
+    in_is_boar_customer     INT,
+    
+    
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
     in_whatsapp             VARCHAR(20),
@@ -42,6 +48,8 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 /* account_pig_buyer.flag bits*/
 DECLARE FLAG_BIT_ACCOUNT_PIG_BUYER_IS_DELETED   INT             DEFAULT 1;
+DECLARE FLAG_BIT_PIG_BUYER_IS_BOAR_CUSTOMER     INT             DEFAULT 2;
+
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -100,6 +108,10 @@ IF cur_account_pig_buyer_id > 0 THEN
 END IF;
 
 
+SET cur_account_pig_buyer_flag  = 0;
+IF in_is_boar_customer > 0 THEN
+    SET cur_account_pig_buyer_flag  = FLAG_BIT_PIG_BUYER_IS_BOAR_CUSTOMER;
+END IF;
 
 INSERT INTO account_pig_buyer(
     account_id,
@@ -107,6 +119,11 @@ INSERT INTO account_pig_buyer(
     address_level_1_id,
     address_level_2_id,
     address_level_3_id,
+    
+    latitude,
+    longitude,
+    
+    flag, 
     
     name,
     
@@ -124,6 +141,12 @@ INSERT INTO account_pig_buyer(
     in_address_level_1_id,
     in_address_level_2_id,
     in_address_level_3_id,
+    
+    in_latitude,
+    in_longitude,
+    
+    
+    cur_account_pig_buyer_flag,
    
     in_name,
    

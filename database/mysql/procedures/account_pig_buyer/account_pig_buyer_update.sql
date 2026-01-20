@@ -11,6 +11,12 @@ CREATE PROCEDURE account_pig_buyer_update(
     in_address_level_2_id   INT,
     in_address_level_3_id   INT,
     
+    in_latitude             DECIMAL(10,5),
+    in_longitude            DECIMAL(10,5),
+    
+    in_is_boar_customer     INT,
+    
+    
     in_name                 VARCHAR(50),
     in_contact_number       VARCHAR(20),
     in_whatsapp             VARCHAR(20),
@@ -45,6 +51,7 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 /* account_pig_buyer.flag bits*/
 DECLARE FLAG_BIT_ACCOUNT_PIG_BUYER_IS_DELETED   INT             DEFAULT 1;
+DECLARE FLAG_BIT_PIG_BUYER_IS_BOAR_CUSTOMER     INT             DEFAULT 2;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -66,8 +73,12 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  account_id
-INTO    cur_account_pig_buyer_account_id
+SELECT  account_id,
+        flag
+
+INTO    cur_account_pig_buyer_account_id,
+        cur_account_pig_buyer_flag
+        
 FROM    account_pig_buyer
 WHERE   id = in_account_pig_buyer_id
 LIMIT   1;
@@ -95,11 +106,23 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/*CLEAR FLAG_BIT_PIG_BUYER_IS_BOAR_CUSTOMER*/
+SET cur_account_pig_buyer_flag = cur_account_pig_buyer_flag & ~FLAG_BIT_PIG_BUYER_IS_BOAR_CUSTOMER;
+
+IF in_is_boar_customer > 0 THEN 
+    SET cur_account_pig_buyer_flag = cur_account_pig_buyer_flag | FLAG_BIT_PIG_BUYER_IS_BOAR_CUSTOMER;
+END IF;
+
+
+
+
 UPDATE account_pig_buyer SET 
     country_id              = in_country_id,
     address_level_1_id      = in_address_level_1_id,
     address_level_2_id      = in_address_level_2_id,
     address_level_3_id      = in_address_level_3_id,
+    
+    flag                    = cur_account_pig_buyer_flag,
     
     name                    = in_name,    
     contact_number          = in_contact_number,

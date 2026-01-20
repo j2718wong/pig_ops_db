@@ -104,7 +104,7 @@ INTO    cur_sow_boar_mate_id
 FROM    sow_boar_mate
 WHERE   sow_boar_id         = in_boar_id            AND
         boar_customer_id    = in_boar_customer_id   AND
-        date_mate           = in_date_mate;
+        date_mate           = in_date_mate
         
 LIMIT 1;
         
