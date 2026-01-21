@@ -44,7 +44,22 @@ BEGIN
  *
  * 5.) Additional gestating feed in feed balance in case user wants to
  *  to track this.
+ *
+ *
+ * Notes 2026-01-26:
+ * 1.) There will be a sum up of feed_buy of a given pig_prod or pig_prod_group
+ * on the date_balance. This is because in the mobile UI, the already bought 
+ * feeds will be visible in every feed_balance entry.
+ *
+ *
  * 
+ *
+ *
+ * 
+ *
+ *
+ * 
+ 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 25, 2025
  *
@@ -103,6 +118,18 @@ DECLARE cur_pig_prod_last_feed_balance_id       INT             DEFAULT 0;
 
 
 DECLARE cur_feed_balance_id                     INT             DEFAULT 0;
+
+DECLARE cur_feed_buy_gestating                  INT             DEFAULT 0;
+DECLARE cur_feed_buy_lactating                  INT             DEFAULT 0;
+DECLARE cur_feed_buy_booster                    INT             DEFAULT 0;
+DECLARE cur_feed_buy_prestarter                 INT             DEFAULT 0;
+DECLARE cur_feed_buy_starter                    INT             DEFAULT 0;
+DECLARE cur_feed_buy_grower                     INT             DEFAULT 0;
+DECLARE cur_feed_buy_finisher                   INT             DEFAULT 0;
+    
+
+
+
 
 DECLARE cur_num_days_since_birth                INT             DEFAULT 0;
 DECLARE cur_num_weeks_since_birth               INT             DEFAULT 0;
@@ -249,7 +276,76 @@ IF in_num_pigs IS NULL THEN
 END IF;
 
 
+/*
+Count all feed_buy before and on this in_date_balance
+for every feed_type.
+*/
+
+
+
+SELECT  SUM(quantity)
+INTO    cur_feed_buy_gestating
+FROM    feed_buy
+WHERE   pig_prod_id = in_pig_prod_id AND
+        feed_type_id = FEED_TYPE_ID_GESTATING AND
+        date_buy <= in_date_balance;
+
+SELECT  SUM(quantity)
+INTO    cur_feed_buy_lactating
+FROM    feed_buy
+WHERE   pig_prod_id = in_pig_prod_id AND
+        feed_type_id = FEED_TYPE_ID_LACTATING AND
+        date_buy <= in_date_balance;
+
+
+SELECT  SUM(quantity)
+INTO    cur_feed_buy_booster
+FROM    feed_buy
+WHERE   pig_prod_id = in_pig_prod_id AND
+        feed_type_id = FEED_TYPE_ID_BOOSTER AND
+        date_buy <= in_date_balance;
+
+
+SELECT  SUM(quantity)
+INTO    cur_feed_buy_prestarter
+FROM    feed_buy
+WHERE   pig_prod_id = in_pig_prod_id AND
+        feed_type_id = FEED_TYPE_ID_PRESTARTER AND
+        date_buy <= in_date_balance;
+
+
+SELECT  SUM(quantity)
+INTO    cur_feed_buy_starter
+FROM    feed_buy
+WHERE   pig_prod_id = in_pig_prod_id AND
+        feed_type_id = FEED_TYPE_ID_STARTER AND
+        date_buy <= in_date_balance;
+
+
+SELECT  SUM(quantity)
+INTO    cur_feed_buy_grower
+FROM    feed_buy
+WHERE   pig_prod_id = in_pig_prod_id AND
+        feed_type_id = FEED_TYPE_ID_GROWER AND
+        date_buy <= in_date_balance;
+
+
+SELECT  SUM(quantity)
+INTO    cur_feed_buy_finisher
+FROM    feed_buy
+WHERE   pig_prod_id = in_pig_prod_id AND
+        feed_type_id = FEED_TYPE_ID_FINISHER AND
+        date_buy <= in_date_balance;
+
+    
+
+
+
+
+
 IF cur_feed_balance_id = 0 THEN 
+    
+
     INSERT INTO feed_balance(
         pig_prod_id,
         pig_prod_group_id,
@@ -257,6 +353,14 @@ IF cur_feed_balance_id = 0 THEN
         date_balance,
         
         num_pigs,
+        
+        num_b_gestating,
+        num_b_lactating,
+        num_b_booster,
+        num_b_prestarter,
+        num_b_starter,
+        num_b_grower,
+        num_b_finisher,
         
         num_gestating,
         num_lactating,
@@ -275,6 +379,14 @@ IF cur_feed_balance_id = 0 THEN
         
         in_num_pigs,
         
+        cur_feed_buy_gestating,
+        cur_feed_buy_lactating,
+        cur_feed_buy_booster,
+        cur_feed_buy_prestarter,
+        cur_feed_buy_starter,
+        cur_feed_buy_grower,
+        cur_feed_buy_finisher,
+        
         in_num_gestating,
         in_num_lactating,
         in_num_booster,
@@ -292,14 +404,22 @@ ELSE
     UPDATE feed_balance SET 
     
         num_pigs            = in_num_pigs,
-    
+        
+        num_b_gestating     = cur_feed_buy_gestating,
+        num_b_lactating     = cur_feed_buy_lactating,
+        num_b_booster       = cur_feed_buy_booster,
+        num_b_prestarter    = cur_feed_buy_prestarter,
+        num_b_starter       = cur_feed_buy_starter,
+        num_b_grower        = cur_feed_buy_grower,
+        num_b_finisher      = cur_feed_buy_finisher,
+        
         num_gestating       = in_num_gestating,
-        num_l_lactating     = in_num_lactating,
-        num_l_booster       = in_num_booster,
-        num_l_prestarter    = in_num_prestarter,
-        num_l_starter       = in_num_starter,
-        num_l_grower        = in_num_grower,
-        num_l_finisher      = in_num_finisher,
+        num_lactating       = in_num_lactating,
+        num_booster         = in_num_booster,
+        num_prestarter      = in_num_prestarter,
+        num_starter         = in_num_starter,
+        num_grower          = in_num_grower,
+        num_finisher        = in_num_finisher,
     
         last_update_user_id = in_user_id,
         dt_last_update      = CURRENT_TIMESTAMP
