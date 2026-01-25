@@ -499,7 +499,10 @@ ELSE
     INSERT INTO pig_prod_ai(
         pig_farm_id,
         pig_prod_id,
-        semen_source_id,
+        semen_supplier_id,
+        semen_sup_semen_id,
+        semen_ai_boar_id,
+        
         insem_staff_id,
         date_insemination,
         
@@ -507,7 +510,10 @@ ELSE
     ) VALUES(
         cur_sow_boar_pig_farm_id,
         cur_pig_prod_id,
-        in_semen_source_id,
+        in_semen_supplier_id,
+        in_semen_sup_semen_id,
+        in_semen_ai_boar_id,
+        
         in_insem_staff_id,
         in_date_insemination,
         
