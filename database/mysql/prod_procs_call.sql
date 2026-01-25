@@ -270,6 +270,12 @@ CALL sow_boar_balance_add(1,  1,  '2026-01-10', 6, 10);
 CALL feed_balance_add(1,  13, NULL, '2026-01-17', 9,  0,   0, 0,     0, 2,    8);
 CALL sow_boar_balance_add(1,  1,  '2026-01-17', 4.5, 8);
 
+CALL feed_balance_add(1,  13, NULL, '2026-01-24', 9,  0,   0, 0,     0, 0,    7);
+CALL sow_boar_balance_add(1,  1,  '2026-01-24', 3.5, 3.5);
+
+
+
+
 
 
   

@@ -118,6 +118,33 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/*
+2026-01-24 Notes:
+1.) The supplier flags 
+
+is_feed_supplier,
+is_gilt_supplier,
+is_semen_supplier,
+
+
+can be SET by any user;
+
+TODO: still thinking the restrictions who can CLEAR the flags.
+
+
+2.) The supplier name is editable only by the account owner  
+of the user who created it. This is to prevent abuse as this is a public data.
+
+3.) The address level_3_id is editable by any account owner who has a 
+account_selection of this supplier.
+
+This action difers from the supplier_flag update since 
+
+ 
+
+*/
+
+
 /* Read updatable data entered by user before update*/
 SELECT  country_id,
         address_level_1_id,
