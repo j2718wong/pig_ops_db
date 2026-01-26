@@ -235,11 +235,9 @@ END IF;
 
 
 /* Set previous pig_production of this sow to not pregnant, if status is gestating*/
-IF cur_sow_boar_last_prod_status_id = PRODUCTION_STATUS_ID_GESTATING THEN 
-    UPDATE pig_production SET 
-        prod_status_id = PRODUCTION_STATUS_ID_NOT_PREGNANT
-    WHERE id = cur_sow_boar_last_prod_id;
-END IF;
+UPDATE pig_production SET 
+    prod_status_id = PRODUCTION_STATUS_ID_NOT_PREGNANT
+WHERE sow_id = in_sow_id AND prod_status_id = PRODUCTION_STATUS_ID_GESTATING;
 
 
 SELECT  last_pig_production_id

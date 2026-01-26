@@ -193,7 +193,6 @@ UPDATE pig_production SET
     insemination_type   = cur_insemination_type,
 
     boar_id             = in_boar_id,
-    semen_source_id     = in_semen_source_id,
     
     semen_supplier_id   = in_semen_supplier_id,
     semen_sup_semen_id  = in_semen_sup_semen_id,
