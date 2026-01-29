@@ -8,14 +8,10 @@ CREATE PROCEDURE pig_prod_pig_ops_medvac_update(
     in_staff_id             INT,
     in_done_by_user         INT,
 
-    in_medvac_type_id       INT,
     in_medvac_brand_id      INT,
-    in_medvac_name          VARCHAR(80),
+    in_medvac_type_id       INT,
+    in_acc_medvac_id        INT,
     
-    in_quantity             INT,
-    in_unit                 VARCHAR(20),
-    
-
     in_date                 VARCHAR(10),
     in_notes                VARCHAR(160)
 )  
@@ -23,7 +19,7 @@ CREATE PROCEDURE pig_prod_pig_ops_medvac_update(
 BEGIN
 
 /** 
- * Will update pig_prod_pig_ops entry.
+ * Will update pig_prod_pig_ops entry. This is the variation if the pigops is a medvac.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 28, 2025
@@ -33,8 +29,10 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
-DECLARE RES_NUM_CANNOT_BE_UDPATED               INT             DEFAULT 21;
+DECLARE RES_NUM_SOW_BOAR_ALREADY_DISPOSED       INT             DEFAULT 20;
+
+DECLARE RES_NUM_PIG_PROD_INACTIVE_STATUS        INT             DEFAULT 21;
+DECLARE RES_NUM_CANNOT_BE_UDPATED               INT             DEFAULT 22;
 
 
 DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_OPS        INT             DEFAULT 23;
@@ -51,7 +49,9 @@ DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
-DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
+DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
+DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
+DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -75,6 +75,11 @@ DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE cur_prod_pig_ops_id                     INT             DEFAULT 0;
 
+
+DECLARE cur_sow_is_disposed                     INT             DEFAULT 0;
+
+DECLARE cur_is_active_status                    INT             DEFAULT 0;
+
 DECLARE cur_medvac_id                           INT             DEFAULT 0;
 
 DECLARE cur_acc_pig_ops_name                    VARCHAR(50);
@@ -82,6 +87,12 @@ DECLARE cur_staff_name                          VARCHAR(50);
 DECLARE cur_notes                               VARCHAR(200);
 
 DECLARE added_new_staff                         INT             DEFAULT 0;
+
+
+DECLARE cur_u_brand_name                        VARCHAR(50)     DEFAULT '';
+DECLARE cur_u_type_name                         VARCHAR(50)     DEFAULT '';
+DECLARE cur_u_acc_medvac_name                   VARCHAR(50)     DEFAULT '';
+DECLARE cur_u_medvac_notes                      VARCHAR(160)    DEFAULT '';
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -145,25 +156,59 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
-    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
-    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+/* Check sow_boar status*/
+IF cur_pig_prod_pig_ops_sow_boar_id > 0 THEN
+    /** Check sow_status if not yet disposed*/
+    SELECT  is_disposed
+    INTO    cur_sow_is_disposed
+    FROM    sow_boar
+    WHERE   id  = cur_pig_prod_pig_ops_sow_boar_id;
     
-    LEAVE process_user;
-END IF;
-
-
-
-IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
-    IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_GESTATING THEN 
-        SET res_num     = RES_NUM_CANNOT_BE_UDPATED;
-        SET res_code    = "RES_NUM_CANNOT_BE_UDPATED";
+    
+    IF cur_sow_is_disposed  > 0 THEN 
+        SET res_num     = RES_NUM_SOW_BOAR_ALREADY_DISPOSED;
+        SET res_code    = "RES_NUM_SOW_BOAR_ALREADY_DISPOSED";
         
         LEAVE process_user;
     END IF;
+    
 END IF;
 
 
+/* Check pig_production status*/
+IF cur_pig_prod_id > 0 THEN 
+    SET cur_is_active_status = 0;
+    CALL pig_prod_check_active_status(cur_pig_prod_status_id, cur_is_active_status);
+    
+    IF cur_is_active_status = 0 THEN 
+        SET res_num     = RES_NUM_PIG_PROD_INACTIVE_STATUS;
+        SET res_code    = "RES_NUM_PIG_PROD_INACTIVE_STATUS";
+    
+        LEAVE process_user;
+    END IF;
+
+
+    IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+        IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_GESTATING THEN 
+            SET res_num     = RES_NUM_CANNOT_BE_UDPATED;
+            SET res_code    = "RES_NUM_CANNOT_BE_UDPATED";
+            
+            LEAVE process_user;
+        END IF;
+    END IF;
+    
+    
+    IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS THEN 
+        IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_LACTATING THEN 
+            SET res_num     = RES_NUM_CANNOT_BE_UDPATED;
+            SET res_code    = "RES_NUM_CANNOT_BE_UDPATED";
+            
+            LEAVE process_user;
+        END IF;
+    END IF;
+    
+
+END IF;
 
 
 IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 THEN 
@@ -300,10 +345,54 @@ UPDATE pig_prod_pig_ops SET
 WHERE id = in_pig_prod_pig_ops_id;
 
 
+
+/* These string copies of medvac_brand, medvac_type and medvac_name
+are used for faster text search for medvac. 
+
+Everytime a user type in key words for search in medvac entry,
+it will search through these columns 
+
+1.) u_brand_name
+2.) u_type_name
+3.) u_medvac_name
+4.) u_medvac_notes
+
+The medvac text search is performed using account_id not sow_boar_id, 
+so this needs to be fast.
+
+There is also a future plan to search for multiple accounts
+with same pig_farm.address_level_2_id, which is even has more data sets to searched.
+
+*/
+
+SELECT  name
+INTO    cur_u_brand_name 
+FROM    medvac_brand
+WHERE   id = in_medvac_brand_id;
+
+
+SELECT  name
+INTO    cur_u_type_name 
+FROM    medvac_type
+WHERE   id = in_medvac_type_id;
+
+
+SELECT  name
+INTO    cur_u_acc_medvac_name 
+FROM    account_medvac
+WHERE   id = in_acc_medvac_id;
+
+
+
+
+
 IF cur_pig_prod_pig_ops_pig_medvac_id IS NULL THEN 
+    
+    /* Relate to SOW if operation is related to sow. */
     IF cur_pig_prod_pig_ops_operation_type IN (
                                     PIG_OPERATION_TYPE_GESTATING,
-                                    PIG_OPERATION_TYPE_LACTATING_SOW) THEN
+                                    PIG_OPERATION_TYPE_LACTATING_SOW,
+                                    PIG_OPERATION_TYPE_GILT_OPS) THEN
 
         INSERT INTO pig_medvac(
     
@@ -314,14 +403,17 @@ IF cur_pig_prod_pig_ops_pig_medvac_id IS NULL THEN
             date_medvac,
             medvac_type_id,
             medvac_brand_id,
+            acc_medvac_id,
+    
+            u_brand_name,
+            u_type_name,
+            u_acc_medvac_name,
             
-            quantity,
-            unit,
-            
+            notes,
+                    
             staff_id,
             
-            added_by_user_id,
-            notes_id
+            added_by_user_id
 
         ) VALUES (
             in_pig_prod_pig_ops_id,
@@ -331,14 +423,17 @@ IF cur_pig_prod_pig_ops_pig_medvac_id IS NULL THEN
             in_date,
             in_medvac_type_id,
             in_medvac_brand_id,
+            in_acc_medvac_id,
             
-            in_quantity,
-            in_unit,
+            cur_u_brand_name,
+            cur_u_type_name,
+            cur_u_acc_medvac_name,
+            
+            in_notes,
             
             in_staff_id,
             
-            in_user_id,
-            cur_pig_prod_pig_ops_notes_id
+            in_user_id
         );
 
         SELECT LAST_INSERT_ID() INTO cur_medvac_id;
@@ -349,6 +444,8 @@ IF cur_pig_prod_pig_ops_pig_medvac_id IS NULL THEN
         
     END IF;
     
+    
+    /* Relate to PIG_PROD if operation is related to piglets. */
     IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS THEN
         INSERT INTO pig_medvac(
     
@@ -359,31 +456,38 @@ IF cur_pig_prod_pig_ops_pig_medvac_id IS NULL THEN
             date_medvac,
             medvac_type_id,
             medvac_brand_id,
+            acc_medvac_id,
+    
+            u_brand_name,
+            u_type_name,
+            u_acc_medvac_name,
             
-            quantity,
-            unit,
+            notes,
+            
             
             staff_id,
             
-            added_by_user_id,
-            notes_id
+            added_by_user_id
 
         ) VALUES (
             in_pig_prod_pig_ops_id,
             
             cur_pig_prod_id,
             
-            in_date_medvac,
+            in_date,
             in_medvac_type_id,
             in_medvac_brand_id,
+            in_acc_medvac_id,
             
-            in_quantity,
-            in_unit,
+            cur_u_brand_name,
+            cur_u_type_name,
+            cur_u_acc_medvac_name,
+            
+            in_notes,
             
             in_staff_id,
             
-            in_user_id,
-            cur_pig_prod_pig_ops_notes_id
+            in_user_id
         );
 
         SELECT LAST_INSERT_ID() INTO cur_medvac_id;
@@ -392,53 +496,26 @@ IF cur_pig_prod_pig_ops_pig_medvac_id IS NULL THEN
             pig_medvac_id = cur_medvac_id
         WHERE id = in_pig_prod_pig_ops_id;
     END IF;
-    
-    
-    IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_GILT_OPS THEN
-        INSERT INTO pig_medvac(
-    
-            pig_prod_pig_ops_id,
-            
-            sow_boar_id,
-            
-            date_medvac,
-            medvac_type_id,
-            medvac_brand_id,
-            
-            quantity,
-            unit,
-            
-            staff_id,
-            
-            added_by_user_id,
-            notes_id
 
-        ) VALUES (
-            in_pig_prod_pig_ops_id,
-            
-            cur_pig_prod_pig_ops_sow_boar_id,
-            
-            in_date_medvac,
-            in_medvac_type_id,
-            in_medvac_brand_id,
-            
-            in_quantity,
-            in_unit,
-            
-            in_staff_id,
-            
-            in_user_id,
-            cur_pig_prod_pig_ops_notes_id
-        );
-
-        SELECT LAST_INSERT_ID() INTO cur_medvac_id;
+ELSE
+    /* Update MEDVAC*/
+    
+    UPDATE pig_medvac  SET
+        date_medvac         = in_date,
         
-        UPDATE pig_prod_pig_ops SET 
-            pig_medvac_id = cur_medvac_id
-        WHERE id = in_pig_prod_pig_ops_id;
-    END IF;
-    
-    
+        medvac_brand_id     = in_medvac_brand_id,
+        medvac_type_id      = in_medvac_type_id,
+        acc_medvac_id       = in_acc_medvac_id,
+        
+        staff_id            = in_staff_id,
+        notes               = in_notes,
+        
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP
+    WHERE id = cur_pig_prod_pig_ops_pig_medvac_id;
+
+
+      
 END IF;
 
 

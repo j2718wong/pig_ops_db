@@ -9,7 +9,7 @@ CREATE PROCEDURE pig_prod_update_insem(
     in_boar_id              INT,
     
     in_semen_supplier_id    INT,
-    in_semen_sup_semen_id  	INT,    /* semen supplier semen_id*/
+    in_semen_sup_semen_id   INT,    /* semen supplier semen_id*/
     in_semen_ai_boar_id     INT,    /* semen coming from one of farm's boar*/
     
     
@@ -203,6 +203,8 @@ UPDATE pig_production SET
     
     date_insemination   = in_date_insemination,
     date_expected_birth = DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
+    
+    insem_staff_id      = in_insem_staff_id,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP

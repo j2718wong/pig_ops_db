@@ -34,7 +34,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_PIG_PROD_INACTIVE_STATUS        INT             DEFAULT 20;
-DECLARE RES_NUM_SOW_BOAR_INACTIVE_STATUS        INT             DEFAULT 21;
+DECLARE RES_NUM_SOW_BOAR_ALREADY_DISPOSED        INT             DEFAULT 21;
 
 
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 22;
@@ -99,8 +99,6 @@ DECLARE cur_count                               INT             DEFAULT 0;
 DECLARE cur_u_brand_name                        VARCHAR(50)     DEFAULT '';
 DECLARE cur_u_type_name                         VARCHAR(50)     DEFAULT '';
 DECLARE cur_u_acc_medvac_name                   VARCHAR(50)     DEFAULT '';
-DECLARE cur_u_medvac_notes                      VARCHAR(160)    DEFAULT '';
-    
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -175,6 +173,19 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/* Check sow_boar status*/
+IF in_sow_boar_id > 0 THEN 
+    IF cur_sow_boar_is_disposed > 0 THEN 
+        SET res_num     = RES_NUM_SOW_BOAR_ALREADY_DISPOSED;
+        SET res_code    = "RES_NUM_SOW_BOAR_ALREADY_DISPOSED";
+        
+        LEAVE process_user;
+    END IF;
+    
+END IF;
+
+
+
 /* Check pig_production status*/
 IF in_pig_prod_id > 0 THEN
     
@@ -191,16 +202,6 @@ IF in_pig_prod_id > 0 THEN
 END IF;
 
 
-/* Check sow_boar status*/
-IF in_sow_boar_id > 0 THEN 
-    IF cur_sow_boar_is_disposed > 0 THEN 
-        SET res_num     = RES_NUM_SOW_BOAR_INACTIVE_STATUS;
-        SET res_code    = "RES_NUM_SOW_BOAR_INACTIVE_STATUS";
-        
-        LEAVE process_user;
-    END IF;
-    
-END IF;
 
 
 
