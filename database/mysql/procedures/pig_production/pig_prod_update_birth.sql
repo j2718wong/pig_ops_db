@@ -11,7 +11,8 @@ CREATE PROCEDURE pig_prod_update_birth(
     in_num_pigs_live_m          INT,
     in_num_pigs_live_f          INT,
     
-    in_birth_staff_id           INT
+    in_birth_staff_id           INT,
+    in_done_by_user             INT
     
 )
 
@@ -68,6 +69,9 @@ DECLARE FLAG_BIT_DAY_1_ON_DATE_OF_INSEM         INT             DEFAULT 2;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
+DECLARE cur_user_staff_id                       INT             DEFAULT 0;
+DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT '';
+DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT '';
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
@@ -85,6 +89,9 @@ DECLARE num_days_to_add                         INT             DEFAULT 0;
 
 DECLARE date_temp                               DATE            DEFAULT NULL;
 DECLARE detected_actual_date_birth_change       INT             DEFAULT 0;
+
+DECLARE added_new_staff                         INT             DEFAULT 0;
+
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -171,6 +178,56 @@ ELSE
     END IF;
 
 END IF;
+
+
+/* If done by user, user will be added to staff list.
+Note: not all staff are users
+*/
+IF in_done_by_user > 0 THEN
+    SELECT  pig_farm_staff_id,
+            name_first,
+            name_last
+    
+    INTO    cur_user_staff_id,
+            cur_user_name_first,
+            cur_user_name_last
+    FROM    user 
+    WHERE   id = in_user_id;
+    
+    
+    IF cur_user_staff_id = 0 THEN 
+        INSERT INTO pig_farm_staff (
+            account_id,
+            pig_farm_id,
+            user_id,
+            name,
+            
+            added_by_user_id
+        ) VALUES (
+            cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id,
+            in_user_id,
+            CONCAT(cur_user_name_first, ' ', cur_user_name_last),
+            
+            in_user_id
+        );
+        SELECT LAST_INSERT_ID() INTO cur_user_staff_id;
+        
+        
+        UPDATE user SET 
+            pig_farm_staff_id = cur_user_staff_id
+        WHERE id = in_user_id;
+        
+        SET added_new_staff = 1;
+        
+    END IF;
+    
+    
+    SET in_birth_staff_id = cur_user_staff_id;
+    
+END IF;
+
+
 
 
 UPDATE pig_production SET 
@@ -294,8 +351,8 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    in_pig_prod_id                      AS pig_production_id;
-
+    in_pig_prod_id                      AS pig_production_id,
+    added_new_staff                     AS added_new_staff;
 
 END $$
 

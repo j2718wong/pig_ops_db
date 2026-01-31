@@ -416,7 +416,7 @@ UPDATE  medvac_brand SET
 WHERE id = in_medvac_brand_id;
 
 
-/* Update feed_brand.flag.FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED*/
+/* Update medvac_brand.flag.FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED*/
 IF cur_count >= MIN_COUNT_MEDVAC_BRAND_IS_VERIFIED THEN 
     UPDATE medvac_brand SET
         flag = flag | FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED
@@ -455,7 +455,7 @@ UPDATE  medvac_type SET
 WHERE id = in_medvac_type_id;
 
 
-/* Update feed_brand.flag.MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED*/
+/* Update medvac_type.flag.MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED*/
 IF cur_count >= MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED THEN 
     UPDATE medvac_type SET
         flag = flag | MIN_COUNT_MEDVAC_TYPE_IS_VERIFIED

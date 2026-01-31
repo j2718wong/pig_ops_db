@@ -90,7 +90,7 @@ IF cur_pig_prod_id > 0 THEN
             cur_pig_prod_status_id
             
     FROM    pig_production
-    WHERE   id = in_pig_prod_notes_id
+    WHERE   id = cur_pig_prod_id
     LIMIT   1;
 
 
