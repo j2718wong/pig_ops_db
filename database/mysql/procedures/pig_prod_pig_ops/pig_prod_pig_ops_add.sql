@@ -28,6 +28,8 @@ DECLARE cur_account_pig_ops_num_days            INT             DEFAULT 0;
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
+DECLARE PIG_OPERATION_TYPE_WEANING_SOW_OPS      INT             DEFAULT 5;
 
 
 /* account.flag_setting bits*/

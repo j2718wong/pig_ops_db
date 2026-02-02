@@ -10,6 +10,11 @@ CREATE PROCEDURE pig_prod_update_weaning(
     in_num_pigs_female      INT,
     in_num_pigs_male        INT,
     
+	/* There is an option to count the pigs 
+	regardless of sex. This is because it maybe time 
+	consuming to count per sex at wean. */
+    in_num_pigs             INT,    
+    
     in_total_weight         INT
 )  
 
@@ -125,22 +130,46 @@ IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_LACTATING THEN
     SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_LACTATING";
 END IF;
 
+IF in_num_pigs_female IS NOT NULL AND in_num_pigs_male IS NOT NULL THEN 
 
-UPDATE pig_production SET
-    date_weaning                = in_date_weaning,
-    prod_status_id              = PRODUCTION_STATUS_ID_WEANING,
+    UPDATE pig_production SET
+        date_weaning                = in_date_weaning,
+        prod_status_id              = PRODUCTION_STATUS_ID_WEANING,
 
-    num_pigs_weaning_m          = in_num_pigs_male,
-    num_pigs_weaning_f          = in_num_pigs_female,
+        num_pigs_weaning_m          = in_num_pigs_male,
+        num_pigs_weaning_f          = in_num_pigs_female,
+        num_pigs_weaning            = NULL,
 
-    num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
-    
-    total_pigs_weight_weaning   = in_total_weight,
-    
-    last_update_user_id         = in_user_id,
-    dt_last_update              = CURRENT_TIMESTAMP
-    
-WHERE id = in_pig_prod_id;
+        num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
+        
+        total_pigs_weight_weaning   = in_total_weight,
+        
+        last_update_user_id         = in_user_id,
+        dt_last_update              = CURRENT_TIMESTAMP
+        
+    WHERE id = in_pig_prod_id;
+END IF;
+
+
+IF in_num_pigs IS NOT NULL THEN 
+    UPDATE pig_production SET
+        date_weaning                = in_date_weaning,
+        prod_status_id              = PRODUCTION_STATUS_ID_WEANING,
+
+        num_pigs_weaning_m          = NULL,
+        num_pigs_weaning_f          = NULL,
+        num_pigs_weaning            = in_num_pigs,
+
+        num_pigs_current            = in_num_pigs,
+        
+        total_pigs_weight_weaning   = in_total_weight,
+        
+        last_update_user_id         = in_user_id,
+        dt_last_update              = CURRENT_TIMESTAMP
+        
+    WHERE id = in_pig_prod_id;
+END IF;
+
 
 
 SELECT  sow_id

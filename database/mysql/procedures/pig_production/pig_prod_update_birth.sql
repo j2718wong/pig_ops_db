@@ -41,9 +41,9 @@ DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
 DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
 DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
 DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
+DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
 DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
 DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
-DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
@@ -54,7 +54,8 @@ DECLARE SOW_STATUS_ID_LACTATING                 INT             DEFAULT 3;
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
-DECLARE PIG_OPERATION_TYPE_GILT_OPS              INT             DEFAULT 4;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
+DECLARE PIG_OPERATION_TYPE_WEANING_SOW_OPS      INT             DEFAULT 5;
 
 
 /* account_pig_ops.flag bits*/
@@ -306,6 +307,7 @@ IF cur_count_account_pig_ops > 0 THEN
 END IF;
 
 
+/* Count if there are pig operations to be done for lactating piglets set by account.*/
 SELECT  COUNT(*)
 INTO    cur_count_pig_prod_pig_ops
 FROM    pig_prod_pig_ops
