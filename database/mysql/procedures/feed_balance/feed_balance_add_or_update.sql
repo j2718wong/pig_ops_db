@@ -438,8 +438,10 @@ IF in_pig_prod_id > 0 THEN
     of the account.flag_settings.FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH setting.
     */
     IF cur_pig_prod_date_actual_birth IS NOT NULL THEN
-        SET cur_num_days_since_birth    = DATEDIFF(in_date_balance, cur_pig_prod_date_actual_birth);
-        SET cur_num_weeks_since_birth   = ROUND(cur_num_days_since_birth/7);
+        IF in_date_balance > cur_pig_prod_date_actual_birth THEN 
+            SET cur_num_days_since_birth    = DATEDIFF(in_date_balance, cur_pig_prod_date_actual_birth);
+            SET cur_num_weeks_since_birth   = ROUND(cur_num_days_since_birth/7);
+        END IF;
     END IF; 
     
 

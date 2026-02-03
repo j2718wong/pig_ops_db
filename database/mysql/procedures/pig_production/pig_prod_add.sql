@@ -83,8 +83,8 @@ DECLARE PIG_OPERATION_TYPE_WEANING_SOW_OPS      INT             DEFAULT 5;
 DECLARE PIG_NUM_DAYS_GESTATION                  INT             DEFAULT 114;
 
 
-DECLARE MIN_COUNT_ACCOUNT_SUPPLIER_IS_VERIFIED  INT             DEFAULT 3;
-DECLARE MIN_COUNT_ACCOUNT_SEMEN_IS_VERIFIED     INT             DEFAULT 3;
+DECLARE MIN_COUNT_SUPPLIER_IS_VERIFIED          INT             DEFAULT 3;
+DECLARE MIN_COUNT_SEMEN_IS_VERIFIED             INT             DEFAULT 3;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -434,7 +434,7 @@ ELSE
                 account_id !=  cur_user_account_id;
                 
         /* Update common_supplier.flag.FLAG_BIT_SUPPLIER_IS_VERIFIED*/
-        IF cur_count >= MIN_COUNT_ACCOUNT_SUPPLIER_IS_VERIFIED THEN
+        IF cur_count >= MIN_COUNT_SUPPLIER_IS_VERIFIED THEN
             UPDATE common_supplier SET 
                 flag = flag | FLAG_BIT_SUPPLIER_IS_VERIFIED
             WHERE id = in_semen_supplier_id;
@@ -467,7 +467,7 @@ ELSE
         WHERE   semen_sup_semen_id = in_semen_sup_semen_id;
     
         
-        IF cur_count_semen_sup_semen_account >= MIN_COUNT_ACCOUNT_SEMEN_IS_VERIFIED THEN 
+        IF cur_count_semen_sup_semen_account >= MIN_COUNT_SEMEN_IS_VERIFIED THEN 
             SET cur_flag_bit = FLAG_BIT_SEMEN_SUPPLIER_SEMEN_IS_VERIFIED;
         END IF;
         

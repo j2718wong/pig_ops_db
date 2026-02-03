@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS pig_farm_feed_buy_item_update $$
 CREATE PROCEDURE pig_farm_feed_buy_item_update(
     in_user_id              INT,
     
-    in_feed_buy_item_id 	INT,
+    in_feed_buy_item_id     INT,
     
     in_feed_type_id         INT,
     in_feed_brand_id        INT,

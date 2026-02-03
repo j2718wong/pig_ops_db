@@ -23,7 +23,6 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_PIG_PROD_STATUS_CANNOT_ADD_FEED_BUY  INT        DEFAULT 20;
 DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 21;
 
 
@@ -35,18 +34,11 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 
-
-
-/* feed_supplier.flag bits*/
-DECLARE FLAG_BIT_FEED_SUPPLIER_IS_DELETED       INT             DEFAULT 1;
-DECLARE FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED      INT             DEFAULT 2;
-
-
-
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
+DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
 DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
 
 
@@ -68,13 +60,12 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  a.pig_farm_id,
-        b.account_id 
+        a.account_id 
 
 INTO    cur_pig_farm_id,
         cur_pig_farm_account_id
         
 FROM pig_farm_feed_buy a 
-LEFT OUTER JOIN pig_farm b WHERE a.pig_farm_id = b.id
 WHERE a.id = in_pig_farm_feed_buy_id;
 
 
