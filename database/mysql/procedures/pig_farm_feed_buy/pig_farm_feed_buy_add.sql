@@ -26,11 +26,12 @@ DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
-/* feed_supplier.flag bits*/
-DECLARE FLAG_BIT_FEED_SUPPLIER_IS_DELETED       INT             DEFAULT 1;
-DECLARE FLAG_BIT_FEED_SUPPLIER_IS_VERIFIED      INT             DEFAULT 2;
+/* common_supplier.flag bits*/
+DECLARE FLAG_BIT_SUPPLIER_IS_DELETED            INT             DEFAULT 1;
+DECLARE FLAG_BIT_SUPPLIER_IS_VERIFIED           INT             DEFAULT 2;
 
-DECLARE MIN_COUNT_FEED_SUPPLIER_IS_VERIFIED INT         DEFAULT 3;
+
+DECLARE MIN_COUNT_SUPPLIER_IS_VERIFIED          INT             DEFAULT 3;
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;

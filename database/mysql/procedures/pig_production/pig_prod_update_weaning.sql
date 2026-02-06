@@ -10,9 +10,9 @@ CREATE PROCEDURE pig_prod_update_weaning(
     in_num_pigs_female      INT,
     in_num_pigs_male        INT,
     
-	/* There is an option to count the pigs 
-	regardless of sex. This is because it maybe time 
-	consuming to count per sex at wean. */
+    /* There is an option to count the pigs 
+    regardless of sex. This is because it maybe time 
+    consuming to count per sex at wean. */
     in_num_pigs             INT,    
     
     in_total_weight         INT

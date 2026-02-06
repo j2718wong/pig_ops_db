@@ -48,7 +48,7 @@ DECLARE INSEMINATION_TYPE_ARTIFICIAL_EXTERNAL   VARCHAR(4)      DEFAULT 'AI_X';
 DECLARE INSEMINATION_TYPE_ARTIFICIAL_INTERNAL   VARCHAR(4)      DEFAULT 'AI_N';
 
 
-/* supplier.flag bits*/
+/* common_supplier.flag bits*/
 DECLARE FLAG_BIT_SUPPLIER_IS_DELETED            INT             DEFAULT 1;
 DECLARE FLAG_BIT_SUPPLIER_IS_VERIFIED           INT             DEFAULT 2;
 
@@ -529,6 +529,7 @@ END IF;
 IF in_comments IS NOT NULL THEN 
     INSERT INTO pig_prod_notes (
         pig_prod_id,
+        sow_boar_id,
         
         notes,
         date_notes,
@@ -536,6 +537,7 @@ IF in_comments IS NOT NULL THEN
         
     ) VALUES (
         cur_pig_prod_id,
+        in_sow_id,
         
         in_comments,
         in_date_insemination,

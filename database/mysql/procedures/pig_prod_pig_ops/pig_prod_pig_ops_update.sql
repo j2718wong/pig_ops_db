@@ -57,6 +57,8 @@ DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT '';
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
+DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
+
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_ops_operation_type     INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_ops_notes_id           INT             DEFAULT 0;
@@ -85,6 +87,7 @@ SET res_code    = "SUCCESS";
 SELECT  
         b.account_id,
         b.pig_farm_id,
+        b.sow_id,
         a.pig_prod_id,
         a.operation_type,
         b.prod_status_id,
@@ -92,6 +95,7 @@ SELECT
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
+        cur_pig_prod_sow_id,
         cur_pig_prod_id,
         cur_pig_prod_pig_ops_operation_type,
         cur_pig_prod_status_id,
@@ -179,30 +183,50 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
     END IF;
 
     
+    /* Should not relate to SOW if operation is for piglets*/
+    IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS THEN 
     
+        INSERT INTO pig_prod_notes (
+            account_id,
+            pig_farm_id,
+            pig_prod_id,
+            production_group_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            cur_pig_prod_account_id,
+            NULL,
+            cur_pig_prod_id,
+            NULL,
+            
+            cur_notes,
+            in_date,
+            in_user_id
+        );
+
+    ELSE
+        INSERT INTO pig_prod_notes (
+            account_id,
+            sow_boar_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            cur_pig_prod_account_id,
+            cur_pig_prod_sow_id,
+            
+            cur_notes,
+            in_date,
+            in_user_id
+        );
     
-    INSERT INTO pig_prod_notes (
-        account_id,
-        pig_farm_id,
-        pig_prod_id,
-        sow_boar_id,
-        production_group_id,
-        
-        notes,
-        date_notes,
-        added_by_user_id
-        
-    ) VALUES (
-        cur_pig_prod_account_id,
-        NULL,
-        cur_pig_prod_id,
-        NULL,
-        NULL,
-        
-        cur_notes,
-        in_date,
-        in_user_id
-    );
+    END IF;
+
 
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
     

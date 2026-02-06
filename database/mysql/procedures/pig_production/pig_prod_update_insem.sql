@@ -76,6 +76,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
+DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_insemination          DATE            DEFAULT NULL;
 DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
@@ -100,6 +101,7 @@ SET res_code    = "SUCCESS";
 SELECT  
         account_id,
         pig_farm_id,
+        sow_id,
         prod_status_id,
         date_insemination,
         flag,
@@ -107,6 +109,7 @@ SELECT
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
+        cur_pig_prod_sow_id,
         cur_pig_prod_status_id,
         cur_pig_prod_date_insemination,
         cur_pig_prod_flag,
@@ -226,6 +229,7 @@ ELSE
     IF in_comments IS NOT NULL THEN 
         INSERT INTO pig_prod_notes (
             pig_prod_id,
+            sow_boar_id,
             
             notes,
             date_notes,
@@ -233,6 +237,7 @@ ELSE
             
         ) VALUES (
             in_pig_prod_id,
+            cur_pig_prod_sow_id,
             
             in_comments,
             in_date_insemination,

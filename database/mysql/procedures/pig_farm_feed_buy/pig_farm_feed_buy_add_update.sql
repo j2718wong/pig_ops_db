@@ -13,7 +13,7 @@ CREATE PROCEDURE pig_farm_feed_buy_update(
 BEGIN
 
 /** 
- * Will add pig_farm_feed_buy entry.
+ * Will update pig_farm_feed_buy entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since February 2, 2026

@@ -244,30 +244,46 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
     END IF;
 
     
-    
-    
-    INSERT INTO pig_prod_notes (
-        account_id,
-        pig_farm_id,
-        pig_prod_id,
-        sow_boar_id,
-        production_group_id,
-        
-        notes,
-        date_notes,
-        added_by_user_id
-        
-    ) VALUES (
-        cur_pig_prod_account_id,
-        NULL,
-        cur_pig_prod_id,
-        NULL,
-        NULL,
-        
-        cur_notes,
-        in_date,
-        in_user_id
-    );
+    /* Should not relate to SOW if operation is for piglets*/
+    IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS THEN 
+        INSERT INTO pig_prod_notes (
+            account_id,
+            pig_farm_id,
+            pig_prod_id,
+            production_group_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            cur_pig_prod_account_id,
+            NULL,
+            cur_pig_prod_id,
+            NULL,
+            
+            cur_notes,
+            in_date,
+            in_user_id
+        );
+    ELSE
+        INSERT INTO pig_prod_notes (
+            account_id,
+            sow_boar_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            cur_pig_prod_account_id,
+            cur_pig_prod_sow_id,
+            
+            cur_notes,
+            in_date,
+            in_user_id
+        );
+    END IF;
 
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
     
