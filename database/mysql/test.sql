@@ -124,3 +124,17 @@ UPDATE pig_prod_pig_ops a, pig_production b SET
 WHERE a.pig_prod_id = b.id AND a.operation_type = 3;
 
 
+SELECT 
+a.id,
+a.pig_prod_id,
+a.sow_boar_id,
+b.name as sow_boar_name,
+a.date_notes,
+a.notes
+FROM pig_prod_notes a
+LEFT OUTER JOIN sow_boar b ON a.sow_boar_id = b.id;
+
+
+UPDATE pig_prod_notes a, pig_production b SET 
+    a.sow_boar_id = b.sow_id
+WHERE a.pig_prod_id = 19;

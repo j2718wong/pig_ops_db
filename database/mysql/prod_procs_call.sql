@@ -281,6 +281,12 @@ CALL feed_balance_add(1,  16, NULL, '2026-01-31', 0,  0,   1, NULL,     NULL, NU
 CALL sow_boar_balance_add(1,  1,  '2026-01-31', 7, 12);
 
 
+CALL feed_balance_add(1,  16, NULL, '2026-02-07', 0,  0,   0.5, NULL,     NULL, NULL,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2026-02-07', 6, 11);
+
+
+
+
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
 CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')
@@ -291,7 +297,32 @@ CALL account_pig_buyer_add(1, 1, 49, 1011, 0, "Mingla Lamesa Mangrasyon", NULL, 
 CALL account_pig_buyer_add(1, 1, 49, 1013, 0, "Ting Rasyon sa Naga merkado", NULL, NULL, NULL);
 CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Silingan Punod Namatyan", NULL, NULL, NULL);
 CALL account_pig_buyer_add(1, 1, 49, 1013, 27033, "Silingan Punod Palit Anay", NULL, NULL, NULL);
+CALL account_pig_buyer_add(1, 1, 49, 1004, 0, NULL, NULL, 0, "Nagbuhat sa Farrowing", NULL, NULL, NULL, NULL);
 
+
+
+CREATE PROCEDURE production_harvest_add(
+    in_user_id              INT,
+    in_pig_prod_id          INT,
+    in_production_group_id  INT,
+    in_acc_pig_buyer_id     INT,
+    
+    in_date_harvest         VARCHAR(10),
+    
+    in_num_pigs_harvest     INT,
+    in_harvest_type_id      INT,
+    
+    in_live_weight          DECIMAL(6,1),
+    in_slaughter_weight     DECIMAL(6,1),
+    in_slaughter_net_weight DECIMAL(6,1),
+    
+    in_live_price_per_unit          DECIMAL(6,1),
+    in_slaughther_price_per_unit    DECIMAL(6,1),
+    
+    in_net_sales            DECIMAL(8,1),
+    in_harvest_cost         DECIMAL(5,1),
+    in_comments             VARCHAR(160)
+)  
 
 
 /* Harvested bayad sa butakal; harvest_type to be updated later*/
@@ -322,6 +353,16 @@ CALL production_harvest_add(1,9,NULL,3,'2025-11-29', 7, NULL,NULL,525,518,NULL,2
 
 /* Harvested Silingan anay*/
 CALL production_harvest_add(1,9,NULL,5,'2025-12-02', 2, NULL,NULL,168,168,NULL,215,36120,0,"Gitupong ang timbangs a pinakabugat na narasyon");
+
+
+/* Harvested rasyon Naga*/
+CALL production_harvest_add(1,13,NULL,3,'2026-02-04', 6, NULL,NULL,412,412,NULL,210,86520,2700,"plete baboy 2100, sakwat baboy 600");
+
+
+/* Harvested Danao palit  anay*/
+CALL production_harvest_add(1,13,NULL,6,'2026-02-05', 3, NULL,NULL,234,234,NULL,210,49140,0,"Gitupong ang timbang sa pinakabugat na narasyon");
+
+
 
 
 CALL semen_supplier_add(1,1,49,1013,27033, "Primary", NULL, NULL, NULL);
