@@ -51,7 +51,7 @@ DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 
-DECLARE cur_account_medvac_id                           INT             DEFAULT 0;
+DECLARE cur_account_medvac_id                   INT             DEFAULT 0;
 
 DECLARE cur_count                               INT             DEFAULT 0;
 

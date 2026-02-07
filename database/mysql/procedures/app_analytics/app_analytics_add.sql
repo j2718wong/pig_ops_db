@@ -39,8 +39,11 @@ INSERT INTO app_analytics(
     CURRENT_DATE
 );
 
-END $$
 
 SELECT 1;
+
+END $$
+
+
 
 DELIMITER ;

@@ -3,3 +3,8 @@ for /r %i in (*.sql) do type "%i" >> combined.txt
 
 # replace NBSP
 Search \uFEFF in notepad++; use extended search; replace with zero length string
+
+
+In debian
+
+find procedures -name "*.sql" -type f | sort | xargs -I {} sh -c 'cat "{}"; echo; echo "\n\n-----------------------------------------------------------\n\n"' > combined.sql

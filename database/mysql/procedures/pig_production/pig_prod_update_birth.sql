@@ -282,6 +282,11 @@ IF cur_count_account_pig_ops > 0 THEN
             in_date_actual_birth
         );
         
+        /* Since this is a lactating sow pig ops, need to relate to SOW.*/
+        UPDATE pig_prod_pig_ops SET 
+            sow_boar_id = cur_pig_prod_sow_id
+        WHERE pig_prod_id = in_pig_prod_id AND a.operation_type = PIG_OPERATION_TYPE_LACTATING_SOW;
+        
     ELSE
         IF detected_actual_date_birth_change > 0 THEN
             

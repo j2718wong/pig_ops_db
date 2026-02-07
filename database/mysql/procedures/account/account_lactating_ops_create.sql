@@ -29,7 +29,8 @@ DECLARE PIG_OPERATION_TYPE_WEANING_SOW_OPS      INT             DEFAULT 5;
 
 
 /* Default account lactating piglets operation; num_days since birth*/
-DECLARE LACTATING_OPS_NUM_DAYS_CUT_TEETH_AND_TAIL INT           DEFAULT 3;
+DECLARE LACTATING_OPS_NUM_DAYS_CUT_TEETH        INT             DEFAULT 0;
+DECLARE LACTATING_OPS_NUM_DAYS_CUT_TAIL         INT             DEFAULT 3;
 DECLARE LACTATING_OPS_NUM_DAYS_INJECT_IRON_1    INT             DEFAULT 3;
 DECLARE LACTATING_OPS_NUM_DAYS_INJECT_IRON_2    INT             DEFAULT 13;
 DECLARE LACTATING_OPS_NUM_DAYS_INJECT_VITA_1    INT             DEFAULT 14;
@@ -58,12 +59,35 @@ INSERT INTO account_pig_ops (
     in_account_id,
     PIG_OPERATION_TYPE_LACTATING_PIGLETS,
     1,
-    LACTATING_OPS_NUM_DAYS_CUT_TEETH_AND_TAIL,
+    LACTATING_OPS_NUM_DAYS_CUT_TEETH,
     
     "Cut Teeth",
-    "Cut TT",
-    "Cut Teeth and Tail"
+    "Cut Teeth",
+    "Cut Teeth"
 );
+
+
+INSERT INTO account_pig_ops (
+    account_id,
+    operation_type,
+    version_num,
+    num_days_since,
+    
+    name,
+    short_name,
+    description
+) VALUES (
+    in_account_id,
+    PIG_OPERATION_TYPE_LACTATING_PIGLETS,
+    1,
+    LACTATING_OPS_NUM_DAYS_CUT_TAIL,
+    
+    "Cut Tail",
+    "Cut Tail",
+    "Cut Tail"
+);
+
+
 
 INSERT INTO account_pig_ops (
     account_id,

@@ -579,6 +579,13 @@ CALL pig_prod_pig_ops_add(
     in_date_insemination);
 
 
+/* Since this is a gestating pig ops, need to relate to SOW.*/
+UPDATE pig_prod_pig_ops SET 
+    sow_boar_id = in_sow_id
+WHERE pig_prod_id = cur_pig_prod_id AND a.operation_type = PIG_OPERATION_TYPE_GESTATING;
+
+
+
 END process_user;
 
 SELECT 

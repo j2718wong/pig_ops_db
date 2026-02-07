@@ -5,10 +5,10 @@ CREATE PROCEDURE pig_prod_eartag_a_pig(
     in_user_id              INT,
    
     in_pig_prod_id          INT,
-	in_sex         			CHAR(1),
-	
-	in_number				VARCHAR(10),
-	in_date_eartag			VARCHAR(10)
+    in_sex                  CHAR(1),
+    
+    in_number               VARCHAR(10),
+    in_date_eartag          VARCHAR(10)
     
 )  
 

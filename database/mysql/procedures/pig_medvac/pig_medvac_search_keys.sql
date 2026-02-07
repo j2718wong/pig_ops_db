@@ -19,7 +19,6 @@ BEGIN
         searched_str,
         SUM(hits) as num_hits
     FROM (
-        -- Strings that START WITH the search term (priority 1)
         SELECT 
             u_brand_name AS searched_str,
             COUNT(*) as hits,
@@ -56,7 +55,6 @@ BEGIN
 		
 		
 		
-        -- Strings that CONTAIN the search term but don't start with it (priority 2)
         SELECT 
             u_brand_name AS searched_str,
             COUNT(*) as hits,

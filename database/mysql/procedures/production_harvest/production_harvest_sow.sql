@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS production_harvest_sow $$
 CREATE PROCEDURE production_harvest_sow(
     in_user_id              INT,
     in_pig_prod_id          INT,
-	in_production_group_id	INT,
+    in_production_group_id  INT,
     
     
     in_date_harvest         VARCHAR(10),
