@@ -77,6 +77,7 @@ DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT '';
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
@@ -106,11 +107,13 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
+        pig_farm_id,
         prod_status_id,
         sow_id,
         date_actual_birth
 INTO    
         cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id,
         cur_pig_prod_sow_id,
         cur_pig_prod_date_actual_birth
@@ -162,9 +165,9 @@ END IF;
 
 
 /*
-It is possible to change the date_actual_birth, but there is a series of 
-operations to be done to the affected business objects. So that is why   
-we need to check if the date_actual_birth has been modified.
+It is possible to change the pig_production.date_actual_birth after previously SET,
+but there is a series of operations to be done to the affected business objects. 
+So that is why we need to check if the date_actual_birth is to be modified.
 
 */
 
@@ -265,6 +268,7 @@ WHERE   account_id = cur_pig_prod_account_id  AND
 
 
 IF cur_count_account_pig_ops > 0 THEN 
+    /* Count if there are already created pig_ops*/
     SELECT  COUNT(*)
     INTO    cur_count_pig_prod_pig_ops
     FROM    pig_prod_pig_ops
@@ -305,6 +309,7 @@ IF cur_count_account_pig_ops > 0 THEN
                         a.operation_type = PIG_OPERATION_TYPE_LACTATING_SOW AND
                         a.account_pig_ops_id = b.id;
             END IF;
+            
         END IF;
 
     END IF;

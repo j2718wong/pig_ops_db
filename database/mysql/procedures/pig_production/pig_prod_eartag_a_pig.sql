@@ -15,17 +15,30 @@ CREATE PROCEDURE pig_prod_eartag_a_pig(
 BEGIN
 
 /** 
- * Will eartag a pig.
+ * Will eartag a pig in production. Will assume that the eartagged pig will
+ * be either be made into a Gilt or a Boar.
+ * 
+ * Notes: 
+ * 1.) This is not the same action as eartagging an already recorded sow or 
+ * newly bought gilts and putting eartags on them. This is eartagging a pig 
+ * that has a pig_prod_id so that the sow_boar.birth_pig_prod_id and other 
+ * birth details can be populated.
+ * 
+ * 2.) Eartagged pigs are listed as gilts if female and boar if male.
+ * If female it should automatically create scheduled gilt ops.  
+ *
+ * 3.) The eartagged pigs are not treated as pig_harvest and the pig_count
+ * in the production stays the same.       
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
- * @since January 19, 2025
+ * @since January 19, 2026
  *
  */
 
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
-DECLARE RES_NUM_PIG_PROD_STATUS_NOT_LACTATING   INT             DEFAULT 21;
+DECLARE RES_NUM_PIG_PROD_STATUS_CANNOT_EARTAG   INT             DEFAULT 21;
 
 
 DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 21;
@@ -43,6 +56,8 @@ DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
 DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
 DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
+DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
+DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
@@ -63,6 +78,10 @@ DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 
 
+DECLARE cur_pig_farm_last_sow_id                INT             DEFAULT 0;
+DECLARE cur_pig_farm_last_boar_id               INT             DEFAULT 0;
+
+
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
 DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
@@ -76,15 +95,31 @@ SELECT
         account_id,
         pig_farm_id,
         prod_status_id,
-        flag
+        flag,
+        
+        sow_id,
+        boar_id,
+        date_actual_birth
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id,
         cur_pig_prod_flag
+        cur_pig_prod_date_actual_birth
         
 FROM    pig_production 
 WHERE   id = in_pig_prod_id
+LIMIT   1;
+
+
+SELECT  
+        last_sow_id,
+        last_boar_id
+INTO    
+        cur_pig_farm_last_sow_id,
+        cur_pig_farm_last_boar_id
+FROM    pig_farm
+WHERE   id = cur_pig_prod_pig_farm_id
 LIMIT   1;
 
 
@@ -111,49 +146,115 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_CLOSED THEN 
-    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
-    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
-    
-    LEAVE process_user;
+
+IF cur_pig_prod_status_id NOT IN(   PRODUCTION_STATUS_ID_LACTATING,
+                                    PRODUCTION_STATUS_ID_WEANING,
+                                    PRODUCTION_STATUS_ID_GROWING) THEN 
+    SET res_num     = RES_NUM_PIG_PROD_STATUS_CANNOT_EARTAG;
+    SET res_code    = "RES_NUM_PIG_PROD_STATUS_CANNOT_EARTAG";
 END IF;
 
 
-IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_LACTATING THEN 
-    SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_LACTATING;
-    SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_LACTATING";
+
+/** INSERT sow_boar entry*/
+
+IF in_sex = 'F' THEN 
+    SET cur_pig_farm_last_sow_id = cur_pig_farm_last_sow_id + 1;
+    
+    
+    INSERT INTO sow_boar(
+        account_id,
+        pig_farm_id,
+        farm_sow_id,
+        
+        sow_status_id,
+        
+        parent_sow_id,
+        parent_boar_id,
+        
+        sex,
+        
+        number,
+        date_of_birth,
+        
+        added_by_user_id
+    ) VALUES (
+        cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
+        cur_pig_farm_last_sow_id,
+        
+        in_sow_status_id,
+        
+        in_parent_sow_id,
+        in_parent_boar_id,
+        
+        in_sex,
+        
+        in_number,
+        in_date_of_birth,
+        
+        in_user_id
+    );
+
+
+ELSE
+    SET cur_pig_farm_last_boar_id = cur_pig_farm_last_boar_id + 1;
+    
+    INSERT INTO sow_boar(
+        account_id,
+        pig_farm_id,
+        farm_boar_id,
+        
+        line_id,
+        sow_status_id,
+        is_external,
+        is_production_ready,
+        
+        sex,
+        
+        number,
+        name,
+        date_of_birth,
+        
+        added_by_user_id
+    ) VALUES (
+        cur_user_account_id,
+        in_pig_farm_id,
+        cur_pig_farm_last_boar_id,        
+
+        in_line_id,
+        NULL,
+        in_is_external,
+        in_is_production_ready,
+        
+        in_sex,
+        
+        in_number,
+        in_name,
+        in_date_of_birth,
+        
+        in_user_id
+    );
+    
+    
 END IF;
 
-
-UPDATE pig_production SET
-    date_weaning                = in_date_weaning,
-    prod_status_id              = PRODUCTION_STATUS_ID_WEANING,
-
-    num_pigs_weaning_m          = in_num_pigs_male,
-    num_pigs_weaning_f          = in_num_pigs_female,
-
-    num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
-    
-    total_pigs_weight_weaning   = in_total_weight,
-    
-    last_update_user_id         = in_user_id,
-    dt_last_update              = CURRENT_TIMESTAMP
-    
-WHERE id = in_pig_prod_id;
+SELECT LAST_INSERT_ID() INTO cur_sow_boar_id;
 
 
-SELECT  sow_id
-INTO    cur_pig_prod_sow_id
-FROM    pig_production
-WHERE   id = in_pig_prod_id;
+
+UPDATE pig_farm SET 
+    last_sow_id     = cur_pig_farm_last_sow_id,
+    last_boar_id    = cur_pig_farm_last_boar_id
+WHERE id = cur_pig_prod_pig_farm_id;
 
 
-UPDATE sow_boar SET
-    sow_status_id = SOW_STATUS_ID_WEANING
-WHERE id = cur_pig_prod_sow_id;
+
 
 
 END process_user;
+
+
 
 SELECT 
     res_num                             AS result_number,

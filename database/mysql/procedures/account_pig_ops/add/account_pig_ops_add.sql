@@ -213,6 +213,26 @@ IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
 END IF;
 
 
+IF in_operation_type = PIG_OPERATION_TYPE_GILT_OPS THEN 
+    CALL account_pig_ops_add_update_gilts(
+        cur_user_account_id,
+        in_operation_type,
+        cur_account_pig_ops_id,
+        in_num_days_since
+    );
+END IF;
+
+
+IF in_operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS THEN 
+    CALL account_pig_ops_add_update_gilts(
+        cur_user_account_id,
+        in_operation_type,
+        cur_account_pig_ops_id,
+        in_num_days_since
+    );
+END IF;
+
+
  
 
 END process_user;

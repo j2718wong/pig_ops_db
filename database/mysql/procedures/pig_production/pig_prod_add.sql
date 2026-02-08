@@ -133,6 +133,7 @@ SELECT  a.account_id,
         a.farm_sow_id,
         a.last_pig_production_id,
         b.prod_status_id
+        
 INTO    cur_sow_boar_account_id,
         cur_sow_boar_pig_farm_id,
         cur_sow_boar_farm_sow_id,

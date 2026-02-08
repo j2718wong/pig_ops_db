@@ -33,6 +33,8 @@ DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS   INT                   DEFAULT 10;
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
 DECLARE PIG_OPERATION_TYPE_LACTATING_PIGLETS    INT             DEFAULT 2;
 DECLARE PIG_OPERATION_TYPE_LACTATING_SOW        INT             DEFAULT 3;
+DECLARE PIG_OPERATION_TYPE_GILT_OPS             INT             DEFAULT 4;
+DECLARE PIG_OPERATION_TYPE_WEANING_SOW_OPS      INT             DEFAULT 5;
 
 
 /* account_pig_ops.flag bits*/
@@ -173,6 +175,11 @@ IF cur_pig_ops_num_days_since != in_num_days_since THEN
             in_account_pig_ops_id,
             in_num_days_since
         );
+    END IF;
+    
+    
+    IF in_operation_type = PIG_OPERATION_TYPE_GILT_OPS THEN 
+    
     END IF;
 END IF;
 
