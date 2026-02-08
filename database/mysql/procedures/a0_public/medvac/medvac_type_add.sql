@@ -5,7 +5,7 @@ CREATE PROCEDURE medvac_type_add(
     in_user_id              INT,
 
     in_name                 VARCHAR(50)
-	
+    
 )  
 
 BEGIN
@@ -33,7 +33,7 @@ DECLARE FLAG_BIT_MEDVAC_TYPE_IS_DELETED         INT             DEFAULT 1;
 DECLARE FLAG_BIT_MEDVAC_TYPE_IS_VERIFIED        INT             DEFAULT 2;
 
 
-DECLARE MAX_UNVERIFIED_ENTRIES_PER_USER         INT             DEFAULT 2;
+DECLARE MAX_UNVERIFIED_ENTRIES_PER_USER         INT             DEFAULT 3;
 DECLARE MAX_DELETED_INVALID_ENTRIES_PER_USER    INT             DEFAULT 3;
 
 

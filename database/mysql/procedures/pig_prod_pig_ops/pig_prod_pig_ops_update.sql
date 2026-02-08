@@ -67,6 +67,8 @@ DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE cur_prod_pig_ops_id                     INT             DEFAULT 0;
 
+DECLARE cur_prod_notes                          VARCHAR(160)    DEFAULT NULL;
+
 
 DECLARE cur_acc_pig_ops_name                    VARCHAR(50);
 DECLARE cur_staff_name                          VARCHAR(50);
@@ -150,24 +152,25 @@ END IF;
 
 
 
+SELECT  b.name
+INTO    cur_acc_pig_ops_name
+FROM    pig_prod_pig_ops a 
+LEFT OUTER JOIN account_pig_ops b ON a.account_pig_ops_id = b.id 
+WHERE   a.id = in_pig_prod_pig_ops_id;
+
+
+SELECT  name
+INTO    cur_staff_name
+FROM    pig_farm_staff
+WHERE   id = in_staff_id;
+
+
 
 IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 THEN 
     
     /* This is necessary as notes is optional; It will leave blank in table row 
      UI if no notes.*/
 
-
-    SELECT  b.name
-    INTO    cur_acc_pig_ops_name
-    FROM    pig_prod_pig_ops a 
-    LEFT OUTER JOIN account_pig_ops b ON a.account_pig_ops_id = b.id 
-    WHERE   a.id = in_pig_prod_pig_ops_id;
-
-
-    SELECT  name
-    INTO    cur_staff_name
-    FROM    pig_farm_staff
-    WHERE   id = in_staff_id;
 
     SET cur_notes  = CONCAT('Pig operation(', cur_acc_pig_ops_name ,') done by ', cur_staff_name, '. ');
 
@@ -190,6 +193,7 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             account_id,
             pig_farm_id,
             pig_prod_id,
+            sow_boar_id,
             production_group_id,
             
             notes,
@@ -201,6 +205,7 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             NULL,
             cur_pig_prod_id,
             NULL,
+            NULL,
             
             cur_notes,
             in_date,
@@ -210,6 +215,7 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
     ELSE
         INSERT INTO pig_prod_notes (
             account_id,
+            pig_prod_id,
             sow_boar_id,
             
             notes,
@@ -218,6 +224,7 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             
         ) VALUES (
             cur_pig_prod_account_id,
+            NULL,
             cur_pig_prod_sow_id,
             
             cur_notes,
@@ -235,6 +242,8 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
     WHERE id = in_pig_prod_pig_ops_id;
 
 ELSE
+    
+    
     UPDATE pig_prod_notes SET 
         date_notes          = in_date,
         notes               = in_notes,

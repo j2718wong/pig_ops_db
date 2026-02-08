@@ -138,3 +138,26 @@ LEFT OUTER JOIN sow_boar b ON a.sow_boar_id = b.id;
 UPDATE pig_prod_notes a, pig_production b SET 
     a.sow_boar_id = b.sow_id
 WHERE a.pig_prod_id = 19;
+
+
+SELECT 
+a.id,
+a.pig_prod_id,
+b.name as sow_name,
+c.name AS acc_pig_ops,
+a.date_target,
+a.date_actual,
+a.notes_id
+
+FROm pig_prod_pig_ops a
+LEFT outer join sow_boar b ON a.sow_boar_id = b.id
+LEFT outer join account_pig_ops c ON a.account_pig_ops_id = c.id
+WHERE a.pig_prod_id = 16;
+
+
+SELECT
+id,
+flag,
+name,
+added_by_user_id
+FROM medvac_type;
