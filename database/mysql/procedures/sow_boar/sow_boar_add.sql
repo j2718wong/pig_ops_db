@@ -71,6 +71,8 @@ DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE cur_count                               INT             DEFAULT 0;
 
+DECLARE cur_notes                               VARCHAR(200);
+
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -247,29 +249,49 @@ END IF;
 SELECT LAST_INSERT_ID() INTO cur_sow_boar_id;
 
 
-IF in_notes IS NOT NULL THEN
-    INSERT INTO pig_prod_notes (
-        sow_boar_id,
-        
-        notes,
-        date_notes,
-        added_by_user_id
-        
-    ) VALUES (
-        cur_sow_boar_id,
-        
-        in_notes,
-        CURRENT_DATE,
-        in_user_id
-    );
 
-    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
-    
-    UPDATE sow_boar SET 
-        add_notes_id = cur_pig_prod_notes_id
-    WHERE id = cur_sow_boar_id;
+/* This is necessary as notes is optional; It will leave blank in table row 
+     UI if no notes.*/
 
+
+SET cur_notes  = CONCAT('SYS: Added to list; ');
+
+
+IF in_notes IS NOT NULL THEN 
+    SET cur_notes  = CONCAT(cur_notes, in_notes);
 END IF;
+
+
+/* Truncate notes if needed. */
+IF LENGTH(cur_notes) >= 160 THEN 
+    SET cur_notes = SUBSTRING(cur_notes, 1, 159);
+END IF;
+
+
+
+INSERT INTO pig_prod_notes (
+    pig_prod_id,
+    sow_boar_id,
+    
+    notes,
+    date_notes,
+    added_by_user_id
+    
+) VALUES (
+    NULL,
+    cur_sow_boar_id,
+    
+    cur_notes,
+    CURRENT_DATE,
+    in_user_id
+);
+
+SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+
+UPDATE sow_boar SET 
+    add_notes_id = cur_pig_prod_notes_id
+WHERE id = cur_sow_boar_id;
+
 
 
 UPDATE pig_farm SET 

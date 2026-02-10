@@ -86,11 +86,15 @@ loop_here: LOOP
    
 
     INSERT INTO pig_prod_pig_ops(
+        pig_prod_id,
+        
         sow_boar_id,
         account_pig_ops_id,
         operation_type,
         date_target
     ) VALUES (
+        NULL,
+        
         in_sow_id,
         cur_account_pig_ops_id,
         in_operation_type,

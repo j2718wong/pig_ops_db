@@ -53,10 +53,21 @@ SELECT
 id,
 name
 FROm sow_boar
-WHERE name LIKE 'fiona'
+WHERE name LIKE 'lorisita';
 
 
 
+SELECT
+a.id,
+b.name AS sow_boar_name, 
+c.name AS acc_pig_ops,
+a.date_target,
+a.date_actual,
+a.notes_id
+FROM pig_prod_pig_ops a
+LEFT OUTER JOIN sow_boar b ON a.sow_boar_id = b.id
+LEFT OUTER JOIN account_pig_ops c ON a.account_pig_ops_id = c.id 
+WHERE a.sow_boar_id = 10;
 
 
 SELECT id, 
@@ -128,11 +139,13 @@ SELECT
 a.id,
 a.pig_prod_id,
 a.sow_boar_id,
+a.flag,
 b.name as sow_boar_name,
 a.date_notes,
 a.notes
 FROM pig_prod_notes a
-LEFT OUTER JOIN sow_boar b ON a.sow_boar_id = b.id;
+LEFT OUTER JOIN sow_boar b ON a.sow_boar_id = b.id
+WHERE a.sow_boar_id=15;
 
 
 UPDATE pig_prod_notes a, pig_production b SET 
@@ -161,3 +174,56 @@ flag,
 name,
 added_by_user_id
 FROM medvac_type;
+
+
+SELECT
+a.id,
+b.name as prod_status,
+a.num_pigs_current
+FROM pig_production a 
+LEFT OUTER JOIN pig_prod_status b ON a.prod_status_id = b.id
+WHERE a.date_actual_birth IS NOT NULL;
+
+
+SELECT
+id,
+name,
+add_notes_id,
+notes
+FROm sow_boar;
+
+
+SELECT
+a.id,
+a.name,
+a.add_notes_id,
+a.notes AS sow_boar_notes,
+b.notes AS pig_prod_notes,
+a.dt_entry
+FROm sow_boar a
+LEFT OUTER JOIN pig_prod_notes b ON a.add_notes_id = b.id;
+
+
+SELECT 
+id,
+pig_prod_id,
+sow_boar_id,
+notes,
+date_notes
+FROM pig_prod_notes;
+
+
+SELECT 
+id,
+name,
+notes
+FROM sow_boar
+WHERE id >=1 AND id <=8
+
+
+INSERT INTO pig_prod_notes(sow_boar_id, notes, date_notes) VALUES
+(9, 'SYS: Added to list; ', '2025-11-10'),
+(10, 'SYS: Added to list; ', '2025-11-10'),
+(11, 'SYS: Added to list; ', '2025-11-10'),
+(12, 'SYS: Added to list; ', '2025-11-10'),
+(13, 'SYS: Added to list; ', '2025-11-10');
