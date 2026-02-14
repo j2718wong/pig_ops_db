@@ -175,26 +175,6 @@ END IF;
 
 
 
-IF in_num_pigs_female IS NOT NULL AND in_num_pigs_male IS NOT NULL THEN 
-
-    UPDATE pig_production SET
-        date_weaning                = in_date_weaning,
-        prod_status_id              = PRODUCTION_STATUS_ID_WEANING,
-
-        num_pigs_weaning_m          = in_num_pigs_male,
-        num_pigs_weaning_f          = in_num_pigs_female,
-        num_pigs_weaning            = NULL,
-
-        num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
-        
-        total_pigs_weight_weaning   = in_total_weight,
-        
-        last_update_user_id         = in_user_id,
-        dt_last_update              = CURRENT_TIMESTAMP
-        
-    WHERE id = in_pig_prod_id;
-END IF;
-
 
 IF in_num_pigs IS NOT NULL THEN 
     UPDATE pig_production SET
@@ -213,6 +193,26 @@ IF in_num_pigs IS NOT NULL THEN
         dt_last_update              = CURRENT_TIMESTAMP
         
     WHERE id = in_pig_prod_id;
+    
+ELSE
+    UPDATE pig_production SET
+        date_weaning                = in_date_weaning,
+        prod_status_id              = PRODUCTION_STATUS_ID_WEANING,
+
+        num_pigs_weaning_m          = in_num_pigs_male,
+        num_pigs_weaning_f          = in_num_pigs_female,
+        num_pigs_weaning            = NULL,
+
+        num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
+        
+        total_pigs_weight_weaning   = in_total_weight,
+        
+        last_update_user_id         = in_user_id,
+        dt_last_update              = CURRENT_TIMESTAMP
+        
+    WHERE id = in_pig_prod_id;
+
+
 END IF;
 
 
@@ -260,7 +260,7 @@ IF cur_count_account_pig_ops > 0 THEN
         /* Since this is a weaning sow pig ops, need to relate to SOW.*/
         UPDATE pig_prod_pig_ops SET 
             sow_boar_id = cur_pig_prod_sow_id
-        WHERE pig_prod_id = in_pig_prod_id AND a.operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS;
+        WHERE pig_prod_id = in_pig_prod_id AND operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS;
         
     ELSE
         IF detected_date_weaning_change > 0 THEN
@@ -285,7 +285,7 @@ IF cur_count_account_pig_ops > 0 THEN
             */
             
             
-            /* in_date_weaning i s DAY 0 after wean */
+            /* in_date_weaning is DAY 0 after wean */
             UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
                 a.date_target = DATE_ADD(in_date_weaning, INTERVAL b.num_days_since DAY)
             WHERE   a.pig_prod_id = in_pig_prod_id AND 
