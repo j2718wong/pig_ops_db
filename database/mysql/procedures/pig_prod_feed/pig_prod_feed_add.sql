@@ -37,6 +37,10 @@ BEGIN
  * @since February 13, 2026
  */
 
+
+
+
+
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 DECLARE RES_NUM_PIG_PROD_INACTIVE_STATUS        INT             DEFAULT 20;
@@ -302,8 +306,13 @@ IF in_feed_item_finisher_id > 0 THEN
 END IF;
 
 
+/* Update pig_production bought feeds*/ 
 
-    
+/* Sum up all gestating feeds for pig_production*/
+
+SELECT SUM(num_gesta)
+INTO cur_feed_quantity,
+
 
 
 END process_user;

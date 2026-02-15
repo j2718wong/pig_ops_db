@@ -7,7 +7,8 @@ CREATE PROCEDURE pig_farm_feed_buy_update(
     in_pig_farm_feed_buy_id INT,
     
     in_date_buy             VARCHAR(10),
-    in_feed_supplier_id     INT
+    in_feed_supplier_id     INT,
+    in_other_cost           DECIMAL(8,2)
 )  
 
 BEGIN
@@ -95,12 +96,22 @@ END IF;
 UPDATE pig_farm_feed_buy SET 
     date_buy            = in_date_buy,
     feed_supplier_id    = in_feed_supplier_id,
+    other_cost          = in_other_cost,
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
 WHERE id = in_pig_farm_feed_buy_id;
 
 
+/* propagate change to feed_buy*/
+UPDATE feed_buy SET
+    date_buy            = in_date_buy,
+    feed_supplier_id    = in_feed_supplier_id,
+    
+    last_update_user_id = in_user_id,
+    dt_last_update      = CURRENT_TIMESTAMP
+WHERE 
+    pig_farm_feed_buy_id = in_pig_farm_feed_buy_id;
 
 END process_user;
 

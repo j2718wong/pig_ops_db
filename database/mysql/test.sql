@@ -192,11 +192,11 @@ a.id,
 a.name,
 a.add_notes_id,
 b.date_notes,
-b.notes AS pig_prod_notes
-
+b.notes AS pig_prod_notes,
+a.num_nipples
 FROm sow_boar a
-LEFT OUTER JOIN pig_prod_notes b ON a.add_notes_id = b.id;
-
+LEFT OUTER JOIN pig_prod_notes b ON a.add_notes_id = b.id
+WHERE a.name LIKE 'Gemma'
 
 SELECT 
 id,
@@ -401,7 +401,7 @@ c.name AS prod_status
 FROM pig_production a 
 LEFT OUTER JOIN sow_boar b ON a.sow_id = b.id
 LEFT OUTER JOIN pig_prod_status c ON a.prod_status_id = c.id
-WHERE a.id = 22;
+WHERE a.id = 14;
 
 
 SELECT 

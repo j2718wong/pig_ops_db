@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS pig_farm_feed_buy_item_update $$
 CREATE PROCEDURE pig_farm_feed_buy_item_update(
     in_user_id              INT,
     
-    in_feed_buy_item_id     INT,
+    in_feed_buy_id          INT,
     
     in_feed_type_id         INT,
     in_feed_brand_id        INT,
@@ -57,7 +57,7 @@ DECLARE cur_pig_farm_feed_buy_id                INT             DEFAULT 0;
 DECLARE cur_pig_farm_feed_buy_account_id        INT             DEFAULT 0;
 
 
-DECLARE cur_feed_buy_item_id                    INT             DEFAULT 0;
+DECLARE cur_feed_buy_id                    INT             DEFAULT 0;
 
 DECLARE cur_feed_buy_total_cost                 DECIMAL(10,2)   DEFAULT 0;
 
@@ -80,9 +80,9 @@ SELECT  a.pig_farm_feed_buy_id,
 INTO    cur_pig_farm_feed_buy_id,
         cur_pig_farm_feed_buy_account_id
         
-FROM pig_farm_feed_buy_item a 
+FROM feed_buy a 
 LEFT OUTER JOIN pig_farm_feed_buy b ON a.pig_farm_feed_buy_id = b.id
-WHERE a.id = in_feed_buy_item_id;
+WHERE a.id = in_feed_buy_id;
 
 
 CALL basic_user_check(
@@ -110,7 +110,7 @@ END IF;
 
 
 
-UPDATE pig_farm_feed_buy_item SET
+UPDATE feed_buy SET
     feed_type_id        = in_feed_type_id,
     feed_brand_id       = in_feed_brand_id,
     
@@ -123,13 +123,13 @@ UPDATE pig_farm_feed_buy_item SET
     
     last_update_user_id = in_user_id,
     dT_last_update      = CURRENT_DATE    
-WHERE id = in_feed_buy_item_id;
+WHERE id = in_feed_buy_id;
 
 
 /* Add up all feeds cost related to pig_farm_feed_buy*/
 SELECT  SUM(total_cost)
 INTO    cur_feed_buy_total_cost
-FROM    pig_farm_feed_buy_item
+FROM    feed_buy
 WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id;
 
 UPDATE pig_farm_feed_buy SET 
@@ -148,7 +148,7 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_feed_buy_item_id                     AS feed_buy_id;
+    cur_feed_buy_id                     AS feed_buy_id;
 
 END $$
 

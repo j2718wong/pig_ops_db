@@ -3,9 +3,12 @@
 DROP PROCEDURE IF EXISTS pig_farm_feed_buy_add $$
 CREATE PROCEDURE pig_farm_feed_buy_add(
     in_user_id              INT,
+    
     in_pig_farm_id          INT,
+    
     in_date_buy             VARCHAR(10),
-    in_feed_supplier_id     INT
+    in_feed_supplier_id     INT,
+    in_other_cost           DECIMAL(8,2)
 ) 
  
 BEGIN
@@ -93,14 +96,20 @@ END IF;
 INSERT INTO pig_farm_feed_buy(
     account_id,
     pig_farm_id,
+    
     date_buy,
     feed_supplier_id,
+    other_cost,
+    
     added_by_user_id
 ) VALUES (
     cur_pig_farm_account_id,
     in_pig_farm_id,
+    
     in_date_buy,
     in_feed_supplier_id,
+    in_other_cost,
+    
     in_user_id
 );
 

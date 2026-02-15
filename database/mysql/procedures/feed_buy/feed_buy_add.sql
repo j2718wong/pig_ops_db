@@ -29,6 +29,143 @@ BEGIN
  *
  */
 
+/** 
+20260214 Notes
+1.) As of this writing the feed_buy is created like this.
+
+
+CREATE TABLE `feed_buy` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `pig_farm_id` int(11) DEFAULT NULL,
+  `pig_prod_id` int(11) DEFAULT NULL,
+  `pig_prod_group_id` int(11) DEFAULT NULL,
+  `date_buy` date DEFAULT NULL,
+  `feed_type_id` int(11) DEFAULT NULL,
+  `feed_brand_id` int(11) DEFAULT NULL,
+  `feed_supplier_id` int(11) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL,
+  `kg_per_unit` decimal(5,1) DEFAULT NULL,
+  `kg_total` decimal(6,1) DEFAULT NULL,
+  `unit_cost` decimal(8,2) DEFAULT NULL,
+  `total_cost` decimal(8,2) DEFAULT NULL,
+  `added_by_user_id` int(11) DEFAULT NULL,
+  `last_update_user_id` int(11) DEFAULT NULL,
+  `dt_last_update` datetime DEFAULT NULL,
+  `dt_entry` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `INDEX_PIG_FARM_ID` (`pig_farm_id`),
+  KEY `INDEX_PIG_PROD_ID` (`pig_prod_id`),
+  KEY `INDEX_PIG_PROD_GROUP_ID` (`pig_prod_group_id`)
+) ENGINE=InnoDB
+
+
+
+2.) Two additional tables will be created in addition to feed_buy.
+
+CREATE TABLE `pig_prod_feed` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `pig_prod_id` int(10) unsigned NOT NULL DEFAULT 0,
+  `date_add` date DEFAULT NULL,
+  `added_by_user_id` int(11) DEFAULT NULL,
+  `last_update_user_id` int(11) DEFAULT NULL,
+  `dt_last_update` datetime DEFAULT NULL,
+  `dt_entry` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `INDEX_PIG_PROD_ID` (`pig_prod_id`)
+) ENGINE=InnoDB
+
+
+CREATE TABLE `pig_farm_feed_buy` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` int(10) unsigned NOT NULL DEFAULT 0,
+  `pig_farm_id` int(10) unsigned DEFAULT NULL,
+  `date_buy` date DEFAULT NULL,
+  `feed_supplier_id` int(11) DEFAULT NULL,
+  `total_feed_cost` decimal(10,2) DEFAULT NULL,
+  `other_cost` decimal(8,2) DEFAULT NULL,
+  `added_by_user_id` int(11) DEFAULT NULL,
+  `last_update_user_id` int(11) DEFAULT NULL,
+  `dt_last_update` datetime DEFAULT NULL,
+  `dt_entry` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `INDEX_PIG_FARM` (`pig_farm_id`)
+) ENGINE=InnoDB
+
+
+And the feed_buy table will add two additional keys
+
+
+ALTER TABLE feed_buy ADD COLUMN pig_prod_feed_id  INT UNSIGNED 
+AFTER pig_prod_group_id;
+
+
+ALTER TABLE feed_buy ADD COLUMN pig_farm_feed_buy_id  INT UNSIGNED 
+AFTER pig_prod_group_id;
+
+
+The feed_buy will look like this now:
+
+CREATE TABLE `feed_buy` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `pig_farm_id` int(11) DEFAULT NULL,
+  `pig_prod_id` int(11) DEFAULT NULL,
+  `pig_prod_group_id` int(11) DEFAULT NULL,
+  `pig_prod_feed_id` int(10) unsigned DEFAULT NULL,
+  `pig_farm_feed_buy_id` int(10) unsigned DEFAULT NULL,
+  `date_buy` date DEFAULT NULL,
+  `feed_type_id` int(11) DEFAULT NULL,
+  `feed_brand_id` int(11) DEFAULT NULL,
+  `feed_supplier_id` int(11) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL,
+  `kg_per_unit` decimal(5,1) DEFAULT NULL,
+  `kg_total` decimal(6,1) DEFAULT NULL,
+  `unit_cost` decimal(8,2) DEFAULT NULL,
+  `total_cost` decimal(8,2) DEFAULT NULL,
+  `added_by_user_id` int(11) DEFAULT NULL,
+  `last_update_user_id` int(11) DEFAULT NULL,
+  `dt_last_update` datetime DEFAULT NULL,
+  `dt_entry` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `INDEX_PIG_FARM_ID` (`pig_farm_id`),
+  KEY `INDEX_PIG_PROD_ID` (`pig_prod_id`),
+  KEY `INDEX_PIG_PROD_GROUP_ID` (`pig_prod_group_id`),
+  KEY `INDEX_PIG_PROD_FEED_ID` (`pig_prod_feed_id`),
+  KEY `INDEX_PIG_FARM_FEED_BUY_ID` (`pig_farm_feed_buy_id`)
+) ENGINE=InnoDB
+
+
+4.) In feed_buy, the feed items per pig_production are directly saved,
+and the remainder of the non-production feeds are save in pig_farm_id keys;
+
+This is time consuming at the user side because it needs to populate
+the feed_item details per pig_production.
+
+5.) In actual pig_operations, the feeds are bought at the pig_farm level not at 
+pig_production level. Then the feeds are distributed to pig_production 
+and the remainder are for gestating sows and boars. The adding of feeds to 
+feed production can be done by farm_staff and no need to input the details of 
+feed_items like the unit_price, unit_weight, feed_brand or feed_supplier.
+
+
+6.) This buying of feeds at the pig_farm level and distributing to pig_production
+is abstracted using pig_farm_feed_buy table and the feed_item details
+is still will be saved in feed_buy table but relating to key pig_farm_feed_buy_id;
+
+
+7.) The distribution of feeds to pig_production is saved at pig_prod_feed table;
+and the feed items distributed to pig_production will still be saved in feed_buy 
+buy using key pig_prod_feed_id;
+
+
+In this way there is little change in the feed_buy table and still recycled.
+
+
+
+
+*/
+
+
+
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
