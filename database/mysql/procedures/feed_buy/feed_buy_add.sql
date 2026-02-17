@@ -112,6 +112,7 @@ CREATE TABLE `feed_buy` (
   `pig_prod_group_id` int(11) DEFAULT NULL,
   `pig_prod_feed_id` int(10) unsigned DEFAULT NULL,
   `pig_farm_feed_buy_id` int(10) unsigned DEFAULT NULL,
+  `flag` int(10) unsigned DEFAULT NULL,
   `date_buy` date DEFAULT NULL,
   `feed_type_id` int(11) DEFAULT NULL,
   `feed_brand_id` int(11) DEFAULT NULL,

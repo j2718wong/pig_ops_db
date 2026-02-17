@@ -186,7 +186,35 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
     END IF;
 
     
-    /* Should not relate to SOW if operation is for piglets*/
+    /* Should relate to both sow and pig_prod*/
+    IF cur_pig_prod_pig_ops_operation_type IN ( PIG_OPERATION_TYPE_GESTATING,
+                                                PIG_OPERATION_TYPE_LACTATING_SOW) THEN
+        INSERT INTO pig_prod_notes (
+            account_id,
+            pig_farm_id,
+            pig_prod_id,
+            sow_boar_id,
+            production_group_id,
+            
+            notes,
+            date_notes,
+            added_by_user_id
+            
+        ) VALUES (
+            cur_pig_prod_account_id,
+            NULL,
+            cur_pig_prod_id,
+            cur_pig_prod_sow_id,
+            NULL,
+            
+            cur_notes,
+            in_date,
+            in_user_id
+        );
+    END iF;
+    
+    
+    /** Should not relate to sow if operation is for piglets*/
     IF cur_pig_prod_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS THEN 
     
         INSERT INTO pig_prod_notes (
@@ -211,8 +239,12 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             in_date,
             in_user_id
         );
-
-    ELSE
+    END IF;
+    
+    
+    /** Should only relate to sow*/
+    IF cur_pig_prod_pig_ops_operation_type IN ( PIG_OPERATION_TYPE_GILT_OPS,
+                                                PIG_OPERATION_TYPE_WEANING_SOW_OPS) THEN
         INSERT INTO pig_prod_notes (
             account_id,
             pig_prod_id,

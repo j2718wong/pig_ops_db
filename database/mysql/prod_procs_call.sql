@@ -124,6 +124,10 @@ CALL feed_buy_add(1, NULL, 13, NULL, '2026-01-07', 7, 1, 1, 10, 50, 1575, 15750)
 
 
 CALL feed_buy_add(1, NULL, 16, NULL, '2026-01-31', 2, 1, 1, 1, 50, 1670, 1670);
+CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-09', 2, 1, 1, 1, 50, 1670, 1670);
+CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-09', 3, 1, 1, 4, 1, 75, 300);
+CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-17', 3, 1, 1, 12, 1, 75, 1000);
+
 
 
 CALL feed_buy_add(1, 1, NULL, NULL,  '2025-09-17', 7, 1, 1, 2, 50, 1575, 3150);
@@ -277,15 +281,16 @@ CALL sow_boar_balance_add(1,  1,  '2026-01-24', 3.5, 3.5);
 
 
 CALL feed_balance_add(1,  13, NULL, '2026-01-31', 9,  0,   0, 0,     0, 0,    2);
-CALL feed_balance_add(1,  16, NULL, '2026-01-31', 0,  0,   1, NULL,     NULL, NULL,    NULL);
+CALL feed_balance_add(1,  16, NULL, '2026-01-31', 0,  1,   NULL, NULL,     NULL, NULL,    NULL);
 CALL sow_boar_balance_add(1,  1,  '2026-01-31', 7, 12);
 
 
-CALL feed_balance_add(1,  16, NULL, '2026-02-07', 0,  0,   0.5, NULL,     NULL, NULL,    NULL);
+CALL feed_balance_add(1,  16, NULL, '2026-02-07', 0,  0.5,   NULL, NULL,     NULL, NULL,    NULL);
 CALL sow_boar_balance_add(1,  1,  '2026-02-07', 6, 11);
 
 
-
+CALL feed_balance_add(1,  16, NULL, '2026-02-14', 0,  1,   NULL, NULL,     NULL, NULL,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2026-02-14', 5.5, 9);
 
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')

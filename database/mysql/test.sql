@@ -159,7 +159,7 @@ a.notes_id
 FROm pig_prod_pig_ops a
 LEFT outer join sow_boar b ON a.sow_boar_id = b.id
 LEFT outer join account_pig_ops c ON a.account_pig_ops_id = c.id
-WHERE a.pig_prod_id = 22;
+WHERE a.pig_prod_id = 18;
 
 
 SELECT
@@ -191,20 +191,28 @@ SELECT
 a.id,
 a.name,
 a.add_notes_id,
+a.is_production_ready,
 b.date_notes,
 b.notes AS pig_prod_notes,
-a.num_nipples
+a.sow_status_id,
+c.name AS sow_status,
+a.parent_sow_id,
+a.parent_boar_id
 FROm sow_boar a
 LEFT OUTER JOIN pig_prod_notes b ON a.add_notes_id = b.id
-WHERE a.name LIKE 'Gemma'
+LEFT OUTER JOIN sow_status c ON a.sow_status_id = c.id
+WHERE a.name LIKE 'rosita'
 
 SELECT 
-id,
-pig_prod_id,
-sow_boar_id,
-notes,
-date_notes
-FROM pig_prod_notes;
+a.id,
+a.pig_prod_id,
+a.sow_boar_id,
+b.name as sow_boar_name,
+a.notes,
+a.date_notes
+FROM pig_prod_notes a
+LEFT OUTER JOIN sow_boar b ON a.sow_boar_id = b.id;
+
 
 
 SELECT 
@@ -427,4 +435,54 @@ SELECT
     LEFT OUTER JOIN pig_production d    ON a.last_pig_production_id  = d.id
     LEFT OUTER JOIN pig_prod_notes e    ON a.add_notes_id           = e.id
     WHERE a.id =9;
+
+SELECT 
+a.id, 
+a.pig_farm_id, 
+a.pig_prod_id, 
+a.pig_farm_feed_buy_id AS pf_feed_buy_id,
+a.pig_prod_feed_id,
+a.date_buy, 
+a.feed_type_id,
+b.name,
+a.quantity as qty,
+a.unit_cost,
+a.total_cost
+FROm feed_buy a
+LEFT OUTER JOIN feed_type b ON a.feed_type_id = b.id
+WHERE a.pig_farm_feed_buy_id = 1
+ORDER BY a.id;
+
+
+SELECT
+a.id,
+a.name AS sow_boar_name,
+a.add_notes_id,
+b.notes
+FROm sow_boar a
+LEFT OUTER JOIN pig_prod_notes b ON a.add_notes_id = b.id; 
+
+
+SELECT 
+id,
+pig_prod_id,
+date_balance,
+num_pigs,
+num_b_gestating,
+num_b_lactating,
+num_b_booster,
+num_b_prestarter,
+num_b_starter,
+
+
+num_gestating,
+num_lactating,
+num_booster,
+num_prestarter,
+num_starter
+
+
+FROm feed_balance
+
+
 

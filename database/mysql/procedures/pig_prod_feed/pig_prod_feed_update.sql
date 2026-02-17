@@ -8,28 +8,20 @@ CREATE PROCEDURE pig_prod_feed_update(
     in_date_add             VARCHAR(10),
     
     
-    in_num_gesta            INT,
-    in_num_lacta            INT,
-    in_num_booster          INT,
-    in_num_prestarter       INT,
-    in_num_starter          INT,
-    in_num_grower           INT,
-    in_num_finisher         INT,
+    in_num_gesta            INT, /** can be >= 0; cannot be NULL*/
+    in_num_lacta            INT, /** can be >= 0; cannot be NULL*/   
+    in_num_booster          INT, /** can be >= 0; cannot be NULL*/
+    in_num_prestarter       INT, /** can be >= 0; cannot be NULL*/
+    in_num_starter          INT, /** can be >= 0; cannot be NULL*/
+    in_num_grower           INT, /** can be >= 0; cannot be NULL*/
+    in_num_finisher         INT  /** can be >= 0; cannot be NULL*/
     
-    
-    in_feed_item_gesta_id       INT,
-    in_feed_item_lacta_id       INT,
-    in_feed_item_booster_id     INT,
-    in_feed_item_prestarter_id  INT,
-    in_feed_item_starter_id     INT,
-    in_feed_item_grower_id      INT,
-    in_feed_item_finisher_id    INT
     
 ) 
  
 BEGIN
 /**
- * Will add pig_prod_feed entry.
+ * Will update pig_prod_feed entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since February 13, 2026
@@ -47,15 +39,41 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+DECLARE FEED_TYPE_ID_GESTATING                  INT             DEFAULT 1;
+DECLARE FEED_TYPE_ID_LACTATING                  INT             DEFAULT 2;
+DECLARE FEED_TYPE_ID_BOOSTER                    INT             DEFAULT 3;
+DECLARE FEED_TYPE_ID_PRESTARTER                 INT             DEFAULT 4;
+DECLARE FEED_TYPE_ID_STARTER                    INT             DEFAULT 5;
+DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
+DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
+
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
+
+
+DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
+DECLARE cur_pig_farm_feed_buy_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 DECLARE cur_is_active_status                    INT             DEFAULT 0;
 
-DECLARE cur_feed_brand_id                       INT             DEFAULT 0;
-DECLARE cur_unit_cost                           DECIMAL(8,2)    DEFAULT NULL;
+
+DECLARE cur_prod_feed_buy_id                    INT             DEFAULT 0;
+
+DECLARE cur_pf_feed_buy_id                      INT             DEFAULT 0;
+DECLARE cur_feed_buy_feed_brand_id              INT             DEFAULT 0;
+DECLARE cur_feed_buy_feed_supplier_id           INT             DEFAULT 0;
+        
+DECLARE cur_feed_buy_kg_per_unit                DECIMAL(5,1)    DEFAULT NULL;        
+DECLARE cur_feed_buy_unit_cost                  DECIMAL(8,2)    DEFAULT NULL;
+
+
+DECLARE cur_feed_quantity                       INT             DEFAULT 0;
+DECLARE cur_feed_weight_kg                      DECIMAL(6,1)    DEFAULT NULL;
+DECLARE cur_total_cost                          DECIMAL(8,2)    DEFAULT NULL;
+
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -67,14 +85,20 @@ SET res_code    = "SUCCESS";
 
 
 
-SELECT  account_id,
-        pig_prod_status_id
+SELECT  a.pig_prod_id,
+        a.pig_farm_feed_buy_id,
+        b.account_id,
+        b.prod_status_id
         
-INTO    cur_pig_prod_account_id,
+INTO    cur_pig_prod_id,
+        cur_pig_farm_feed_buy_id,
+        cur_pig_prod_account_id,
         cur_pig_prod_status_id
         
-FROM    pig_production 
-WHERE   id = in_pig_prod_id;
+FROM    pig_prod_feed a
+LEFT OUTER JOIN pig_production b ON a.pig_prod_id = b.id
+WHERE   a.id = in_pig_prod_feed_id;
+
 
 CALL basic_user_check(
     in_user_id, 
@@ -107,217 +131,997 @@ IF cur_is_active_status = 0 THEN
 END IF;
 
 
-/* Check for duplicate entry */
-SELECT  id
-INTO    in_pig_prod_feed_id
-FROM    pig_prod_feed
-WHERE   pig_prod_id         = in_pig_prod_id    AND
-        date_add            = in_date_add       AND
-        pig_farm_feed_buy_id= in_pig_farm_feed_buy_id
-LIMIT   1;
-
-IF in_pig_prod_feed_id > 0 THEN 
-    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
-    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
-    LEAVE process_user;
-END IF;
 
 
-
-UPDATE pig_prod_feed SET
-    date_add                = in_date_add,                  
-                           
-    num_gesta               = in_num_gesta,                              
-    num_lacta               = in_num_lacta,                              
-    num_booster             = in_num_booster,                          
-    num_prestarter          = in_num_prestarter,                      
-    num_starter             = in_num_starter,                          
-    num_grower              = in_num_grower,                            
-    num_finisher            = in_num_finisher,                        
-                                
-    feed_item_gesta_id      = in_feed_item_gesta_id,        
-    feed_item_lacta_id      = in_feed_item_lacta_id,        
-    feed_item_booster_id    = in_feed_item_booster_id,    
-    feed_item_prestarter_id = in_feed_item_prestarter_id, 
-    feed_item_starter_id    = in_feed_item_starter_id,    
-    feed_item_grower_id     = in_feed_item_grower_id,      
-    feed_item_finisher_id   = in_feed_item_finisher_id,  
-    
-    last_update_user_id     = in_user_id,
-    dt_last_update          = CURRENT_TIMESTAMP
-
+UPDATE pig_prod_feed SET 
+    date_add = in_date_add
 WHERE id = in_pig_prod_feed_id;
 
 
-/* Update pig_prod_feed joined columns because this is expensive operation when  
-LEFT OUTER JOIN in SELECT query.*/
+/** Update feed items*/
 
-IF in_feed_item_gesta_id > 0 THEN 
-    SELECT  feed_brand_id,
+
+IF in_num_gesta IS NOT NULL THEN 
+    /** Check if already added */
+    SET     cur_prod_feed_buy_id = 0;
+
+    SELECT  id
+    INTO    cur_prod_feed_buy_id
+    FROM    feed_buy
+    WHERE   pig_prod_feed_id = in_pig_prod_feed_id AND 
+            feed_type_id = FEED_TYPE_ID_GESTATING
+    LIMIT   1;
+
+
+    SET     cur_pf_feed_buy_id = 0;
+
+    SELECT  id,
+            feed_brand_id,
+            feed_supplier_id,
+        
+            kg_per_unit,        
             unit_cost
     
-    INTO    cur_feed_brand_id,
-            cur_unit_cost
-    
-    FROM    pig_farm_feed_buy_item
-    WHERE   id = in_feed_item_gesta_id;
-    
-    UPDATE  pig_prod_feed SET
-        feed_brand_gesta_id = cur_feed_brand_id,
-        unit_cost_gesta     = cur_unit_cost
-    WHERE id = in_pig_prod_feed_id;
+    INTO    cur_pf_feed_buy_id,
+            cur_feed_buy_feed_brand_id,
+            cur_feed_buy_feed_supplier_id,
+        
+            cur_feed_buy_kg_per_unit,        
+            cur_feed_buy_unit_cost
+            
+    FROM    feed_buy
+    WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id AND 
+            feed_type_id = FEED_TYPE_ID_GESTATING
+    LIMIT   1;
 
-ELSE
-    UPDATE  pig_prod_feed SET
-        feed_brand_gesta_id = NULL,
-        unit_cost_gesta     = NULL
-    WHERE id = in_pig_prod_feed_id;
 
+    /** Insert newly added feed_buy. */
+    IF cur_prod_feed_buy_id = 0 AND in_num_gesta > 0 THEN 
+        
+        IF cur_pf_feed_buy_id > 0 THEN 
+            INSERT INTO feed_buy(
+                pig_prod_id,
+                pig_prod_feed_id,
+                
+                date_buy,
+                
+                feed_type_id,
+                feed_brand_id,
+                feed_supplier_id,
+                
+                quantity,
+                kg_per_unit,
+                kg_total,
+                
+                unit_cost,
+                total_cost,
+                
+                added_by_user_id
+
+            ) VALUES (
+                cur_pig_prod_id,
+                cur_pig_prod_feed_id,
+                
+                in_date_add,
+                
+                FEED_TYPE_ID_GESTATING,
+                cur_feed_buy_feed_brand_id,
+                cur_feed_buy_feed_supplier_id,
+                
+                in_num_gesta,
+                cur_feed_buy_kg_per_unit,
+                in_num_gesta * cur_feed_buy_kg_per_unit,
+                
+                cur_feed_buy_unit_cost,
+                in_num_gesta * cur_feed_buy_unit_cost,
+                
+                in_user_id
+            );
+            
+            
+            /** Sum up all feeds related to pig_prod_id*/
+            SELECT  SUM(quantity),
+                    SUM(kg_total),
+                    SUM(total_cost)
+                    
+            INTO    cur_feed_quantity,
+                    cur_feed_weight_kg,
+                    cur_total_cost
+            FROM    feed_buy
+            WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_GESTATING;
+
+            
+            UPDATE pig_production SET 
+                num_b_gestating     = cur_feed_quantity,
+                num_b_kg_gestating  = cur_feed_weight_kg,
+                cost_gestating      = cur_total_cost
+            WHERE id = cur_pig_prod_id;
+        END IF;
+
+    END IF;
+        
+    
+    /** Update already inserted feed_buy. */
+    IF cur_prod_feed_buy_id > 0 THEN 
+        UPDATE feed_buy SET
+            date_buy            = in_date_add,
+
+                           
+            quantity            = in_num_gesta,
+            kg_per_unit         = cur_feed_buy_kg_per_unit,
+            kg_total            = in_num_gesta * cur_feed_buy_kg_per_unit,
+                      
+            unit_cost           = cur_feed_buy_unit_cost,
+            total_cost          = in_num_gesta * cur_feed_buy_unit_cost
+                           
+        WHERE id = cur_prod_feed_buy_id;
+    
+    
+        /** Sum up all feeds related to pig_prod_id*/
+        SELECT  SUM(quantity),
+                SUM(kg_total),
+                SUM(total_cost)
+                
+        INTO    cur_feed_quantity,
+                cur_feed_weight_kg,
+                cur_total_cost
+        FROM    feed_buy
+        WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_GESTATING;
+
+        
+        UPDATE pig_production SET 
+            num_b_gestating     = cur_feed_quantity,
+            num_b_kg_gestating  = cur_feed_weight_kg,
+            cost_gestating      = cur_total_cost
+        WHERE id = cur_pig_prod_id;
+    
+    END IF;
+    
 END IF;
 
 
-IF in_feed_item_lacta_id > 0 THEN 
-    SELECT  feed_brand_id,
+
+
+IF in_num_lacta IS NOT NULL THEN 
+    /** Check if already added */
+    SET     cur_prod_feed_buy_id = 0;
+
+    SELECT  id
+    INTO    cur_prod_feed_buy_id
+    FROM    feed_buy
+    WHERE   pig_prod_feed_id = in_pig_prod_feed_id AND 
+            feed_type_id = FEED_TYPE_ID_LACTATING
+    LIMIT   1;
+
+    
+    SET     cur_pf_feed_buy_id = 0;
+    
+    SELECT  id,
+            feed_brand_id,
+            feed_supplier_id,
+        
+            kg_per_unit,        
             unit_cost
     
-    INTO    cur_feed_brand_id,
-            cur_unit_cost
-    
-    FROM    pig_farm_feed_buy_item
-    WHERE   id = in_feed_item_lacta_id;
-    
-    UPDATE  pig_prod_feed SET
-        feed_brand_lacta_id = cur_feed_brand_id,
-        unit_cost_lacta     = cur_unit_cost
-    WHERE id = in_pig_prod_feed_id;
+    INTO    cur_pf_feed_buy_id,
+            cur_feed_buy_feed_brand_id,
+            cur_feed_buy_feed_supplier_id,
+        
+            cur_feed_buy_kg_per_unit,        
+            cur_feed_buy_unit_cost
+            
+    FROM    feed_buy
+    WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id AND 
+            feed_type_id = FEED_TYPE_ID_LACTATING
+    LIMIT   1;
 
-ELSE
-    UPDATE  pig_prod_feed SET
-        feed_brand_gesta_id = NULL,
-        unit_cost_gesta     = NULL
-    WHERE id = in_pig_prod_feed_id;
 
+    /** Insert newly added feed_buy. */
+    IF cur_prod_feed_buy_id = 0 AND in_num_lacta > 0 THEN 
+        
+        IF cur_pf_feed_buy_id > 0 THEN 
+            INSERT INTO feed_buy(
+                pig_prod_id,
+                pig_prod_feed_id,
+                
+                date_buy,
+                
+                feed_type_id,
+                feed_brand_id,
+                feed_supplier_id,
+                
+                quantity,
+                kg_per_unit,
+                kg_total,
+                
+                unit_cost,
+                total_cost,
+                
+                added_by_user_id
+
+            ) VALUES (
+                cur_pig_prod_id,
+                cur_pig_prod_feed_id,
+                
+                in_date_add,
+                
+                FEED_TYPE_ID_LACTATING,
+                cur_feed_buy_feed_brand_id,
+                cur_feed_buy_feed_supplier_id,
+                
+                in_num_lacta,
+                cur_feed_buy_kg_per_unit,
+                in_num_lacta * cur_feed_buy_kg_per_unit,
+                
+                cur_feed_buy_unit_cost,
+                in_num_lacta * cur_feed_buy_unit_cost,
+                
+                in_user_id
+            );
+            
+            
+            /** Sum up all feeds related to pig_prod_id*/
+            SELECT  SUM(quantity),
+                    SUM(kg_total),
+                    SUM(total_cost)
+                    
+            INTO    cur_feed_quantity,
+                    cur_feed_weight_kg,
+                    cur_total_cost
+            FROM    feed_buy
+            WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_LACTATING;
+
+            
+            UPDATE pig_production SET 
+                num_b_lactating     = cur_feed_quantity,
+                num_b_kg_lactating  = cur_feed_weight_kg,
+                cost_lactating      = cur_total_cost
+            WHERE id = cur_pig_prod_id;
+        END IF;
+
+    END IF;
+        
+    
+    /** Update already inserted feed_buy. */
+    IF cur_prod_feed_buy_id > 0 THEN 
+        UPDATE feed_buy SET
+            date_buy            = in_date_add,
+
+                           
+            quantity            = in_num_lacta,
+            kg_per_unit         = cur_feed_buy_kg_per_unit,
+            kg_total            = in_num_lacta * cur_feed_buy_kg_per_unit,
+                            
+            unit_cost           = cur_feed_buy_unit_cost,
+            total_cost          = in_num_lacta * cur_feed_buy_unit_cost
+                           
+        WHERE id = cur_prod_feed_buy_id;
+    
+    
+        /** Sum up all feeds related to pig_prod_id*/
+        SELECT  SUM(quantity),
+                SUM(kg_total),
+                SUM(total_cost)
+                
+        INTO    cur_feed_quantity,
+                cur_feed_weight_kg,
+                cur_total_cost
+        FROM    feed_buy
+        WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_LACTATING;
+
+        
+        UPDATE pig_production SET 
+            num_b_lactating     = cur_feed_quantity,
+            num_b_kg_lactating  = cur_feed_weight_kg,
+            cost_lactating      = cur_total_cost
+        WHERE id = cur_pig_prod_id;
+    
+    END IF;
+    
 END IF;
 
 
-IF in_feed_item_booster_id > 0 THEN 
-    SELECT  feed_brand_id,
+
+
+IF in_num_booster IS NOT NULL THEN 
+    /** Check if already added */
+    SET     cur_prod_feed_buy_id = 0;
+
+    SELECT  id
+    INTO    cur_prod_feed_buy_id
+    FROM    feed_buy
+    WHERE   pig_prod_feed_id = in_pig_prod_feed_id AND 
+            feed_type_id = FEED_TYPE_ID_BOOSTER
+    LIMIT   1;
+
+    
+    SELECT  id,
+            feed_brand_id,
+            feed_supplier_id,
+        
+            kg_per_unit,        
             unit_cost
     
-    INTO    cur_feed_brand_id,
-            cur_unit_cost
-    
-    FROM    pig_farm_feed_buy_item
-    WHERE   id = in_feed_item_booster_id;
-    
-    UPDATE  pig_prod_feed SET
-        feed_brand_booster_id = cur_feed_brand_id,
-        unit_cost_booster     = cur_unit_cost
-    WHERE id = in_pig_prod_feed_id;
+    INTO    cur_pf_feed_buy_id,
+            cur_feed_buy_feed_brand_id,
+            cur_feed_buy_feed_supplier_id,
+        
+            cur_feed_buy_kg_per_unit,        
+            cur_feed_buy_unit_cost
+            
+    FROM    feed_buy
+    WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id AND 
+            feed_type_id = FEED_TYPE_ID_BOOSTER
+    LIMIT   1;
 
-ELSE
-    UPDATE  pig_prod_feed SET
-        feed_brand_gesta_id = NULL,
-        unit_cost_gesta     = NULL
-    WHERE id = in_pig_prod_feed_id;
 
+    /** Insert newly added feed_buy. */
+    IF cur_prod_feed_buy_id = 0 AND in_num_booster > 0 THEN 
+        
+        IF cur_pf_feed_buy_id > 0 THEN 
+            INSERT INTO feed_buy(
+                pig_prod_id,
+                pig_prod_feed_id,
+                
+                date_buy,
+                
+                feed_type_id,
+                feed_brand_id,
+                feed_supplier_id,
+                
+                quantity,
+                kg_per_unit,
+                kg_total,
+                
+                unit_cost,
+                total_cost,
+                
+                added_by_user_id
+
+            ) VALUES (
+                cur_pig_prod_id,
+                cur_pig_prod_feed_id,
+                
+                in_date_add,
+                
+                FEED_TYPE_ID_BOOSTER,
+                cur_feed_buy_feed_brand_id,
+                cur_feed_buy_feed_supplier_id,
+                
+                in_num_booster,
+                cur_feed_buy_kg_per_unit,
+                in_num_booster * cur_feed_buy_kg_per_unit,
+                
+                cur_feed_buy_unit_cost,
+                in_num_booster * cur_feed_buy_unit_cost,
+                
+                in_user_id
+            );
+            
+            
+            /** Sum up all feeds related to pig_prod_id*/
+            SELECT  SUM(quantity),
+                    SUM(kg_total),
+                    SUM(total_cost)
+                    
+            INTO    cur_feed_quantity,
+                    cur_feed_weight_kg,
+                    cur_total_cost
+            FROM    feed_buy
+            WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_BOOSTER;
+
+            
+            UPDATE pig_production SET 
+                num_b_booster       = cur_feed_quantity,
+                num_b_kg_booster    = cur_feed_weight_kg,
+                cost_booster        = cur_total_cost
+            WHERE id = cur_pig_prod_id;
+        END IF;
+
+    END IF;
+        
+    
+    /** Update already inserted feed_buy. */
+    IF cur_prod_feed_buy_id > 0 THEN 
+        UPDATE feed_buy SET
+            date_buy            = in_date_add,
+
+                           
+            quantity            = in_num_booster,
+            kg_per_unit         = cur_feed_buy_kg_per_unit,
+            kg_total            = in_num_booster * cur_feed_buy_kg_per_unit,
+                            
+            unit_cost           = cur_feed_buy_unit_cost,
+            total_cost          = in_num_booster * cur_feed_buy_unit_cost
+                           
+        WHERE id = cur_prod_feed_buy_id;
+    
+    
+        /** Sum up all feeds related to pig_prod_id*/
+        SELECT  SUM(quantity),
+                SUM(kg_total),
+                SUM(total_cost)
+                
+        INTO    cur_feed_quantity,
+                cur_feed_weight_kg,
+                cur_total_cost
+        FROM    feed_buy
+        WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_BOOSTER;
+
+        
+        UPDATE pig_production SET 
+            num_b_booster       = cur_feed_quantity,
+            num_b_kg_booster    = cur_feed_weight_kg,
+            cost_booster        = cur_total_cost
+        WHERE id = cur_pig_prod_id;
+    
+    END IF;
+    
 END IF;
 
 
-IF in_feed_item_prestarter_id > 0 THEN 
-    SELECT  feed_brand_id,
+
+
+IF in_num_prestarter IS NOT NULL THEN 
+    /** Check if already added */
+    SET     cur_prod_feed_buy_id = 0;
+
+    SELECT  id
+    INTO    cur_prod_feed_buy_id
+    FROM    feed_buy
+    WHERE   pig_prod_feed_id = in_pig_prod_feed_id AND 
+            feed_type_id = FEED_TYPE_ID_PRESTARTER
+    LIMIT   1;
+
+    
+    SET     cur_pf_feed_buy_id = 0;
+    
+    SELECT  id,
+            feed_brand_id,
+            feed_supplier_id,
+        
+            kg_per_unit,        
             unit_cost
     
-    INTO    cur_feed_brand_id,
-            cur_unit_cost
-    
-    FROM    pig_farm_feed_buy_item
-    WHERE   id = in_feed_item_prestarter_id;
-    
-    UPDATE  pig_prod_feed SET
-        feed_brand_prestarter_id = cur_feed_brand_id,
-        unit_cost_prestarter     = cur_unit_cost
-    WHERE id = in_pig_prod_feed_id;
+    INTO    cur_pf_feed_buy_id,
+            cur_feed_buy_feed_brand_id,
+            cur_feed_buy_feed_supplier_id,
+        
+            cur_feed_buy_kg_per_unit,        
+            cur_feed_buy_unit_cost
+            
+    FROM    feed_buy
+    WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id AND 
+            feed_type_id = FEED_TYPE_ID_PRESTARTER
+    LIMIT   1;
 
-ELSE
-    UPDATE  pig_prod_feed SET
-        feed_brand_gesta_id = NULL,
-        unit_cost_gesta     = NULL
-    WHERE id = in_pig_prod_feed_id;
 
+    /** Insert newly added feed_buy. */
+    IF cur_prod_feed_buy_id = 0 AND in_num_prestarter > 0 THEN 
+        
+        IF cur_pf_feed_buy_id > 0 THEN 
+            INSERT INTO feed_buy(
+                pig_prod_id,
+                pig_prod_feed_id,
+                
+                date_buy,
+                
+                feed_type_id,
+                feed_brand_id,
+                feed_supplier_id,
+                
+                quantity,
+                kg_per_unit,
+                kg_total,
+                
+                unit_cost,
+                total_cost,
+                
+                added_by_user_id
+
+            ) VALUES (
+                cur_pig_prod_id,
+                cur_pig_prod_feed_id,
+                
+                in_date_add,
+                
+                FEED_TYPE_ID_PRESTARTER,
+                cur_feed_buy_feed_brand_id,
+                cur_feed_buy_feed_supplier_id,
+                
+                in_num_prestarter,
+                cur_feed_buy_kg_per_unit,
+                in_num_prestarter * cur_feed_buy_kg_per_unit,
+                
+                cur_feed_buy_unit_cost,
+                in_num_prestarter * cur_feed_buy_unit_cost,
+                
+                in_user_id
+            );
+            
+            
+            /** Sum up all feeds related to pig_prod_id*/
+            SELECT  SUM(quantity),
+                    SUM(kg_total),
+                    SUM(total_cost)
+                    
+            INTO    cur_feed_quantity,
+                    cur_feed_weight_kg,
+                    cur_total_cost
+            FROM    feed_buy
+            WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_PRESTARTER;
+
+            
+            UPDATE pig_production SET 
+                num_b_prestarter       = cur_feed_quantity,
+                num_b_kg_prestarter    = cur_feed_weight_kg,
+                cost_prestarter        = cur_total_cost
+            WHERE id = cur_pig_prod_id;
+        END IF;
+
+    END IF;
+        
+    
+    /** Update already inserted feed_buy. */
+    IF cur_prod_feed_buy_id > 0 THEN 
+        UPDATE feed_buy SET
+            date_buy            = in_date_add,
+
+                           
+            quantity            = in_num_prestarter,
+            kg_per_unit         = cur_feed_buy_kg_per_unit,
+            kg_total            = in_num_prestarter * cur_feed_buy_kg_per_unit,
+                        
+            unit_cost           = cur_feed_buy_unit_cost,
+            total_cost          = in_num_prestarter * cur_feed_buy_unit_cost
+                           
+        WHERE id = cur_prod_feed_buy_id;
+    
+    
+        /** Sum up all feeds related to pig_prod_id*/
+        SELECT  SUM(quantity),
+                SUM(kg_total),
+                SUM(total_cost)
+                
+        INTO    cur_feed_quantity,
+                cur_feed_weight_kg,
+                cur_total_cost
+        FROM    feed_buy
+        WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_PRESTARTER;
+
+        
+        UPDATE pig_production SET 
+            num_b_prestarter       = cur_feed_quantity,
+            num_b_kg_prestarter    = cur_feed_weight_kg,
+            cost_prestarter        = cur_total_cost
+        WHERE id = cur_pig_prod_id;
+    
+    END IF;
+    
 END IF;
 
 
-IF in_feed_item_starter_id > 0 THEN 
-    SELECT  feed_brand_id,
+
+
+IF in_num_starter IS NOT NULL THEN 
+    /** Check if already added */
+    SET     cur_prod_feed_buy_id = 0;
+
+    SELECT  id
+    INTO    cur_prod_feed_buy_id
+    FROM    feed_buy
+    WHERE   pig_prod_feed_id = in_pig_prod_feed_id AND 
+            feed_type_id = FEED_TYPE_ID_STARTER
+    LIMIT   1;
+
+    
+    SET     cur_pf_feed_buy_id = 0;
+    
+    SELECT  id,
+            feed_brand_id,
+            feed_supplier_id,
+        
+            kg_per_unit,        
             unit_cost
     
-    INTO    cur_feed_brand_id,
-            cur_unit_cost
-    
-    FROM    pig_farm_feed_buy_item
-    WHERE   id = in_feed_item_starter_id;
-    
-    UPDATE  pig_prod_feed SET
-        feed_brand_starter_id = cur_feed_brand_id,
-        unit_cost_starter     = cur_unit_cost
-    WHERE id = in_pig_prod_feed_id;
+    INTO    cur_pf_feed_buy_id,
+            cur_feed_buy_feed_brand_id,
+            cur_feed_buy_feed_supplier_id,
+        
+            cur_feed_buy_kg_per_unit,        
+            cur_feed_buy_unit_cost
+            
+    FROM    feed_buy
+    WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id AND 
+            feed_type_id = FEED_TYPE_ID_STARTER
+    LIMIT   1;
 
-ELSE
-    UPDATE  pig_prod_feed SET
-        feed_brand_starter_id = NULL,
-        unit_cost_starter     = NULL
-    WHERE id = in_pig_prod_feed_id;
+
+    /** Insert newly added feed_buy. */
+    IF cur_prod_feed_buy_id = 0 AND in_num_starter > 0 THEN 
+        
+        IF cur_pf_feed_buy_id > 0 THEN 
+            INSERT INTO feed_buy(
+                pig_prod_id,
+                pig_prod_feed_id,
+                
+                date_buy,
+                
+                feed_type_id,
+                feed_brand_id,
+                feed_supplier_id,
+                
+                quantity,
+                kg_per_unit,
+                kg_total,
+                
+                unit_cost,
+                total_cost,
+                
+                added_by_user_id
+
+            ) VALUES (
+                cur_pig_prod_id,
+                cur_pig_prod_feed_id,
+                
+                in_date_add,
+                
+                FEED_TYPE_ID_STARTER,
+                cur_feed_buy_feed_brand_id,
+                cur_feed_buy_feed_supplier_id,
+                
+                in_num_starter,
+                cur_feed_buy_kg_per_unit,
+                in_num_starter * cur_feed_buy_kg_per_unit,
+                
+                cur_feed_buy_unit_cost,
+                in_num_starter * cur_feed_buy_unit_cost,
+                
+                in_user_id
+            );
+            
+            
+            /** Sum up all feeds related to pig_prod_id*/
+            SELECT  SUM(quantity),
+                    SUM(kg_total),
+                    SUM(total_cost)
+                    
+            INTO    cur_feed_quantity,
+                    cur_feed_weight_kg,
+                    cur_total_cost
+            FROM    feed_buy
+            WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_STARTER;
+
+            
+            UPDATE pig_production SET 
+                num_b_starter       = cur_feed_quantity,
+                num_b_kg_starter    = cur_feed_weight_kg,
+                cost_starter        = cur_total_cost
+            WHERE id = cur_pig_prod_id;
+        END IF;
+
+    END IF;
+        
+    
+    /** Update already inserted feed_buy. */
+    IF cur_prod_feed_buy_id > 0 THEN 
+        UPDATE feed_buy SET
+            date_buy            = in_date_add,
+
+                           
+            quantity            = in_num_starter,
+            kg_per_unit         = cur_feed_buy_kg_per_unit,
+            kg_total            = in_num_starter * cur_feed_buy_kg_per_unit,
+                  
+            unit_cost           = cur_feed_buy_unit_cost,
+            total_cost          = in_num_starter * cur_feed_buy_unit_cost
+                           
+        WHERE id = cur_prod_feed_buy_id;
+    
+    
+        /** Sum up all feeds related to pig_prod_id*/
+        SELECT  SUM(quantity),
+                SUM(kg_total),
+                SUM(total_cost)
+                
+        INTO    cur_feed_quantity,
+                cur_feed_weight_kg,
+                cur_total_cost
+        FROM    feed_buy
+        WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_STARTER;
+
+        
+        UPDATE pig_production SET 
+            num_b_starter       = cur_feed_quantity,
+            num_b_kg_starter    = cur_feed_weight_kg,
+            cost_starter        = cur_total_cost
+        WHERE id = cur_pig_prod_id;
+    
+    END IF;
+    
 END IF;
 
 
-IF in_feed_item_grower_id > 0 THEN 
-    SELECT  feed_brand_id,
+
+
+IF in_num_grower IS NOT NULL THEN 
+    /** Check if already added */
+    SET     cur_prod_feed_buy_id = 0;
+
+    SELECT  id
+    INTO    cur_prod_feed_buy_id
+    FROM    feed_buy
+    WHERE   pig_prod_feed_id = in_pig_prod_feed_id AND 
+            feed_type_id = FEED_TYPE_ID_GROWER
+    LIMIT   1;
+
+    
+    SET     cur_pf_feed_buy_id = 0;
+    
+    SELECT  id,
+            feed_brand_id,
+            feed_supplier_id,
+        
+            kg_per_unit,        
             unit_cost
     
-    INTO    cur_feed_brand_id,
-            cur_unit_cost
-    
-    FROM    pig_farm_feed_buy_item
-    WHERE   id = in_feed_item_grower_id;
-    
-    UPDATE  pig_prod_feed SET
-        feed_brand_grower_id = cur_feed_brand_id,
-        unit_cost_grower     = cur_unit_cost
-    WHERE id = in_pig_prod_feed_id;
+    INTO    cur_pf_feed_buy_id,
+            cur_feed_buy_feed_brand_id,
+            cur_feed_buy_feed_supplier_id,
+        
+            cur_feed_buy_kg_per_unit,        
+            cur_feed_buy_unit_cost
+            
+    FROM    feed_buy
+    WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id AND 
+            feed_type_id = FEED_TYPE_ID_GROWER
+    LIMIT   1;
 
-ELSE
-    UPDATE  pig_prod_feed SET
-        feed_brand_gesta_id = NULL,
-        unit_cost_gesta     = NULL
-    WHERE id = in_pig_prod_feed_id;
 
+    /** Insert newly added feed_buy. */
+    IF cur_prod_feed_buy_id = 0 AND in_num_grower > 0 THEN 
+        
+        IF cur_pf_feed_buy_id > 0 THEN 
+            INSERT INTO feed_buy(
+                pig_prod_id,
+                pig_prod_feed_id,
+                
+                date_buy,
+                
+                feed_type_id,
+                feed_brand_id,
+                feed_supplier_id,
+                
+                quantity,
+                kg_per_unit,
+                kg_total,
+                
+                unit_cost,
+                total_cost,
+                
+                added_by_user_id
+
+            ) VALUES (
+                cur_pig_prod_id,
+                cur_pig_prod_feed_id,
+                
+                in_date_add,
+                
+                FEED_TYPE_ID_GROWER,
+                cur_feed_buy_feed_brand_id,
+                cur_feed_buy_feed_supplier_id,
+                
+                in_num_grower,
+                cur_feed_buy_kg_per_unit,
+                in_num_grower * cur_feed_buy_kg_per_unit,
+                
+                cur_feed_buy_unit_cost,
+                in_num_grower * cur_feed_buy_unit_cost,
+                
+                in_user_id
+            );
+            
+            
+            /** Sum up all feeds related to pig_prod_id*/
+            SELECT  SUM(quantity),
+                    SUM(kg_total),
+                    SUM(total_cost)
+                    
+            INTO    cur_feed_quantity,
+                    cur_feed_weight_kg,
+                    cur_total_cost
+            FROM    feed_buy
+            WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_GROWER;
+
+            
+            UPDATE pig_production SET 
+                num_b_grower       = cur_feed_quantity,
+                num_b_kg_grower    = cur_feed_weight_kg,
+                cost_grower        = cur_total_cost
+            WHERE id = cur_pig_prod_id;
+        END IF;
+
+    END IF;
+        
+    
+    /** Update already inserted feed_buy. */
+    IF cur_prod_feed_buy_id > 0 THEN 
+        UPDATE feed_buy SET
+            date_buy            = in_date_add,
+
+                           
+            quantity            = in_num_grower,
+            kg_per_unit         = cur_feed_buy_kg_per_unit,
+            kg_total            = in_num_grower * cur_feed_buy_kg_per_unit,
+                          
+            unit_cost           = cur_feed_buy_unit_cost,
+            total_cost          = in_num_grower * cur_feed_buy_unit_cost
+                           
+        WHERE id = cur_prod_feed_buy_id;
+    
+    
+        /** Sum up all feeds related to pig_prod_id*/
+        SELECT  SUM(quantity),
+                SUM(kg_total),
+                SUM(total_cost)
+                
+        INTO    cur_feed_quantity,
+                cur_feed_weight_kg,
+                cur_total_cost
+        FROM    feed_buy
+        WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_GROWER;
+
+        
+        UPDATE pig_production SET 
+            num_b_grower       = cur_feed_quantity,
+            num_b_kg_grower    = cur_feed_weight_kg,
+            cost_grower        = cur_total_cost
+        WHERE id = cur_pig_prod_id;
+    
+    END IF;
+    
 END IF;
 
 
-IF in_feed_item_finisher_id > 0 THEN 
-    SELECT  feed_brand_id,
+
+
+IF in_num_finisher IS NOT NULL THEN 
+    /** Check if already added */
+    SET     cur_prod_feed_buy_id = 0;
+
+    SELECT  id
+    INTO    cur_prod_feed_buy_id
+    FROM    feed_buy
+    WHERE   pig_prod_feed_id = in_pig_prod_feed_id AND 
+            feed_type_id = FEED_TYPE_ID_FINISHER
+    LIMIT   1;
+
+    
+    SET     cur_pf_feed_buy_id = 0;
+    
+    SELECT  id,
+            feed_brand_id,
+            feed_supplier_id,
+        
+            kg_per_unit,        
             unit_cost
     
-    INTO    cur_feed_brand_id,
-            cur_unit_cost
-    
-    FROM    pig_farm_feed_buy_item
-    WHERE   id = in_feed_item_finisher_id;
-    
-    UPDATE  pig_prod_feed SET
-        feed_brand_finisher_id = cur_feed_brand_id,
-        unit_cost_finisher     = cur_unit_cost
-    WHERE id = in_pig_prod_feed_id;
+    INTO    cur_pf_feed_buy_id,
+            cur_feed_buy_feed_brand_id,
+            cur_feed_buy_feed_supplier_id,
+        
+            cur_feed_buy_kg_per_unit,        
+            cur_feed_buy_unit_cost
+            
+    FROM    feed_buy
+    WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id AND 
+            feed_type_id = FEED_TYPE_ID_FINISHER
+    LIMIT   1;
 
-ELSE
-    UPDATE  pig_prod_feed SET
-        feed_brand_gesta_id = NULL,
-        unit_cost_gesta     = NULL
-    WHERE id = in_pig_prod_feed_id;
 
+    /** Insert newly added feed_buy. */
+    IF cur_prod_feed_buy_id = 0 AND in_num_finisher > 0 THEN 
+        
+        IF cur_pf_feed_buy_id > 0 THEN 
+            INSERT INTO feed_buy(
+                pig_prod_id,
+                pig_prod_feed_id,
+                
+                date_buy,
+                
+                feed_type_id,
+                feed_brand_id,
+                feed_supplier_id,
+                
+                quantity,
+                kg_per_unit,
+                kg_total,
+                
+                unit_cost,
+                total_cost,
+                
+                added_by_user_id
+
+            ) VALUES (
+                cur_pig_prod_id,
+                cur_pig_prod_feed_id,
+                
+                in_date_add,
+                
+                FEED_TYPE_ID_FINISHER,
+                cur_feed_buy_feed_brand_id,
+                cur_feed_buy_feed_supplier_id,
+                
+                in_num_finisher,
+                cur_feed_buy_kg_per_unit,
+                in_num_finisher * cur_feed_buy_kg_per_unit,
+                
+                cur_feed_buy_unit_cost,
+                in_num_finisher * cur_feed_buy_unit_cost,
+                
+                in_user_id
+            );
+            
+            
+            /** Sum up all feeds related to pig_prod_id*/
+            SELECT  SUM(quantity),
+                    SUM(kg_total),
+                    SUM(total_cost)
+                    
+            INTO    cur_feed_quantity,
+                    cur_feed_weight_kg,
+                    cur_total_cost
+            FROM    feed_buy
+            WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_FINISHER;
+
+            
+            UPDATE pig_production SET 
+                num_b_finisher       = cur_feed_quantity,
+                num_b_kg_finisher    = cur_feed_weight_kg,
+                cost_finisher        = cur_total_cost
+            WHERE id = cur_pig_prod_id;
+        END IF;
+
+    END IF;
+        
+    
+    /** Update already inserted feed_buy. */
+    IF cur_prod_feed_buy_id > 0 THEN 
+        UPDATE feed_buy SET
+            date_buy            = in_date_add,
+
+                           
+            quantity            = in_num_finisher,
+            kg_per_unit         = cur_feed_buy_kg_per_unit,
+            kg_total            = in_num_finisher * cur_feed_buy_kg_per_unit,
+                         
+            unit_cost           = cur_feed_buy_unit_cost,
+            total_cost          = in_num_finisher * cur_feed_buy_unit_cost
+                           
+        WHERE id = cur_prod_feed_buy_id;
+    
+    
+        /** Sum up all feeds related to pig_prod_id*/
+        SELECT  SUM(quantity),
+                SUM(kg_total),
+                SUM(total_cost)
+                
+        INTO    cur_feed_quantity,
+                cur_feed_weight_kg,
+                cur_total_cost
+        FROM    feed_buy
+        WHERE   pig_prod_id = cur_pig_prod_id AND feed_type_id = FEED_TYPE_ID_FINISHER;
+
+        
+        UPDATE pig_production SET 
+            num_b_finisher       = cur_feed_quantity,
+            num_b_kg_finisher    = cur_feed_weight_kg,
+            cost_finisher        = cur_total_cost
+        WHERE id = cur_pig_prod_id;
+    
+    END IF;
+    
 END IF;
-
 
 
 
