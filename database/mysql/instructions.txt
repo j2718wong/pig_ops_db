@@ -8,3 +8,16 @@ Search \uFEFF in notepad++; use extended search; replace with zero length string
 In debian
 
 find procedures -name "*.sql" -type f | sort | xargs -I {} sh -c 'cat "{}"; echo; echo "\n\n-----------------------------------------------------------\n\n"' > combined.sql
+
+
+
+
+
+mysqldump -u root -p pig_operations > pig_operations_20260217.sql
+mysqldump -u root -p pig_operations --routines > pig_operations_20260217.sql
+
+
+mysqldump -u root -p pig_ops_dev --routines> pig_ops_dev_20260217.sql
+
+
+
