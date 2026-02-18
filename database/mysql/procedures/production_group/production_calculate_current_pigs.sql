@@ -52,6 +52,14 @@ IF in_pig_prod_id > 0 THEN
         INTO    cur_num_pigs_weaning
         FROM    pig_production 
         WHERE   id = in_pig_prod_id;
+        
+        IF cur_num_pigs_weaning IS NULL THEN 
+            SELECT  num_pigs_weaning
+            INTO    cur_num_pigs_weaning
+            FROM    pig_production 
+            WHERE   id = in_pig_prod_id;
+        END IF;
+        
     END IF;
     
     
@@ -69,21 +77,12 @@ IF in_pig_prod_id > 0 THEN
     WHERE   pig_prod_id = in_pig_prod_id;
     
     
-    IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_LACTATING THEN 
-        /* This can be NULL.*/
-        SELECT  SUM(num_pigs_dead)
-        INTO    cur_num_dead_pigs
-        FROM    pig_prod_pig_dead
-        WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_LACTATING;
+    /* This can be NULL.*/
+    SELECT  SUM(num_pigs_dead)
+    INTO    cur_num_dead_pigs
+    FROM    pig_prod_pig_dead
+    WHERE   pig_prod_id = in_pig_prod_id;
     
-    ELSE
-        /* This can be NULL.*/
-        SELECT  SUM(num_pigs_dead)
-        INTO    cur_num_dead_pigs
-        FROM    pig_prod_pig_dead
-        WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
-    
-    END IF;
     
     
 ELSE

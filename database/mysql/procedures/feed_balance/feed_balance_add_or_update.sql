@@ -35,8 +35,8 @@ BEGIN
  *  In the UI, this is not manually entered
  *
  * 3.) Feed consumption is not anymore calculated in every feed balance entry 
- *  or update. This is because can frequently update the feed_balance on 
- *  the same date_balance than rather enetering only once a week (as it was 
+ *  or update. This is because user can frequently update the feed_balance on 
+ *  the same date_balance than rather entering only once a week (as it was 
  *  originally designed). 
  *
  * 4.) The feed_balance table is not visible to user in UI. As this may not be 
@@ -238,7 +238,7 @@ END IF;
 
 
 
-/* Check for duplicate entry */
+
 IF in_pig_prod_id > 0 THEN 
     SELECT  id
     INTO    cur_feed_balance_id
