@@ -51,6 +51,8 @@ DECLARE FLAG_BIT_ACCOUNT_PIG_BUYER_IS_DELETED   INT             DEFAULT 1;
 DECLARE FLAG_BIT_PIG_BUYER_IS_BOAR_CUSTOMER     INT             DEFAULT 2;
 
 
+DECLARE cur_user_account_check_id               INT             DEFAULT 0;
+
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
@@ -70,10 +72,16 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
+SELECT  account_id
+INTO    cur_user_account_check_id
+FROM    user
+WHERE   id = in_user_id;
+
+
 CALL basic_user_check(
     in_user_id, 
     1, /* user must have an account*/
-    0,
+    cur_user_account_check_id, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER,
     FLAG_BIT_OPERATION_ADD,

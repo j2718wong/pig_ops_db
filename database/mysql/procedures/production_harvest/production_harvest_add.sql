@@ -12,16 +12,20 @@ CREATE PROCEDURE production_harvest_add(
     in_num_pigs_harvest     INT,
     in_harvest_type_id      INT,
     
-    in_live_weight          DECIMAL(6,1),
-    in_slaughter_weight     DECIMAL(6,1),
-    in_slaughter_net_weight DECIMAL(6,1),
-    
+    in_live_weight                  DECIMAL(6,1),
     in_live_price_per_unit          DECIMAL(6,1),
+    
+    in_slaughter_weight             DECIMAL(6,1),
+    in_slaughter_minus_weight       DECIMAL(6,1),
     in_slaughther_price_per_unit    DECIMAL(6,1),
     
     in_net_sales            DECIMAL(8,1),
     in_harvest_cost         DECIMAL(5,1),
-    in_comments             VARCHAR(160)
+    in_comments             VARCHAR(160),
+    
+    in_weight_pp_live       VARCHAR(400),
+    in_weight_pp_slaughter  VARCHAR(400)
+
 )  
 
 BEGIN
@@ -70,7 +74,8 @@ DECLARE cur_num_days_since_birth                INT             DEFAULT NULL;
 
 
 DECLARE cur_live_weight_ave                     DECIMAL(6,1)    DEFAULT NULL;
-DECLARE cur_slaughter_weight                    DECIMAL(6,1)    DEFAULT NULL;
+DECLARE cur_slaughter_weight_ave                DECIMAL(6,1)    DEFAULT NULL;
+DEclARE cur_slaughter_net_weight                DECIMAL(6,1)    DEFAULT NULL;
 DECLARE cur_net_sales_pp                        DECIMAL(8,1)    DEFAULT NULL;
 
 DECLARE cur_production_harvest_id               INT             DEFAULT 0;
@@ -211,12 +216,22 @@ IF in_live_weight IS NOT NULL THEN
 END IF;
 
 IF in_slaughter_weight IS NOT NULL THEN 
-    SET cur_slaughter_weight = in_slaughter_weight/in_num_pigs_harvest;
+    SET cur_slaughter_weight_ave = in_slaughter_weight/in_num_pigs_harvest;
+    
+    IF in_slaughter_minus_weight IS NOT NULL THEN 
+        SET cur_slaughter_net_weight = in_slaughter_weight - in_slaughter_minus_weight;
+    ELSE
+        SET cur_slaughter_net_weight = in_slaughter_weight;
+    END IF;
+    
 END IF;
 
 IF in_net_sales IS NOT NULL THEN
     SET cur_net_sales_pp = in_net_sales / in_num_pigs_harvest;
 END IF;
+
+
+
 
 INSERT INTO production_harvest(
     account_id,
@@ -232,19 +247,22 @@ INSERT INTO production_harvest(
     harvest_type_id,
     
     live_weight,
-    slaughter_weight,
-    slaughter_net_weight,
-    
     live_weight_ave,
-    slaughter_weight_ave,
-    
     live_price_per_unit,
+    
+    slaughter_weight,
+    slaughter_minus_weight,
+    slaughter_net_weight,
+    slaughter_weight_ave,
     slaughter_price_per_unit,
     
     net_sales,
     net_sales_pp,
     harvest_cost,
     comments,
+    
+    weight_pp_lw_csv,
+    weight_pp_sw_csv,
 
     added_by_user_id
     
@@ -262,20 +280,23 @@ INSERT INTO production_harvest(
     in_harvest_type_id,
     
     in_live_weight,
-    in_slaughter_weight,
-    in_slaughter_net_weight,
-    
     cur_live_weight_ave,
-    slaughter_weight_ave,
-    
     in_live_price_per_unit,
+    
+    in_slaughter_weight,
+    in_slaughter_minus_weight,
+    cur_slaughter_net_weight,
+    cur_slaughter_weight_ave,
     in_slaughther_price_per_unit,
     
     in_net_sales,
     cur_net_sales_pp,
     in_harvest_cost,
     in_comments,
-
+    
+    in_weight_pp_live,     
+    in_weight_pp_slaughter,
+    
     in_user_id
 );
 
@@ -289,6 +310,12 @@ IF in_pig_prod_id > 0 THEN
     IF cur_num_pigs_current < 0 THEN
         /* Something is wrong*/
         SET cur_num_pigs_current = 0;
+        
+        UPDATE  pig_production SET
+            num_pigs_current = 0,
+            prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
+        WHERE id = in_pig_prod_id;
+        
     END IF;
     
 

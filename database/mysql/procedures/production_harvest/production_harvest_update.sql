@@ -6,21 +6,27 @@ CREATE PROCEDURE production_harvest_update(
     
     in_production_harvest_id INT,
     
+    in_acc_pig_buyer_id     INT,
+    
     in_date_harvest         VARCHAR(10),
     
     in_num_pigs_harvest     INT,
     in_harvest_type_id      INT,
     
-    in_live_weight          DECIMAL(6,1),
-    in_slaughter_weight     DECIMAL(6,1),
-    in_slaughter_net_weight DECIMAL(6,1),
-    
+    in_live_weight                  DECIMAL(6,1),
     in_live_price_per_unit          DECIMAL(6,1),
+    
+    in_slaughter_weight             DECIMAL(6,1),
+    in_slaughter_minus_weight       DECIMAL(6,1),
     in_slaughther_price_per_unit    DECIMAL(6,1),
     
     in_net_sales            DECIMAL(8,1),
     in_harvest_cost         DECIMAL(5,1),
-    in_comments             VARCHAR(160)
+    in_comments             VARCHAR(160),
+    
+    in_weight_pp_live       VARCHAR(400),
+    in_weight_pp_slaughter  VARCHAR(400)
+
 )  
 
 BEGIN
@@ -71,6 +77,12 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 
 DECLARE cur_num_days_since_birth                INT             DEFAULT NULL;
+
+DECLARE cur_live_weight_ave                     DECIMAL(6,1)    DEFAULT NULL;
+DECLARE cur_slaughter_weight_ave                DECIMAL(6,1)    DEFAULT NULL;
+DEclARE cur_slaughter_net_weight                DECIMAL(6,1)    DEFAULT NULL;
+DECLARE cur_net_sales_pp                        DECIMAL(8,1)    DEFAULT NULL;
+
 
 DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
 DECLARE cur_num_pigs_harvest                    INT             DEFAULT 0;
@@ -169,26 +181,55 @@ IF cur_pig_prod_id > 0 THEN
 END IF;
 
 
+IF in_live_weight IS NOT NULL THEN 
+    SET cur_live_weight_ave = in_live_weight/in_num_pigs_harvest;
+END IF;
+
+IF in_slaughter_weight IS NOT NULL THEN 
+    SET cur_slaughter_weight_ave = in_slaughter_weight/in_num_pigs_harvest;
+    
+    IF in_slaughter_minus_weight IS NOT NULL THEN 
+        SET cur_slaughter_net_weight = in_slaughter_weight - in_slaughter_minus_weight;
+    ELSE
+        SET cur_slaughter_net_weight = in_slaughter_weight;
+    END IF;
+    
+END IF;
+
+IF in_net_sales IS NOT NULL THEN
+    SET cur_net_sales_pp = in_net_sales / in_num_pigs_harvest;
+END IF;
+
+
+
+
 UPDATE pig_prod_harvest SET
-    date_harvest        = in_date_harvest,
-    num_days_since_birth= cur_num_days_since_birth,
-    
-    num_pigs_harvest    = in_num_pigs_harvest,
-    harvest_type_id     = in_harvest_type_id,
-    
-    live_weight         = in_live_weight,
-    slaughter_weight    = in_slaughter_weight,
-    slaughter_net_weight = in_slaughter_net_weight,
-    
+    acc_pig_buyer_id        = in_acc_pig_buyer_id,
+    date_harvest            = in_date_harvest,
+    num_days_since_birth    = cur_num_days_since_birth,
+        
+    num_pigs_harvest        = in_num_pigs_harvest,
+    harvest_type_id         = in_harvest_type_id,
+        
+    live_weight             = in_live_weight,
+    live_weight_ave         = cur_live_weight_ave,
     live_price_per_unit     = in_live_price_per_unit,
-    slaughter_price_per_unit = in_slaughter_price_per_unit,
     
-    net_sales           = in_net_sales,
-    harvest_cost        = in_harvest_cost,
-    comments            = in_comments,
+    slaughter_weight        = in_slaughter_weight,
+    slaughter_minus_weight  = in_slaughter_minus_weight,
+    slaughter_net_weight    = cur_slaughter_net_weight,
+    slaughter_weight_ave    = cur_slaughter_weight_ave,
+    slaughter_price_per_unit= in_slaughter_price_per_unit,
     
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
+    net_sales               = in_net_sales,
+    harvest_cost            = in_harvest_cost,
+    comments                = in_comments,
+        
+    weight_pp_lw_csv        = in_weight_pp_live,
+    weight_pp_sw_csv        = in_weight_pp_slaughter,
+        
+    last_update_user_id     = in_user_id,
+    dt_last_update          = CURRENT_TIMESTAMP
 WHERE id = in_production_harvest_id;
 
 
@@ -199,6 +240,11 @@ IF cur_pig_prod_id > 0 THEN
     IF cur_num_pigs_current < 0 THEN
         /* Something is wrong*/
         SET cur_num_pigs_current = 0;
+        
+        UPDATE  pig_production SET
+            num_pigs_current = 0,
+            prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
+        WHERE id = cur_pig_prod_id;
     END IF;
     
 
