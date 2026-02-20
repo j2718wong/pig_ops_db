@@ -18,7 +18,7 @@ CREATE PROCEDURE production_harvest_update(
     
     in_slaughter_weight             DECIMAL(6,1),
     in_slaughter_minus_weight       DECIMAL(6,1),
-    in_slaughther_price_per_unit    DECIMAL(6,1),
+    in_slaughter_price_per_unit     DECIMAL(6,1),
     
     in_net_sales            DECIMAL(8,1),
     in_harvest_cost         DECIMAL(5,1),
@@ -32,7 +32,7 @@ CREATE PROCEDURE production_harvest_update(
 BEGIN
 
 /** 
- * Will update pig_prod_harvest entry.
+ * Will update production_harvest entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since September 18, 2025
@@ -89,7 +89,7 @@ DECLARE cur_num_pigs_harvest                    INT             DEFAULT 0;
 DECLARE cur_num_dead_pigs                       INT             DEFAULT 0;
 DECLARE cur_num_pigs_current                    INT             DEFAULT 0;
 
-DECLARE cur_pig_prod_harvest_id                 INT             DEFAULT 0;
+DECLARE cur_production_harvest_id                 INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -112,6 +112,14 @@ INTO
 
 FROM production_harvest 
 WHERE id = in_production_harvest_id;
+
+
+IF cur_pig_prod_id > 0 THEN 
+    SELECT  prod_status_id
+    INTO    cur_pig_prod_status_id
+    FROM    pig_production
+    WHERE   id = cur_pig_prod_id;
+END IF;
 
 
 
@@ -203,7 +211,7 @@ END IF;
 
 
 
-UPDATE pig_prod_harvest SET
+UPDATE production_harvest SET
     acc_pig_buyer_id        = in_acc_pig_buyer_id,
     date_harvest            = in_date_harvest,
     num_days_since_birth    = cur_num_days_since_birth,
@@ -290,13 +298,19 @@ END IF;
 END process_user;
 
 
+SELECT  prod_status_id
+INTO    cur_pig_prod_status_id
+FROM    pig_production
+WHERE   id = cur_pig_prod_id;
+
 
 SELECT 
     res_num                             AS result_number,
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_pig_prod_harvest_id             AS pig_prod_harvest_id;
+    in_production_harvest_id            AS prod_harvest_id,
+    cur_pig_prod_status_id              AS prod_status_id;
 
 END $$
 

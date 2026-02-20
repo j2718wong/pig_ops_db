@@ -81,7 +81,7 @@ IF in_pig_prod_id > 0 THEN
     SELECT  SUM(num_pigs_dead)
     INTO    cur_num_dead_pigs
     FROM    pig_prod_pig_dead
-    WHERE   pig_prod_id = in_pig_prod_id;
+    WHERE   pig_prod_id = in_pig_prod_id AND dead_at_stage = DEAD_AT_STAGE_GROWING;
     
     
     

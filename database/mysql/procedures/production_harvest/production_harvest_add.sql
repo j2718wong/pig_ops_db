@@ -310,12 +310,6 @@ IF in_pig_prod_id > 0 THEN
     IF cur_num_pigs_current < 0 THEN
         /* Something is wrong*/
         SET cur_num_pigs_current = 0;
-        
-        UPDATE  pig_production SET
-            num_pigs_current = 0,
-            prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
-        WHERE id = in_pig_prod_id;
-        
     END IF;
     
 
@@ -359,13 +353,19 @@ END IF;
 END process_user;
 
 
+SELECT  prod_status_id
+INTO    cur_pig_prod_status_id
+FROM    pig_production
+WHERE   id = in_pig_prod_id;
+
 
 SELECT 
     res_num                             AS result_number,
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_production_harvest_id           AS pig_prod_harvest_id;
+    cur_production_harvest_id           AS prod_harvest_id,
+    cur_pig_prod_status_id              AS prod_status_id;
 
 END $$
 

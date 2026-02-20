@@ -523,15 +523,32 @@ SELECT
 a.id,
 a.date_harvest, 
 a.pig_prod_id, 
-a.acc_pig_buyer_id AS buyer_id,
 b.name AS pig_buyer,
-a.harvest_type_id,  
+a.num_pigs_harvest as num_pigs,
+c.name AS harvest_type,
 a.net_sales, 
 a.harvest_cost, 
 a.comments,
 a.weight_pp_sw_csv
 FROM production_harvest a
-LEFT OUTER JOIN account_pig_buyer b ON a.acc_pig_buyer_id = b.id;
+LEFT OUTER JOIN account_pig_buyer b ON a.acc_pig_buyer_id = b.id
+LEFT OUTER JOIN harvest_type c ON a.harvest_type_id = c.id  
+
+
+CALL production_calculate_current_pigs(13, 0, @cur_pigs);
+
+
+SELECT id,
+prod_status_id,
+num_pigs_live_m,
+num_pigs_live_f,
+num_pigs_weaning_m,
+num_pigs_weaning_f,
+num_pigs_current
+
+FROm pig_production
+WHERE id = 13;
+
 
 
 
