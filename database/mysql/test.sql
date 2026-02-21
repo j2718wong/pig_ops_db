@@ -522,6 +522,7 @@ MariaDB [pig_operations]> DESCRIBE production_harvest;
 SELECT 
 a.id,
 a.date_harvest, 
+a.pig_farm_id,
 a.pig_prod_id, 
 b.name AS pig_buyer,
 a.num_pigs_harvest as num_pigs,
@@ -571,3 +572,13 @@ WHERE id = 13;
 | 14 | 2026-02-05   |          13 |        6 | Nagbuhat sa Farrowing       |            NULL |   49140.0 |          0.0 | Gitupong ang timbang sa pinakabugat na narasyon | NULL                          |
 +----+--------------+-------------+----------+-----------------------------+-----------------+-----------+--------------+-------------------------------------------------+-------------------------------+
 
+ALTER TABLE pig_production ADD COLUMN harvest_wt_pp_live    VARCHAR(400)  AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_wt_pp_live    VARCHAR(400)  AFTER cost_finisher;  
+ALTER TABLE pig_production ADD COLUMN harvest_wt_slaughter_ave  DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_wt_slaughter  DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_wt_live_ave   DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_wt_live       DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_num_sold_pigs INT UNSIGNED AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_num_sold_boar INT UNSIGNED AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_num_sold_gilt INT UNSIGNED AFTER cost_finisher;
+ALTER TABLE pig_production ADD COLUMN harvest_num_int_sow_boar INT UNSIGNED AFTER cost_finisher;

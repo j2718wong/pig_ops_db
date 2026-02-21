@@ -67,6 +67,7 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 
@@ -98,10 +99,12 @@ IF in_pig_prod_id > 0 THEN
     /* pig_production */
     SELECT 
         account_id,
+        pig_farm_id,
         prod_status_id,
         date_actual_birth
     INTO
         cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id,
         cur_pig_prod_date_actual_birth
     FROM pig_production 
@@ -235,6 +238,7 @@ END IF;
 
 INSERT INTO production_harvest(
     account_id,
+    pig_farm_id,
 
     pig_prod_id,
     production_group_id,
@@ -268,6 +272,7 @@ INSERT INTO production_harvest(
     
 ) VALUES (
     cur_pig_prod_account_id,
+    cur_pig_prod_pig_farm_id,
 
     in_pig_prod_id,
     in_production_group_id,
