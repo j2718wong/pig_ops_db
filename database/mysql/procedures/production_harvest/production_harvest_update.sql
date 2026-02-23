@@ -292,6 +292,17 @@ ELSE
 END IF;
 
 
+IF cur_pig_prod_id > 0 THEN 
+    UPDATE pig_production SET 
+        data_ver_num_harvest = data_ver_num_harvest + 1
+    WHERE id = cur_pig_prod_id;
+END IF;
+
+IF cur_production_group_id > 0 THEN 
+    UPDATE pig_production SET 
+        data_ver_num_harvest = data_ver_num_harvest + 1
+    WHERE id = cur_production_group_id;
+END IF;
 
 
 

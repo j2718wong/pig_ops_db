@@ -167,6 +167,10 @@ IF in_notes IS NOT NULL THEN
 END IF;
 
 
+UPDATE sow_boar SET 
+    data_ver_num_sow_boar   = data_ver_num_sow_boar + 1
+WHERE id = in_boar_id;
+
 
 END process_user;
 

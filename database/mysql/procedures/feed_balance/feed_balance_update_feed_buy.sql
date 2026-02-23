@@ -6,7 +6,7 @@ CREATE PROCEDURE feed_balance_update_feed_buy()
 BEGIN
 
 /** 
- * A sub procedure to create pig_prod_pig_ops entries.
+ * 
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since February 18, 2026

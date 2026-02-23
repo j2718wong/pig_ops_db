@@ -35,8 +35,12 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
+DECLARE cur_sow_boar_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
+
+
+DECLARE cur_sow_boar_sex                        CHAR(2);
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -48,8 +52,14 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  account_id
-INTO    cur_sow_boar_account_id
+SELECT  pig_farm_id,  
+        account_id,
+        sex
+
+INTO    cur_sow_boar_pig_farm_id,
+        cur_sow_boar_account_id,
+        cur_sow_boar_sex
+        
 FROM    sow_boar
 WHERE   id = in_sow_boar_id
 LIMIT   1;
@@ -96,6 +106,9 @@ IF in_dispose_notes IS NOT NULL THEN
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
 END IF;
 
+
+
+
 UPDATE sow_boar SET
     date_dispose        = in_date_dispose,
     dispose_notes_id    = cur_pig_prod_notes_id,
@@ -107,6 +120,19 @@ UPDATE sow_boar SET
     
 WHERE 
     id = in_sow_boar_id;
+
+
+IF cur_sow_boar_sex = 'M' THEN 
+    UPDATE pig_farm SET
+        data_ver_num_boar = data_ver_num_boar + 1
+    WHERE id = cur_sow_boar_pig_farm_id; 
+ELSE
+    UPDATE pig_farm SET
+        data_ver_num_sow = data_ver_num_sow + 1
+    WHERE id = cur_sow_boar_pig_farm_id; 
+END IF;
+
+
 
 
 END process_user;

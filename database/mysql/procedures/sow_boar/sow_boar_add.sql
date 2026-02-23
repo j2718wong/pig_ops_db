@@ -202,7 +202,10 @@ IF in_sex = 'F' THEN
         
         in_user_id
     );
-
+    
+    UPDATE pig_farm SET 
+        data_ver_num_sow = data_ver_num_sow + 1
+    WHERE id = in_pig_farm_id;
 
 ELSE
     SET cur_pig_farm_last_boar_id = cur_pig_farm_last_boar_id + 1;
@@ -243,6 +246,9 @@ ELSE
         in_user_id
     );
     
+    UPDATE pig_farm SET 
+        data_ver_num_boar = data_ver_num_boar + 1
+    WHERE id = in_pig_farm_id;
     
 END IF;
 

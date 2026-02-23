@@ -166,6 +166,10 @@ UPDATE  common_supplier SET
 WHERE id = in_feed_supplier_id;
 
 
+UPDATE pig_farm SET 
+    data_ver_num_feed_buy = data_ver_num_feed_buy + 1
+WHERE id = in_pig_farm_id;
+
 
 END process_user;
 

@@ -162,6 +162,17 @@ UPDATE feed_balance SET
 WHERE id = in_feed_balance_id;
 
 
+IF cur_pig_prod_id > 0 THEN 
+    UPDATE pig_production SET  
+        data_ver_num_feed_balance = data_ver_num_feed_balance + 1
+    WHERE id = cur_pig_prod_id;
+END IF;
+
+IF cur_pig_prod_group_id > 0 THEN
+    UPDATE pig_production SET  
+        data_ver_num_feed_balance = data_ver_num_feed_balance + 1
+    WHERE id = cur_pig_prod_group_id;
+END IF;
 
 
 END process_user;

@@ -1,7 +1,7 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS pig_farm_feed_buy_item_add $$
-CREATE PROCEDURE pig_farm_feed_buy_item_add(
+DROP PROCEDURE IF EXISTS pig_farm_feed_buy_item_delete $$
+CREATE PROCEDURE pig_farm_feed_buy_item_delete(
     in_user_id              INT,
     
     in_pig_farm_feed_buy_id INT,

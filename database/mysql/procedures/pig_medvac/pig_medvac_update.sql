@@ -160,6 +160,21 @@ UPDATE pig_medvac  SET
 WHERE id = in_pig_medvac_id;
 
 
+IF cur_sow_boar_id > 0 THEN 
+    UPDATE sow_boar SET
+        data_ver_num_medvac = data_ver_num_medvac + 1 
+    WHERE id = cur_sow_boar_id;
+END IF;
+
+
+IF cur_pig_prod_id > 0 THEN 
+    UPDATE pig_production SET 
+        data_ver_num_medvac = data_ver_num_medvac + 1
+    WHERE id = cur_pig_prod_id;
+END IF;
+
+
+
 
 END process_user;
 

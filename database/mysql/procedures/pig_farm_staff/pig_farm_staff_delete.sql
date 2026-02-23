@@ -39,7 +39,8 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-DECLARE cur_pig_farm_staff_account_id           INT             DEFAULT 0;
+DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
 DECLARE cur_pig_farm_staff_flag                 INT             DEFAULT 0;
 DECLARE cur_pig_farm_staff_name                 VARCHAR(50)     DEFAULT NULL;
 
@@ -53,8 +54,12 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-SELECT  account_id
-INTO    cur_pig_farm_staff_account_id
+SELECT  account_id,
+        pig_farm_id
+        
+INTO    cur_pig_farm_account_id,
+        cur_pig_farm_id
+        
 FROM    pig_farm_staff
 WHERE   id = in_pig_farm_staff_id
 LIMIT   1;
@@ -63,7 +68,7 @@ LIMIT   1;
 CALL basic_user_check(
     in_user_id, 
     1, /* user must have an account*/
-    cur_pig_farm_staff_account_id, /* compare user.account_id to this account_id*/
+    cur_pig_farm_account_id, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_PIG_FARM_STAFF,
     FLAG_BIT_OPERATION_DELETE,
@@ -89,6 +94,12 @@ UPDATE pig_farm_staff SET
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
 WHERE id =  in_pig_farm_staff_id;
+
+
+UPDATE pig_farm SET 
+    data_ver_num_staff = data_ver_num_staff + 1
+WHERE id = cur_pig_farm_id;
+
 
 
 END process_user;

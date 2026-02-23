@@ -55,9 +55,10 @@ DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 DECLARE cur_pig_farm_feed_buy_id                INT             DEFAULT 0;
 DECLARE cur_pig_farm_feed_buy_account_id        INT             DEFAULT 0;
+DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
 
 
-DECLARE cur_feed_buy_id                    INT             DEFAULT 0;
+DECLARE cur_feed_buy_id                         INT             DEFAULT 0;
 
 DECLARE cur_feed_buy_total_cost                 DECIMAL(10,2)   DEFAULT 0;
 
@@ -75,10 +76,12 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  a.pig_farm_feed_buy_id,
-        b.account_id 
+        b.account_id,
+        b.pig_farm_id 
 
 INTO    cur_pig_farm_feed_buy_id,
-        cur_pig_farm_feed_buy_account_id
+        cur_pig_farm_feed_buy_account_id,
+        cur_pig_farm_id
         
 FROM feed_buy a 
 LEFT OUTER JOIN pig_farm_feed_buy b ON a.pig_farm_feed_buy_id = b.id
@@ -135,6 +138,12 @@ WHERE   pig_farm_feed_buy_id = cur_pig_farm_feed_buy_id;
 UPDATE pig_farm_feed_buy SET 
     total_feed_cost =  cur_feed_buy_total_cost
 WHERE id = cur_pig_farm_feed_buy_id;
+
+
+
+UPDATE pig_farm SET 
+    data_ver_num_feed_buy = data_ver_num_feed_buy + 1
+WHERE id = cur_pig_farm_id;
 
 
 

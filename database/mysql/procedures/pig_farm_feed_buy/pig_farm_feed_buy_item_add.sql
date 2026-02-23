@@ -244,6 +244,11 @@ WHERE id = in_pig_farm_feed_buy_id;
 
 
 
+UPDATE pig_farm SET 
+    data_ver_num_feed_buy = data_ver_num_feed_buy + 1
+WHERE id = cur_pig_farm_id;
+
+
 
 END process_user;
 

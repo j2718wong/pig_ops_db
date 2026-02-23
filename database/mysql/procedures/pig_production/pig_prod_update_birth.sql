@@ -218,6 +218,11 @@ IF in_done_by_user > 0 THEN
         SELECT LAST_INSERT_ID() INTO cur_user_staff_id;
         
         
+        UPDATE pig_farm SET 
+            data_ver_num_staff = data_ver_num_staff + 1
+        WHERE id = cur_pig_prod_pig_farm_id;
+        
+        
         UPDATE user SET 
             pig_farm_staff_id = cur_user_staff_id
         WHERE id = in_user_id;
@@ -248,13 +253,16 @@ UPDATE pig_production SET
     birth_staff_id              = in_birth_staff_id,
     
     last_update_user_id         = in_user_id,
-    dt_last_update              = CURRENT_TIMESTAMP
+    dt_last_update              = CURRENT_TIMESTAMP,
+    
+    data_ver_num_pig_prod       = data_ver_num_pig_prod + 1
     
 WHERE id =  in_pig_prod_id;
 
 
 UPDATE sow_boar SET 
-    sow_status_id   = SOW_STATUS_ID_LACTATING
+    sow_status_id           = SOW_STATUS_ID_LACTATING,
+    data_ver_num_sow_boar   = data_ver_num_sow_boar + 1
 WHERE id = cur_pig_prod_sow_id;
 
 

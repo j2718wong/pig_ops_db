@@ -190,7 +190,9 @@ IF in_num_pigs IS NOT NULL THEN
         total_pigs_weight_weaning   = in_total_weight,
         
         last_update_user_id         = in_user_id,
-        dt_last_update              = CURRENT_TIMESTAMP
+        dt_last_update              = CURRENT_TIMESTAMP,
+        
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1
         
     WHERE id = in_pig_prod_id;
     
@@ -208,7 +210,9 @@ ELSE
         total_pigs_weight_weaning   = in_total_weight,
         
         last_update_user_id         = in_user_id,
-        dt_last_update              = CURRENT_TIMESTAMP
+        dt_last_update              = CURRENT_TIMESTAMP,
+        
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1
         
     WHERE id = in_pig_prod_id;
 

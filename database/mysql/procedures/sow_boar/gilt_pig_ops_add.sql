@@ -101,6 +101,10 @@ loop_here: LOOP
         DATE_ADD(in_date_reference, INTERVAL num_days_to_add DAY)
     );
     
+    UPDATE sow_boar SET 
+        data_ver_num_sow_boar   = data_ver_num_sow_boar + 1
+    WHERE id = in_sow_id;
+    
 
 END LOOP loop_here;
  

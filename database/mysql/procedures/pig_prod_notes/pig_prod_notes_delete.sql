@@ -42,6 +42,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_group_id                   INT             DEFAULT 0;
+DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
@@ -59,10 +60,12 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  pig_prod_id,
-        pig_prod_group_id
+        production_group_id,
+        sow_boar_id
 
 INTO    cur_pig_prod_id,
-        cur_pig_prod_group_id
+        cur_pig_prod_group_id,
+        cur_sow_boar_id
 
 FROM    pig_prod_notes 
 WHERE   id = in_pig_prod_notes_id;
@@ -135,6 +138,30 @@ UPDATE pig_prod_notes SET
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP
 WHERE id =  in_pig_prod_notes_id;
+
+
+
+IF cur_sow_boar_id > 0 THEN 
+    UPDATE sow_boar SET
+        data_ver_num_health_notes = data_ver_num_health_notes + 1 
+    WHERE id = cur_sow_boar_id;
+END IF;
+
+
+IF cur_pig_prod_id > 0 THEN 
+    UPDATE pig_production SET 
+        data_ver_num_health_notes = data_ver_num_health_notes + 1
+    WHERE id = cur_pig_prod_id;
+END IF;
+
+
+IF cur_pig_prod_group_id > 0 THEN 
+    UPDATE pig_production SET 
+        data_ver_num_health_notes = data_ver_num_health_notes + 1
+    WHERE id = cur_pig_prod_group_id;
+END IF;
+
+
 
 
 END process_user;

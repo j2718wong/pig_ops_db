@@ -132,23 +132,25 @@ END IF;
 
 
 UPDATE sow_boar SET
-    line_id             = in_line_id,
-    sow_status_id       = in_sow_status_id,
-
-    is_external         = in_is_external,
-    is_production_ready = in_is_production_ready,
+    line_id                 = in_line_id,
+    sow_status_id           = in_sow_status_id,
     
+    is_external             = in_is_external,
+    is_production_ready     = in_is_production_ready,
+        
+        
+    parent_sow_id           = in_parent_sow_id,
+    parent_boar_id          = in_parent_boar_id,
+        
+    number                  = in_number,
+    name                    = in_name,
+    date_of_birth           = in_date_of_birth,
+    date_eartag             = in_date_eartag,
+        
+    last_update_user_id     = in_user_id,
+    dt_last_update          = CURRENT_TIMESTAMP,
     
-    parent_sow_id       = in_parent_sow_id,
-    parent_boar_id      = in_parent_boar_id,
-    
-    number              = in_number,
-    name                = in_name,
-    date_of_birth       = in_date_of_birth,
-    date_eartag         = in_date_eartag,
-    
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
+    data_ver_num_sow_boar   = data_ver_num_sow_boar + 1
     
 WHERE 
     id = in_sow_boar_id;

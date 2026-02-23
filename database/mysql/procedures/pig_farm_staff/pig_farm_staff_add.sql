@@ -106,6 +106,7 @@ IF cur_pig_farm_staff_id > 0 THEN
     LEAVE process_user;
 END IF;
 
+
 IF in_set_user_as_staff > 0 THEN 
     SELECT  name_first,
             name_last
@@ -156,6 +157,9 @@ ELSE
 END IF;
 
 
+UPDATE pig_farm SET 
+    data_ver_num_staff = data_ver_num_staff + 1
+WHERE id = in_pig_farm_id;
 
 
 END process_user;

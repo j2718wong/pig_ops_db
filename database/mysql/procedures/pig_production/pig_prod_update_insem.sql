@@ -193,24 +193,26 @@ END IF;
 
 
 UPDATE pig_production SET
-    insemination_type   = cur_insemination_type,
-
-    boar_id             = in_boar_id,
+    insemination_type       = cur_insemination_type,
     
-    semen_supplier_id   = in_semen_supplier_id,
-    semen_sup_semen_id  = in_semen_sup_semen_id,
-    semen_ai_boar_id    = in_semen_ai_boar_id,
+    boar_id                 = in_boar_id,
+        
+    semen_supplier_id       = in_semen_supplier_id,
+    semen_sup_semen_id      = in_semen_sup_semen_id,
+    semen_ai_boar_id        = in_semen_ai_boar_id,
+        
+    semen_cost              = in_semen_cost,
+    insemination_cost       = in_insemination_cost,
+        
+    date_insemination       = in_date_insemination,
+    date_expected_birth     = DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
+        
+    insem_staff_id          = in_insem_staff_id,
+        
+    last_update_user_id     = in_user_id,
+    dt_last_update          = CURRENT_TIMESTAMP,
     
-    semen_cost          = in_semen_cost,
-    insemination_cost   = in_insemination_cost,
-    
-    date_insemination   = in_date_insemination,
-    date_expected_birth = DATE_ADD(in_date_insemination, INTERVAL 115 DAY),
-    
-    insem_staff_id      = in_insem_staff_id,
-    
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
+    data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
     
 WHERE id =  in_pig_prod_id;
 

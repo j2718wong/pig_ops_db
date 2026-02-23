@@ -435,6 +435,30 @@ IF cur_feed_buy_pig_prod_group_id > 0 THEN
 END IF;
 
 
+
+IF cur_feed_buy_pig_farm_id > 0 THEN 
+    UPDATE pig_farm SET
+        data_ver_num_feed_buy = data_ver_num_feed_buy + 1
+    WHERE id = cur_feed_buy_pig_farm_id; 
+END IF;
+
+
+IF cur_feed_buy_pig_prod_id > 0 THEN 
+    UPDATE pig_production SET
+        data_ver_num_prod_feed = data_ver_num_prod_feed + 1
+    WHERE id = cur_feed_buy_pig_prod_id;
+END IF;
+
+ 
+IF cur_feed_buy_pig_prod_group_id > 0 THEN 
+    UPDATE pig_production SET
+        data_ver_num_prod_feed = data_ver_num_prod_feed + 1
+    WHERE id = cur_feed_buy_pig_prod_group_id;
+END IF;
+
+
+
+
 END process_user;
 
 
