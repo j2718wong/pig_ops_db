@@ -79,16 +79,24 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
+DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_weaning               DATE            DEFAULT NULL;
 
-DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 
 DECLARE cur_account_flag_settings               INT             DEFAULT 0;
 
 DECLARE cur_count_account_pig_ops               INT             DEFAULT 0;
 DECLARE cur_count_pig_prod_pig_ops              INT             DEFAULT 0;
+
+
+DECLARE cur_num_pigs_weaning_m                  INT             DEFAULT 0;
+DECLARE cur_num_pigs_weaning_f                  INT             DEFAULT 0;
+DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
+
+DECLARE cur_num_pigs                            INT             DEFAULT 0;
+
 
 DECLARE date_temp                               DATE            DEFAULT NULL;
 DECLARE detected_date_weaning_change            INT             DEFAULT 0;
@@ -106,12 +114,14 @@ SET res_code    = "SUCCESS";
 SELECT  
         account_id,
         pig_farm_id,
+        sow_id,
         prod_status_id,
         flag,
         date_weaning
 INTO    
         cur_pig_prod_account_id,
         cur_pig_prod_pig_farm_id,
+        cur_pig_prod_sow_id,
         cur_pig_prod_status_id,
         cur_pig_prod_flag,
         cur_pig_prod_date_weaning
@@ -220,15 +230,39 @@ ELSE
 END IF;
 
 
+/* SUM the number pigs weaned for this sow. */
 
-SELECT  sow_id
-INTO    cur_pig_prod_sow_id
+SELECT  SUM(num_pigs_weaning_m),
+        SUM(num_pigs_weaning_f),
+        SUM(num_pigs_weaning)
+        
+INTO    cur_num_pigs_weaning_m,    
+        cur_num_pigs_weaning_f,
+        cur_num_pigs_weaning
 FROM    pig_production
-WHERE   id = in_pig_prod_id;
+WHERE   sow_id = cur_pig_prod_sow_id AND date_weaning IS NOT NULL;
+
+
+SET cur_num_pigs = 0;
+IF cur_num_pigs_weaning_m > 0 THEN 
+    SET cur_num_pigs =  cur_num_pigs + cur_num_pigs_weaning_m;
+END IF;
+
+IF cur_num_pigs_weaning_f > 0 THEN 
+    SET cur_num_pigs =  cur_num_pigs + cur_num_pigs_weaning_f;
+END IF;
+
+IF cur_num_pigs_weaning > 0 THEN 
+    SET cur_num_pigs =  cur_num_pigs + cur_num_pigs_weaning;
+END IF;
+
+
 
 
 UPDATE sow_boar SET
-    sow_status_id = SOW_STATUS_ID_WEANING
+    sow_status_id       = SOW_STATUS_ID_WEANING,
+    num_pigs_wean       = cur_num_pigs,
+    data_ver_num_sow_boar = data_ver_num_sow_boar 
 WHERE id = cur_pig_prod_sow_id;
 
 

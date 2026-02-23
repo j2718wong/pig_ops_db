@@ -582,3 +582,5 @@ ALTER TABLE pig_production ADD COLUMN harvest_num_sold_pigs INT UNSIGNED AFTER c
 ALTER TABLE pig_production ADD COLUMN harvest_num_sold_boar INT UNSIGNED AFTER cost_finisher;
 ALTER TABLE pig_production ADD COLUMN harvest_num_sold_gilt INT UNSIGNED AFTER cost_finisher;
 ALTER TABLE pig_production ADD COLUMN harvest_num_int_sow_boar INT UNSIGNED AFTER cost_finisher;
+
+SELECT id, name, num_births, num_pigs_wean FROm sow_boar;
