@@ -15,7 +15,8 @@ CREATE PROCEDURE pig_prod_update_weaning(
     consuming to count per sex at wean. */
     in_num_pigs             INT,    
     
-    in_total_weight         INT
+    in_total_weight         DECIMAL(6,2),
+    in_per_pig_weight       VARCHAR(200)
 )  
 
 BEGIN
@@ -197,7 +198,8 @@ IF in_num_pigs IS NOT NULL THEN
 
         num_pigs_current            = in_num_pigs,
         
-        total_pigs_weight_weaning   = in_total_weight,
+        wean_pigs_weight_total      = in_total_weight,
+        wean_pigs_weight_pp         = in_per_pig_weight,
         
         last_update_user_id         = in_user_id,
         dt_last_update              = CURRENT_TIMESTAMP,
@@ -217,7 +219,8 @@ ELSE
 
         num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
         
-        total_pigs_weight_weaning   = in_total_weight,
+        wean_pigs_weight_total      = in_total_weight,
+        wean_pigs_weight_pp         = in_per_pig_weight,
         
         last_update_user_id         = in_user_id,
         dt_last_update              = CURRENT_TIMESTAMP,

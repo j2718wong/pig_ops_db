@@ -87,6 +87,14 @@ DECLARE cur_account_flag_settings               INT             DEFAULT 0;
 
 DECLARE cur_count_births                        INT             DEFAULT 0;
 
+DECLARE cur_num_pigs_weaning_m                  INT             DEFAULT 0;
+DECLARE cur_num_pigs_weaning_f                  INT             DEFAULT 0;
+DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
+
+DECLARE cur_num_pigs                            INT             DEFAULT 0;
+
+
+
 DECLARE cur_count_account_pig_ops               INT             DEFAULT 0;
 DECLARE cur_count_pig_prod_pig_ops              INT             DEFAULT 0;
 
