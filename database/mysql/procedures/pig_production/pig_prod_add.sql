@@ -248,6 +248,14 @@ UPDATE pig_production SET
 WHERE sow_id = in_sow_id AND prod_status_id = PRODUCTION_STATUS_ID_GESTATING;
 
 
+/* Update pig_farm*/
+IF cur_sow_boar_last_prod_status_id = PRODUCTION_STATUS_ID_GESTATING THEN 
+    UPDATE pig_farm SET 
+        data_ver_num_not_pregnant =  data_ver_num_not_pregnant + 1
+    WHERE id = cur_sow_boar_pig_farm_id;
+END IF;
+
+
 SELECT  last_pig_production_id
 INTO    cur_pig_farm_last_pig_production_id
 FROM    pig_farm

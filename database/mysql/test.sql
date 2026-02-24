@@ -519,6 +519,9 @@ MariaDB [pig_operations]> DESCRIBE production_harvest;
 +--------------------------+-----------------------+------+-----+---------------------+----------------+
 
 
+
+
+
 SELECT 
 a.id,
 a.date_harvest, 
@@ -527,8 +530,8 @@ a.pig_prod_id,
 b.name AS pig_buyer,
 a.num_pigs_harvest as num_pigs,
 c.name AS harvest_type,
+a.slaughter_weight_ave AS slaughter_ave,
 a.net_sales, 
-a.harvest_cost, 
 a.comments,
 a.weight_pp_sw_csv
 FROM production_harvest a
