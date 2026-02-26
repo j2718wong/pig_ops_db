@@ -292,6 +292,10 @@ CALL sow_boar_balance_add(1,  1,  '2026-02-07', 6, 11);
 CALL feed_balance_add(1,  16, NULL, '2026-02-14', 0,  1,   NULL, NULL,     NULL, NULL,    NULL);
 CALL sow_boar_balance_add(1,  1,  '2026-02-14', 5.5, 9);
 
+
+CALL feed_balance_add(1,  16, NULL, '2026-02-21', 0,  0.5,   NULL, NULL,     NULL, NULL,    NULL);
+CALL sow_boar_balance_add(1,  1,  '2026-02-21', 4.5, 7.5);
+
   
 CALL pig_prod_update_feed_type(1, 5, 7, '2025-09-11')
 CALL pig_prod_update_feed_type(1, 7, 6, '2025-09-17')

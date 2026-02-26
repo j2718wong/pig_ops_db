@@ -292,6 +292,7 @@ AND b.is_feed_supplier > 0;
 
 
 SELECT id,
+account_id,
 flag,
 feed_supplier_id, 
 gilt_supplier_id, 

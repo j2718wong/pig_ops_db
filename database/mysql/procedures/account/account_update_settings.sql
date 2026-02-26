@@ -10,7 +10,9 @@ CREATE PROCEDURE account_update_settings(
     in_days_wean                INT,
     
     in_days_harvest_from_birth  INT,
-    in_days_harvest_from_wean   INT
+    in_days_harvest_from_wean   INT,
+    
+    in_weight_unit              VARCHAR(4)
 )
 
 BEGIN
@@ -63,6 +65,10 @@ DECLARE cur_account_flag_settings               INT             DEFAULT 0;
 DECLARE cur_account_days_wean                   INT             DEFAULT 0;
 DECLARE cur_account_days_harvest_from_birth     INT             DEFAULT NULL;
 DECLARE cur_account_days_harvest_from_wean      INT             DEFAULT NULL;
+    
+DECLARE cur_account_weight_unit                 VARCHAR(4)      DEFAULT NULL;
+DECLARE cur_account_currency                    VARCHAR(4)      DEFAULT NULL;
+    
     
 DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT NULL;
 DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT NULL;
@@ -123,10 +129,12 @@ END IF;
 
 
 UPDATE account SET
-    flag_settings           	= cur_account_flag_settings,
-    num_days_wean           	= in_days_wean,
+    flag_settings               = cur_account_flag_settings,
+    num_days_wean               = in_days_wean,
     num_days_harvest_from_birth = in_days_harvest_from_birth,
     num_days_harvest_from_wean  = in_days_harvest_from_wean,
+    
+    weight_unit                 = in_weight_unit,
     
     last_update_settings_user_id     = in_user_id,
     dt_last_update_settings          = CURRENT_TIMESTAMP
@@ -137,14 +145,13 @@ WHERE id = cur_user_account_id;
 END process_user;
 
 SELECT 
-    a.flag_settings,
-    a.num_days_wean,
-    a.num_days_harvest_from_birth,
-    a.num_days_harvest_from_wean,
+    flag_settings,
+    num_days_wean,
+    num_days_harvest_from_birth,
+    num_days_harvest_from_wean,
     
-    b.name_last,
-    b.name_first,
-    a.dt_last_update_settings
+    weight_unit,
+    currency
     
 INTO 
     cur_account_flag_settings,
@@ -152,14 +159,17 @@ INTO
     cur_account_days_harvest_from_birth,
     cur_account_days_harvest_from_wean,
     
+    cur_account_weight_unit,
+    cur_account_currency,
+    
+    
     cur_user_name_last,
     cur_user_name_first,
     cur_account_settings_update
 
-FROM account a 
-LEFT OUTER JOIN user b ON a.last_update_settings_user_id = b.id
+FROM account 
 
-WHERE a.id = cur_user_account_id;
+WHERE id = cur_user_account_id;
     
 
 SELECT 
@@ -172,9 +182,8 @@ SELECT
     cur_account_days_harvest_from_birth AS days_harvest_from_birth,
     cur_account_days_harvest_from_wean  AS days_harvest_from_wean,
     
-    cur_user_name_last                  AS user_name_last,
-    cur_user_name_first                 AS user_name_first,
-    cur_account_settings_update         AS settings_update;
+    cur_account_weight_unit             AS weight_unit,
+    cur_account_currency                AS currency;
     
 
 END $$
