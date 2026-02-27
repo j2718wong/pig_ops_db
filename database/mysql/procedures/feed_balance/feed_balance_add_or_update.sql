@@ -4,7 +4,8 @@ DROP PROCEDURE IF EXISTS feed_balance_add_or_update $$
 CREATE PROCEDURE feed_balance_add_or_update(
     in_user_id              INT,
     
-    in_pig_prod_id          INT,
+    in_pig_farm_id          INT,    /* IF this is filled up, this is for farm_balance */
+    in_pig_prod_id          INT,    
     in_prod_group_id        INT,
     
     in_date_balance         VARCHAR(10),
@@ -52,14 +53,20 @@ BEGIN
  * feeds will be visible in every feed_balance entry.
  *
  *
+ * Notes 2026-02-27
+ * 1.) The farm feed balance will now be saved in feed_balance table. Previously 
+ * this was saved in sow_boar_balance table to simplify sow_balance report.
+ *
+ * Input matrix
+ *                 in_pig_farm_id   in_pig_prod_id  in_prod_group_id
+ * farm_balance         >0          NULL            NULL 
+ * pig_prod_balance    NULL         >0              NULL
+ * prod_group_balance  NULL         NULL            >0  
+ *
  * 
+ * 2.) The feeds in sow_boar_balance will be discontinued later;
+ * The sow_boar_balance will still be maintained.   
  *
- *
- * 
- *
- *
- * 
- 
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since August 25, 2025
  *
@@ -111,7 +118,13 @@ DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+
+DECLARE compare_account_id                      INT             DEFAULT 0;
+
+DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
+
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_date_actual_birth          DATE            DEFAULT NULL;
 DECLARE cur_pig_prod_last_feed_balance_id       INT             DEFAULT 0;
@@ -167,44 +180,61 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
+IF in_pig_farm_id > 0 THEN 
+    SELECT
+        account_id
+    INTO 
+        cur_pig_farm_account_id
+    FROM pig_farm
+    WHERE id =  in_pig_farm_id;
+        
+    SET compare_account_id = cur_pig_farm_account_id;
+END IF;
+
+
 IF in_pig_prod_id > 0 THEN 
     SELECT 
         account_id,
+        pig_farm_id,
         prod_status_id,
         date_actual_birth,
         last_feed_balance_id
 
     INTO
         cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id,
         cur_pig_prod_date_actual_birth,
         cur_pig_prod_last_feed_balance_id
 
     FROM pig_production 
     WHERE id = in_pig_prod_id;
-
-ELSE
-    IF in_prod_group_id > 0 THEN 
-        SELECT 
-            account_id,
-            pig_prod_status_id
-
-        INTO
-            cur_pig_prod_account_id,
-            cur_pig_prod_status_id
-
-        FROM production_group 
-        WHERE id = in_prod_group_id;
- 
-    END IF;
     
+    SET compare_account_id = cur_pig_prod_account_id;
 END IF;
+
+
+IF in_prod_group_id > 0 THEN 
+    /** TO FIX*/
+    SELECT 
+        account_id,
+        pig_prod_status_id
+
+    INTO
+        cur_pig_prod_account_id,
+        cur_pig_prod_status_id
+
+    FROM production_group 
+    WHERE id = in_prod_group_id;
+
+END IF;
+    
 
 
 CALL basic_user_check(
     in_user_id, 
     1, /* user must have an account*/
-    cur_pig_prod_account_id, /* compare user.account_id to this account_id*/
+    compare_account_id, /* compare user.account_id to this account_id*/
     
     BUSINESS_OBJ_ID_FEED_BALANCE,
     FLAG_BIT_OPERATION_ADD,
@@ -237,6 +267,14 @@ IF in_pig_prod_id > 0 THEN
 END IF;
 
 
+IF in_pig_farm_id > 0 THEN 
+    SELECT  id
+    INTO    cur_feed_balance_id
+    FROM    feed_balance
+    WHERE   pig_farm_id         = in_pig_farm_id    AND
+            date_balance        = in_date_balance
+    LIMIT   1;
+END IF;    
 
 
 IF in_pig_prod_id > 0 THEN 
@@ -246,107 +284,113 @@ IF in_pig_prod_id > 0 THEN
     WHERE   pig_prod_id         = in_pig_prod_id    AND
             date_balance        = in_date_balance
     LIMIT   1;
+END IF;    
+
     
-ELSE
-    
-    IF in_prod_group_id > 0 THEN 
-        SELECT  id
-        INTO    cur_feed_balance_id
-        FROM    feed_balance
-        WHERE   pig_prod_group_id   = in_prod_group_id    AND
-                date_balance        = in_date_balance
-        LIMIT   1;
-    END IF;
-    
+IF in_prod_group_id > 0 THEN 
+    SELECT  id
+    INTO    cur_feed_balance_id
+    FROM    feed_balance
+    WHERE   pig_prod_group_id   = in_prod_group_id    AND
+            date_balance        = in_date_balance
+    LIMIT   1;
 END IF;
+    
 
 
-/* Automatic pigs counting if not manually counted.*/
-IF in_num_pigs IS NULL THEN 
-    IF in_pig_prod_id > 0 THEN 
-        IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_GESTATING THEN 
-            SET in_num_pigs = 0;
-        ELSE
-            CALL production_calculate_current_pigs(in_pig_prod_id, 0, in_num_pigs);
+
+IF in_pig_prod_id > 0 THEN 
+    
+    /* Automatic pigs counting if not manually counted.*/
+    IF in_num_pigs IS NULL THEN 
+        IF in_pig_prod_id > 0 THEN 
+            IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_GESTATING THEN 
+                SET in_num_pigs = 0;
+            ELSE
+                CALL production_calculate_current_pigs(in_pig_prod_id, 0, in_num_pigs);
+            END IF;
+        ELSE /*production_group*/
+            CALL production_calculate_current_pigs(0, in_prod_group_id, in_num_pigs);
         END IF;
-    ELSE /*production_group*/
-        CALL production_calculate_current_pigs(0, in_prod_group_id, in_num_pigs);
+
     END IF;
 
-END IF;
 
-
-/*
-Count all feed_buy before and on this in_date_balance
-for every feed_type.
-*/
+    /*
+    Count all feed_buy before and on this in_date_balance
+    for every feed_type.
+    */
 
 
 
-SELECT  SUM(quantity)
-INTO    cur_feed_buy_gestating
-FROM    feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND
-        feed_type_id = FEED_TYPE_ID_GESTATING AND
-        date_buy <= in_date_balance;
+    SELECT  SUM(quantity)
+    INTO    cur_feed_buy_gestating
+    FROM    feed_buy
+    WHERE   pig_prod_id = in_pig_prod_id AND
+            feed_type_id = FEED_TYPE_ID_GESTATING AND
+            date_buy <= in_date_balance;
 
-SELECT  SUM(quantity)
-INTO    cur_feed_buy_lactating
-FROM    feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND
-        feed_type_id = FEED_TYPE_ID_LACTATING AND
-        date_buy <= in_date_balance;
-
-
-SELECT  SUM(quantity)
-INTO    cur_feed_buy_booster
-FROM    feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND
-        feed_type_id = FEED_TYPE_ID_BOOSTER AND
-        date_buy <= in_date_balance;
+    SELECT  SUM(quantity)
+    INTO    cur_feed_buy_lactating
+    FROM    feed_buy
+    WHERE   pig_prod_id = in_pig_prod_id AND
+            feed_type_id = FEED_TYPE_ID_LACTATING AND
+            date_buy <= in_date_balance;
 
 
-SELECT  SUM(quantity)
-INTO    cur_feed_buy_prestarter
-FROM    feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND
-        feed_type_id = FEED_TYPE_ID_PRESTARTER AND
-        date_buy <= in_date_balance;
+    SELECT  SUM(quantity)
+    INTO    cur_feed_buy_booster
+    FROM    feed_buy
+    WHERE   pig_prod_id = in_pig_prod_id AND
+            feed_type_id = FEED_TYPE_ID_BOOSTER AND
+            date_buy <= in_date_balance;
 
 
-SELECT  SUM(quantity)
-INTO    cur_feed_buy_starter
-FROM    feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND
-        feed_type_id = FEED_TYPE_ID_STARTER AND
-        date_buy <= in_date_balance;
+    SELECT  SUM(quantity)
+    INTO    cur_feed_buy_prestarter
+    FROM    feed_buy
+    WHERE   pig_prod_id = in_pig_prod_id AND
+            feed_type_id = FEED_TYPE_ID_PRESTARTER AND
+            date_buy <= in_date_balance;
 
 
-SELECT  SUM(quantity)
-INTO    cur_feed_buy_grower
-FROM    feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND
-        feed_type_id = FEED_TYPE_ID_GROWER AND
-        date_buy <= in_date_balance;
+    SELECT  SUM(quantity)
+    INTO    cur_feed_buy_starter
+    FROM    feed_buy
+    WHERE   pig_prod_id = in_pig_prod_id AND
+            feed_type_id = FEED_TYPE_ID_STARTER AND
+            date_buy <= in_date_balance;
 
 
-SELECT  SUM(quantity)
-INTO    cur_feed_buy_finisher
-FROM    feed_buy
-WHERE   pig_prod_id = in_pig_prod_id AND
-        feed_type_id = FEED_TYPE_ID_FINISHER AND
-        date_buy <= in_date_balance;
+    SELECT  SUM(quantity)
+    INTO    cur_feed_buy_grower
+    FROM    feed_buy
+    WHERE   pig_prod_id = in_pig_prod_id AND
+            feed_type_id = FEED_TYPE_ID_GROWER AND
+            date_buy <= in_date_balance;
 
-    
+
+    SELECT  SUM(quantity)
+    INTO    cur_feed_buy_finisher
+    FROM    feed_buy
+    WHERE   pig_prod_id = in_pig_prod_id AND
+            feed_type_id = FEED_TYPE_ID_FINISHER AND
+            date_buy <= in_date_balance;
+
+END IF;    
 
 
 
 
 
 IF cur_feed_balance_id = 0 THEN 
-    
+    IF in_pig_farm_id > 0 THEN 
+        SET cur_pig_prod_pig_farm_id = in_pig_farm_id;
+    END IF;
+
 
     INSERT INTO feed_balance(
+        pig_farm_id,
         pig_prod_id,
         pig_prod_group_id,
         
@@ -372,6 +416,7 @@ IF cur_feed_balance_id = 0 THEN
 
         added_by_user_id
     ) VALUES (
+        cur_pig_prod_pig_farm_id,
         in_pig_prod_id,
         in_prod_group_id,
         
