@@ -1,11 +1,17 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS user_register $$
-CREATE PROCEDURE user_register(
+DROP PROCEDURE IF EXISTS user_register_or_login $$
+CREATE PROCEDURE user_register_or_login(
+    in_social_channel_id    INT,
+    
     in_name_last            VARCHAR(50),
     in_name_first           VARCHAR(50),
     
-    in_email                VARCHAR(50)
+    in_email                VARCHAR(50),
+    
+    in_viewport_width       INT,
+    in_viewport_height      INT,
+    in_ip_address           VARCHAR(24)            
 )  
 
 BEGIN
@@ -20,9 +26,21 @@ BEGIN
  */
 
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
-DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 1;
+
+
 
 DECLARE cur_user_id                             INT             DEFAULT 0;
+DECLARE cur_user_account_id                     INT             DEFAULT 0;
+DECLARE cur_user_flag                           INT             DEFAULT 0;
+
+
+/* user.flag bits*/
+DECLARE FLAG_BIT_USER_IS_ACTIVE                 INT             DEFAULT 1;
+DECLARE FLAG_BIT_USER_EMAIL_VERIFIED            INT             DEFAULT 2;
+DECLARE FLAG_BIT_USER_MOBILE_NUM_VERIFIED       INT             DEFAULT 4;
+DECLARE FLAG_BIT_USER_IS_DELETED                INT             DEFAULT 8;
+
+DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -35,37 +53,93 @@ SET res_code    = "SUCCESS";
 
 
 
-SELECT  id
-INTO    cur_user_id
+SELECT  id,
+        account_id,
+        flag
+
+INTO    cur_user_id,
+        cur_user_account_id,
+        cur_user_flag
+
 FROM    user
-WHERE   UPPER(email)        = UPPER(in_email)
+WHERE   email        = in_email
 LIMIT   1;
 
 
 process_user : BEGIN
 
-IF cur_user_id > 0 THEN 
-    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
-    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
+IF cur_user_id = 0 THEN 
+
+    INSERT INTO user(
+        name_last,
+        name_first,
+        email,
+        
+        social_channel_id
+    ) VALUES (
+        in_name_last,
+        in_name_first,
+        in_email,
+        
+        in_social_channel_id,
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_user_id;
+
+
+    IF in_social_channel_id > 0 THEN  
+        SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
+        UPDATE user SET
+            flag = cur_user_flag
+        WHERE id = cur_user_id;
     
-    LEAVE process_user;
+    
+        /** Will also create a user_login entry ans user should be automatically logged in*/
+        INSERT INTO user_login(
+            user_id,
+            viewport_width,
+            viewport_height
+            ip_address
+        ) 
+        VALUES (
+            cur_user_id,
+            
+            in_viewport_width,
+            in_viewport_height,
+            in_ip_address     
+        );
+    END IF;
+    
+    
+    /** If user is registered via manual email not via email from social media,
+    user needes to verify email first. 
+    */
+    
+ELSE
+    IF social_channel_id > 0 THEN 
+        UPDATE user SET 
+            name_last           = in_name_last,
+            name_first          = in_name_first,
+            
+            social_channel_id   = social_channel_id 
+        WHERE id = cur_user_id;
+    END IF;
+
+    
+
 
 END IF;
 
 
-INSERT INTO user(
-    name_last,
-    name_first,
-    email
-) VALUES (
-    in_name_last,
-    in_name_first,
-    in_email
-);
-
-SELECT LAST_INSERT_ID() INTO cur_user_id;
-
 END process_user;
+
+
+SELECT  flag
+INTO    cur_user_flag
+FROM    user
+WHERE   id        = cur_user_id;
+
+
 
 SELECT 
     res_num                             AS result_number,
@@ -73,7 +147,8 @@ SELECT
     res_desc                            AS result_desc,
     
     cur_user_id                         AS user_id,
-    0                                   AS user_flag;
+    cur_user_account_id                 AS user_account_id,
+    cur_user_flag                       AS user_flag;
     
 
 END $$
