@@ -156,24 +156,6 @@ FROM    a01_list_of_values
 WHERE   id = LOV_ID_ACCOUNT_NUMDAYS_FREE_TRIAL;
 
 
-/* Check account duplicate. */
-SELECT  id
-INTO    cur_account_id
-FROM    account
-WHERE   country_id = in_country_id AND UPPER(name)  = UPPER(in_name)
-LIMIT   1;
-
-
-IF cur_account_id > 0 THEN 
-    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
-    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
-    
-    LEAVE process_user;
-
-END IF;
-
-
-
 
 
 INSERT INTO account(

@@ -80,6 +80,8 @@ DECLARE cur_pig_prod_pig_dead_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 
+DECLARE cur_num_dead_pigs                       INT             DEFAULT 0;
+
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
 DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
@@ -274,9 +276,18 @@ IF in_pig_prod_id > 0 THEN
         SET cur_num_pigs_current = 0;
     END IF;
     
+    
+    /* Dead after birth This can be NULL.*/
+    SELECT  SUM(num_pigs_dead)
+    INTO    cur_num_dead_pigs
+    FROM    pig_prod_pig_dead
+    WHERE   pig_prod_id = in_pig_prod_id;
+    
 
     UPDATE  pig_production SET
-        num_pigs_current = cur_num_pigs_current
+        num_pigs_current        = cur_num_pigs_current,
+        num_dead_after_birth    = cur_num_dead_pigs,
+        data_ver_num_pig_prod   = data_ver_num_pig_prod +1
     WHERE id = in_pig_prod_id;
 
 ELSE
@@ -289,7 +300,8 @@ ELSE
     
 
     UPDATE  production_group SET
-        num_pigs_current = cur_num_pigs_current
+        num_pigs_current        = cur_num_pigs_current,
+        data_ver_num_pig_prod   = data_ver_num_pig_prod +1
     WHERE id = in_production_group_id;
     
 END IF;

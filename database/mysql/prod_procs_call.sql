@@ -380,6 +380,11 @@ CALL semen_source_add(1,1,NULL, 2,2, "PIC337", "Semen AI from Primary")
 
 CALL pig_prod_pig_dead_add(1, 13, NULL, "2025-10-01", 1, 1, "Nalisang anay sa linog, nadat ugan baktin")
 
+CALL pig_prod_pig_dead_add(1, 16, NULL, "2026-02-27", 1, 1, "Wala ka survive ang luyahon")
+CALL pig_prod_pig_dead_add(1, 16, NULL, "2026-02-28", 1, 1, "daot kaayo na baktin. wala ka survive")
+
+
+
 
 CREATE PROCEDURE sow_boar_add(
     1,

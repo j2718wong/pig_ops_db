@@ -2,7 +2,7 @@
 
 DROP PROCEDURE IF EXISTS user_register_or_login $$
 CREATE PROCEDURE user_register_or_login(
-    in_social_channel_id    INT,
+    in_social_media_id    INT,
     
     in_name_last            VARCHAR(50),
     in_name_first           VARCHAR(50),
@@ -75,30 +75,30 @@ IF cur_user_id = 0 THEN
         name_first,
         email,
         
-        social_channel_id
+        social_media_id
     ) VALUES (
         in_name_last,
         in_name_first,
         in_email,
         
-        in_social_channel_id,
+        in_social_media_id
     );
 
     SELECT LAST_INSERT_ID() INTO cur_user_id;
 
 
-    IF in_social_channel_id > 0 THEN  
+    IF in_social_media_id > 0 THEN  
         SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
         UPDATE user SET
             flag = cur_user_flag
         WHERE id = cur_user_id;
     
     
-        /** Will also create a user_login entry ans user should be automatically logged in*/
+        /** Will also create a user_login entry and user should be automatically logged in*/
         INSERT INTO user_login(
             user_id,
             viewport_width,
-            viewport_height
+            viewport_height,
             ip_address
         ) 
         VALUES (
@@ -116,13 +116,31 @@ IF cur_user_id = 0 THEN
     */
     
 ELSE
-    IF social_channel_id > 0 THEN 
+    IF in_social_media_id > 0 THEN 
         UPDATE user SET 
             name_last           = in_name_last,
             name_first          = in_name_first,
             
-            social_channel_id   = social_channel_id 
+            social_media_id     = social_media_id 
         WHERE id = cur_user_id;
+        
+        
+        /** Will also create a user_login entry and user should be automatically logged in*/
+        INSERT INTO user_login(
+            user_id,
+            viewport_width,
+            viewport_height,
+            ip_address
+        ) 
+        VALUES (
+            cur_user_id,
+            
+            in_viewport_width,
+            in_viewport_height,
+            in_ip_address     
+        );
+
+        
     END IF;
 
     
