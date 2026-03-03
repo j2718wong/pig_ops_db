@@ -78,7 +78,7 @@ DECLARE ACCOUNT_STATUS_ID_UNPAID_BILL           INT             DEFAULT 3;
 /* This is read from a02_business_object table. */
 DECLARE BUSINESS_OBJ_ID_USER                    INT             DEFAULT 1;
 DECLARE BUSINESS_OBJ_ID_ACCOUNT                 INT             DEFAULT 2;
-DECLARE BUSINESS_OBJ_ID_ACCOUNT_REQUEST         INT             DEFAULT 3;
+DECLARE BUSINESS_OBJ_ID_USER_REQUEST            INT             DEFAULT 3;
 DECLARE BUSINESS_OBJ_ID_USER_GROUP              INT             DEFAULT 4;
 
 DECLARE BUSINESS_OBJ_ID_ACCOUNT_TRANSLATION     INT             DEFAULT 5;
