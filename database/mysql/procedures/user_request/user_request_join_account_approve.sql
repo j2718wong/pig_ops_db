@@ -127,8 +127,9 @@ WHERE id = in_user_request_id;
 
 /* Update approved user. */
 UPDATE user SET
-    account_id      = cur_user_req_account_id,
-    user_group_id   = in_assigned_user_group_id
+    account_id          = cur_user_req_account_id,
+    user_group_id       = in_assigned_user_group_id,
+    user_req_join_acc_id= NULL
 WHERE id = cur_user_req_requesting_user_id;
 
 

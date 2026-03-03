@@ -65,7 +65,7 @@ DECLARE cur_user_email                          VARCHAR(100);
 
 DECLARE cur_account_flag                        INT             DEFAULT 0;
 DECLARE cur_account_status_id                   INT             DEFAULT 0;
-DECLARE cur_account_name                        VARCHAR(100); 
+DECLARE cur_account_name                        VARCHAR(100)    DEFAULT NULL; 
 DECLARE cur_account_date_trial_start            DATE;
 DECLARE cur_account_date_trial_end              DATE;
 
@@ -155,7 +155,7 @@ END IF;
 /* Check duplicate. */
 SELECT  id 
 INTO    cur_user_req_id
-FROM    account_request
+FROM    user_request
 WHERE   account_id = in_account_id and requesting_user_id = in_requesting_user_id
 LIMIT   1;
 
@@ -181,6 +181,12 @@ INSERT INTO user_request(
 SELECT LAST_INSERT_ID() INTO cur_user_req_id;
 
 
+UPDATE user SET 
+    user_req_join_acc_id = cur_user_req_id
+WHERE 
+    id = in_requesting_user_id;
+
+
 END process_user;
 
 
@@ -200,7 +206,9 @@ SELECT
     res_desc                            AS result_desc,
     
     cur_user_req_id                     AS acc_req_id,
-    cur_user_req_status_id              AS acc_req_status_id;
+    cur_user_req_status_id              AS acc_req_status_id,
+    
+    cur_account_name                    AS acc_name;
 
 
 END $$
