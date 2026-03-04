@@ -2,8 +2,9 @@
 
 DROP PROCEDURE IF EXISTS user_register_or_login $$
 CREATE PROCEDURE user_register_or_login(
-    in_social_media_id    INT,
-    
+    in_social_media_id      INT,
+
+    in_name                 VARCHAR(80),
     in_name_last            VARCHAR(50),
     in_name_first           VARCHAR(50),
     
@@ -71,12 +72,14 @@ process_user : BEGIN
 IF cur_user_id = 0 THEN 
 
     INSERT INTO user(
+        name,
         name_last,
         name_first,
         email,
         
         social_media_id
     ) VALUES (
+        in_name,
         in_name_last,
         in_name_first,
         in_email,
@@ -118,6 +121,8 @@ IF cur_user_id = 0 THEN
 ELSE
     IF in_social_media_id > 0 THEN 
         UPDATE user SET 
+            name                = in_name,
+        
             name_last           = in_name_last,
             name_first          = in_name_first,
             
