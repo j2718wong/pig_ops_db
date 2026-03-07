@@ -47,7 +47,7 @@ DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 /* account.flag bits
 bit 0: FLAG_BIT_ACCOUNT_ENABLE
-bit 1:
+bit 1: FLAG_BIT_FREE_TRIAL_FINISHED
 bit 2:
 bit 3:  
 

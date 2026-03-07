@@ -20,4 +20,7 @@ mysqldump -u root -p pig_operations --routines > pig_operations_20260217.sql
 mysqldump -u root -p pig_ops_dev --routines> pig_ops_dev_20260217.sql
 
 
+mysqldump -u root -p pig_operations > pig_operations_20260305.sql
+mysqldump -u root -p pig_ops_dev > pig_ops_dev_20260305.sql
+
 

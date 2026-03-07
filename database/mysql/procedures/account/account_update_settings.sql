@@ -160,12 +160,7 @@ INTO
     cur_account_days_harvest_from_wean,
     
     cur_account_weight_unit,
-    cur_account_currency,
-    
-    
-    cur_user_name_last,
-    cur_user_name_first,
-    cur_account_settings_update
+    cur_account_currency
 
 FROM account 
 

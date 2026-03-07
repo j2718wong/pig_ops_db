@@ -2,9 +2,15 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS user_request_join_account_approve $$
 CREATE PROCEDURE user_request_join_account_approve(
-    in_user_request_id          INT,
     in_approving_user_id        INT,
-    in_assigned_user_group_id   INT
+    
+    in_user_request_id          INT,
+    in_user_group_num           INT,
+    
+    in_is_approved              INT,
+    
+    in_pig_farm_id              INT
+    
 )
 
 BEGIN
@@ -55,9 +61,13 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
+DECLARE cur_count                               INT             DEFAULT 0;
+
 DECLARE cur_approving_user_email                VARCHAR(100)    DEFAULT NULL;
 DECLARE cur_approving_user_name_last            VARCHAR(50)     DEFAULT NULL;
 DECLARE cur_approving_user_name_first           VARCHAR(50)     DEFAULT NULL;
+
+
 
 
 DECLARE cur_requesting_user_email               VARCHAR(100)     DEFAULT NULL;
@@ -117,20 +127,72 @@ IF cur_user_req_status_id = USER_REQUEST_STATUS_ID_APPROVED THEN
     LEAVE process_user;
 END IF;
 
-
+IF in_is_approved > 0 THEN
+    SET cur_user_req_status_id = USER_REQUEST_STATUS_ID_APPROVED;
+ELSE
+    SET cur_user_req_status_id = USER_REQUEST_STATUS_ID_REJECTED;
+END IF;
+ 
 UPDATE user_request SET
-    status_id           = USER_REQUEST_STATUS_ID_APPROVED,
+    status_id           = cur_user_req_status_id,
     approved_by_user_id = in_approving_user_id,
     dt_approved         = CURRENT_TIMESTAMP
 WHERE id = in_user_request_id;
 
 
-/* Update approved user. */
-UPDATE user SET
-    account_id          = cur_user_req_account_id,
-    user_group_id       = in_assigned_user_group_id,
-    user_req_join_acc_id= NULL
-WHERE id = cur_user_req_requesting_user_id;
+
+IF in_is_approved > 0 THEN 
+    SELECT  id
+    INTO    cur_user_group_id
+    FROM    user_group
+    WHERE   account_id = cur_user_req_account_id AND 
+            group_num = in_user_group_num;
+
+
+    /* Update approved user. */
+    UPDATE user SET
+        account_id          = cur_user_req_account_id,
+        user_group_id       = cur_user_group_id,
+        user_req_join_acc_id= NULL
+    WHERE id = cur_user_req_requesting_user_id;
+
+
+    IF in_pig_farm_id > 0 THEN 
+        SET cur_count = 0;
+
+        SELECT  COUNT(*)
+        INTO    cur_count
+        FROM    user_pig_farm
+        WHERE   pig_farm_id = in_pig_farm_id AND user_id = cur_user_req_requesting_user_id;
+        
+        
+        IF cur_count = 0 THEN 
+
+            INSERT INTO user_pig_farm(
+                pig_farm_id,
+                user_id,
+                added_by_user_id
+            ) VALUES (
+                in_pig_farm_id,
+                cur_user_req_requesting_user_id,
+                in_approving_user_id
+            );
+        END IF;
+
+
+        
+    ELSE
+        /* Add all account pig farms to cur_user_req_requesting_user_id */
+        CALL user_request_add_farms_to_user(
+            cur_user_req_account_id,
+            cur_user_req_requesting_user_id,
+            in_approving_user_id
+        );
+    END IF;
+    
+
+END IF;
+
 
 
 SELECT  email 

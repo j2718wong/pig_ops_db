@@ -14,7 +14,7 @@ CREATE PROCEDURE user_login(
 BEGIN
 
 /** 
- * Will create user login entry. T
+ * Will create user login entry. 
  *
  * @author Jack Wong (j2718wong@gmail.com) 
  * @since March 1, 2026
