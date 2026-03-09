@@ -55,6 +55,9 @@ DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 DECLARE PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS    INT             DEFAULT 10;
 
+DECLARE PRODUCTION_STATUS_ID_DELETED            INT             DEFAULT 99;
+
+
 DECLARE SOW_STATUS_ID_GESTATING                 INT             DEFAULT 2;
 DECLARE SOW_STATUS_ID_DEAD                      INT             DEFAULT 6;
 
@@ -65,6 +68,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_sow_id                     INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 DECLARE cur_pig_prod_flag                       INT             DEFAULT 0;
@@ -84,11 +88,13 @@ SET res_code    = "SUCCESS";
 
 SELECT  
         account_id,
+        pig_farm_id,
         sow_id,
         prod_status_id,
         flag
 INTO    
         cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
         cur_pig_prod_sow_id,
         cur_pig_prod_status_id,
         cur_pig_prod_flag
@@ -132,7 +138,8 @@ END IF;
 IF in_pig_prod_status_id NOT IN (PRODUCTION_STATUS_ID_TERMINATED, 
                                 PRODUCTION_STATUS_ID_NOT_PREGNANT, 
                                 PRODUCTION_STATUS_ID_CLOSED,
-                                PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS) THEN
+                                PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS,
+                                PRODUCTION_STATUS_ID_DELETED) THEN
     
     SET res_num     = RES_NUM_MANUAL_STATUS_UPDATE_NOT_ALLOWED;
     SET res_code    = "RES_NUM_MANUAL_STATUS_UPDATE_NOT_ALLOWED";
@@ -142,7 +149,9 @@ END IF;
 
 IF in_pig_prod_status_id IN (PRODUCTION_STATUS_ID_TERMINATED, 
                             PRODUCTION_STATUS_ID_NOT_PREGNANT,
-                            PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS) THEN 
+                            PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS,
+                            PRODUCTION_STATUS_ID_DELETED) THEN 
+    
     IF cur_pig_prod_status_id != PRODUCTION_STATUS_ID_GESTATING THEN 
         SET res_num     = RES_NUM_PIG_PROD_STATUS_NOT_GESTATING;
         SET res_code    = "RES_NUM_PIG_PROD_STATUS_NOT_GESTATING";
@@ -168,8 +177,13 @@ IF in_pig_prod_status_id = PRODUCTION_STATUS_ID_TERMINATED THEN
     WHERE id = cur_pig_prod_sow_id;
 END IF;
 
+
 IF in_pig_prod_status_id IN (PRODUCTION_STATUS_ID_NOT_PREGNANT,
-                            PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS) THEN 
+                            PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS,
+                            PRODUCTION_STATUS_ID_DELETED) THEN 
+    
+    
+    /* Sow is gestating but no production. */
     UPDATE sow_boar SET 
         sow_status_id = SOW_STATUS_ID_GESTATING
     WHERE id = cur_pig_prod_sow_id;
@@ -196,6 +210,20 @@ IF in_notes IS NOT NULL THEN
     SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
     
 END IF;
+
+
+/** Update pig_farm.data_ver_num_pig_prod
+Note: This is different from pig_production.data_ver_num_pig_prod;
+The update of prod_status from gestating to being removed needs to propagated 
+to users of the account.
+
+*/
+ 
+    
+UPDATE pig_farm SET 
+    data_ver_num_pig_prod = data_ver_num_pig_prod + 1
+WHERE id = cur_pig_prod_pig_farm_id;
+    
 
 
 

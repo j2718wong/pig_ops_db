@@ -604,3 +604,18 @@ FROM user;
 
 SELECT id, account_id, name, country_id, address_level_1_id FROm pig_farm;
 
+
+
+SELECT 
+data_ver_num_sow,          
+data_ver_num_boar,         
+data_ver_num_pig_prod,     
+data_ver_num_staff,        
+data_ver_num_feed_buy,     
+data_ver_num_not_pregnant
+FROm pig_farm; 
+
+
+
+
+
