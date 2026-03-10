@@ -125,16 +125,6 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-IF  in_pig_prod_status_id <= 0 OR 
-    in_pig_prod_status_id > PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS THEN
-    
-    SET res_num     = RES_NUM_INVALID_PIG_PROD_STATUS;
-    SET res_code    = "RES_NUM_INVALID_PIG_PROD_STATUS";
-    
-    LEAVE process_user;
-END IF;
-
-
 IF in_pig_prod_status_id NOT IN (PRODUCTION_STATUS_ID_TERMINATED, 
                                 PRODUCTION_STATUS_ID_NOT_PREGNANT, 
                                 PRODUCTION_STATUS_ID_CLOSED,
