@@ -57,7 +57,7 @@ DECLARE PRODUCTION_STATUS_ID_NO_LIVE_PIGLETS    INT             DEFAULT 10;
 
 DECLARE PRODUCTION_STATUS_ID_DELETED            INT             DEFAULT 99;
 
-
+DECLARE SOW_STATUS_ID_GROWING                   INT             DEFAULT 1;
 DECLARE SOW_STATUS_ID_GESTATING                 INT             DEFAULT 2;
 DECLARE SOW_STATUS_ID_DEAD                      INT             DEFAULT 6;
 
@@ -166,6 +166,15 @@ IF in_pig_prod_status_id = PRODUCTION_STATUS_ID_TERMINATED THEN
         sow_status_id = SOW_STATUS_ID_DEAD
     WHERE id = cur_pig_prod_sow_id;
 END IF;
+
+
+IF in_pig_prod_status_id = PRODUCTION_STATUS_ID_DELETED THEN 
+    UPDATE sow_boar SET 
+        sow_status_id = SOW_STATUS_ID_GROWING
+    WHERE id = cur_pig_prod_sow_id;
+END IF;
+
+
 
 
 IF in_pig_prod_status_id IN (PRODUCTION_STATUS_ID_NOT_PREGNANT,

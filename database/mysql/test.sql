@@ -11,16 +11,18 @@ LEFT OUTER JOIN pig_farm_staff c ON a.insem_staff_id = c.id
 WHERE a.farm_prod_id = 27
 
 
-SELECT a.id
+SELECT 
+a.id,
 a.farm_prod_id,
+a.flag,
 a.sow_id,
-b.name,
+b.name AS sow_name,
+a.date_insemination AS date_mating,
 a.prod_status_id,
-c.name
+c.name AS status
 FROM pig_production a 
 LEFT OUTER JOIN sow_boar b ON a.sow_id = b.id
-LEFT OUTER JOIN production_status c ON a.prod_status_id = c.id
-WHERE a.id = 20
+LEFT OUTER JOIN pig_prod_status c ON a.prod_status_id = c.id
 
 
 SELECT 
@@ -299,21 +301,6 @@ gilt_supplier_id,
 semen_supplier_id
 FROM account_selection;
 
-+---------------------+------------------+------+-----+---------------------+----------------+
-| Field               | Type             | Null | Key | Default             | Extra          |
-+---------------------+------------------+------+-----+---------------------+----------------+
-| id                  | int(10) unsigned | NO   | PRI | NULL                | auto_increment |
-| account_id          | int(10) unsigned | NO   |     | 0                   |                |
-| pig_farm_id         | int(11)          | YES  | MUL | NULL                |                |
-| date_buy            | date             | YES  |     | NULL                |                |
-| feed_supplier_id    | int(11)          | YES  |     | NULL                |                |
-| total_feed_cost     | decimal(10,2)    | YES  |     | NULL                |                |
-| other_cost          | decimal(8,2)     | YES  |     | NULL                |                |
-| added_by_user_id    | int(11)          | YES  |     | NULL                |                |
-| last_update_user_id | int(11)          | YES  |     | NULL                |                |
-| dt_last_update      | datetime         | YES  |     | NULL                |                |
-| dt_entry            | datetime         | YES  |     | current_timestamp() |                |
-+---------------------+------------------+------+-----+---------------------+----------------+
 
 SELECT 
 a.id,
@@ -366,24 +353,6 @@ added_by_user_id
 FROM feed_brand
 
 
-
-+----------------------+------------------+------+-----+---------------------+----------------+
-| Field                | Type             | Null | Key | Default             | Extra          |
-+----------------------+------------------+------+-----+---------------------+----------------+
-| id                   | int(10) unsigned | NO   | PRI | NULL                | auto_increment |
-| pig_farm_feed_buy_id | int(11)          | YES  | MUL | NULL                |                |
-| feed_type_id         | int(11)          | YES  |     | NULL                |                |
-| feed_brand_id        | int(11)          | YES  |     | NULL                |                |
-| quantity             | int(11)          | YES  |     | NULL                |                |
-| kg_per_unit          | decimal(5,1)     | YES  |     | NULL                |                |
-| kg_total             | decimal(6,1)     | YES  |     | NULL                |                |
-| unit_cost            | decimal(8,2)     | YES  |     | NULL                |                |
-| total_cost           | decimal(10,2)    | YES  |     | NULL                |                |
-| added_by_user_id     | int(11)          | YES  |     | NULL                |                |
-| last_update_user_id  | int(11)          | YES  |     | NULL                |                |
-| dt_last_update       | datetime         | YES  |     | NULL                |                |
-| dt_entry             | datetime         | YES  |     | current_timestamp() |                |
-+----------------------+------------------+------+-----+---------------------+----------------+
 
 SELECT 
 a.id,
@@ -486,39 +455,6 @@ num_starter
 FROm feed_balance
 
 
-MariaDB [pig_operations]> DESCRIBE production_harvest;
-+--------------------------+-----------------------+------+-----+---------------------+----------------+
-| Field                    | Type                  | Null | Key | Default             | Extra          |
-+--------------------------+-----------------------+------+-----+---------------------+----------------+
-| id                       | int(10) unsigned      | NO   | PRI | NULL                | auto_increment |
-| account_id               | int(10) unsigned      | YES  | MUL | 0                   |                |
-| pig_prod_id              | int(10) unsigned      | YES  | MUL | 0                   |                |
-| production_group_id      | int(10) unsigned      | YES  |     | 0                   |                |
-| acc_pig_buyer_id         | int(10) unsigned      | YES  |     | NULL                |                |
-| date_harvest             | date                  | YES  |     | NULL                |                |
-| num_days_since_birth     | int(10) unsigned      | YES  |     | NULL                |                |
-| num_pigs_harvest         | int(10) unsigned      | YES  |     | 1                   |                |
-| harvest_type_id          | int(10) unsigned      | YES  |     | NULL                |                |
-| live_weight              | decimal(6,1) unsigned | YES  |     | NULL                |                |
-| live_weight_ave          | decimal(6,1)          | YES  |     | NULL                |                |
-| live_price_per_unit      | decimal(6,1) unsigned | YES  |     | NULL                |                |
-| slaughter_weight         | decimal(6,1) unsigned | YES  |     | NULL                |                |
-| slaughter_minus_weight   | decimal(6,1) unsigned | YES  |     | NULL                |                |
-| slaughter_net_weight     | decimal(6,1) unsigned | YES  |     | NULL                |                |
-| slaughter_weight_ave     | decimal(6,1) unsigned | YES  |     | NULL                |                |
-| slaughter_price_per_unit | decimal(6,1) unsigned | YES  |     | NULL                |                |
-| net_sales                | decimal(8,1) unsigned | YES  |     | NULL                |                |
-| net_sales_pp             | decimal(8,1) unsigned | YES  |     | NULL                |                |
-| harvest_cost             | decimal(5,1) unsigned | YES  |     | NULL                |                |
-| weight_pp_lw_csv         | varchar(400)          | YES  |     | NULL                |                |
-| weight_pp_sw_csv         | varchar(400)          | YES  |     | NULL                |                |
-| comments                 | varchar(160)          | YES  |     | NULL                |                |
-| last_update_user_id      | int(11)               | YES  |     | NULL                |                |
-| added_by_user_id         | int(11)               | YES  |     | NULL                |                |
-| dt_last_update           | datetime              | YES  |     | NULL                |                |
-| dt_entry                 | datetime              | YES  |     | current_timestamp() |                |
-+--------------------------+-----------------------+------+-----+---------------------+----------------+
-
 
 
 
@@ -555,37 +491,6 @@ FROm pig_production
 WHERE id = 13;
 
 
-
-
-+----+--------------+-------------+----------+-----------------------------+-----------------+-----------+--------------+-------------------------------------------------+-------------------------------+
-| id | date_harvest | pig_prod_id | buyer_id | pig_buyer                   | harvest_type_id | net_sales | harvest_cost | comments                                        | weight_pp_sw_csv              |
-+----+--------------+-------------+----------+-----------------------------+-----------------+-----------+--------------+-------------------------------------------------+-------------------------------+
-|  1 | 2025-02-16   |           1 |     NULL | NULL                        |            NULL |      NULL |         NULL | baligya kay nawadan trabaho                     | NULL                          |
-|  2 | 2025-08-19   |           9 |     NULL | NULL                        |            NULL |      NULL |         NULL | Bayad Butakal                                   | NULL                          |
-|  3 | 2025-09-19   |           5 |        1 | Meloy Requinto              |            NULL |   15320.0 |        200.0 | plete                                           | 78.6                          |
-|  4 | 2025-09-27   |           5 |     NULL | NULL                        |            NULL |      NULL |         NULL | himo 1 anay, 1 butakal                          | NULL                          |
-|  5 | 2025-10-23   |          13 |     NULL | NULL                        |            NULL |      NULL |         NULL | Bayad Butakal                                   | NULL                          |
-|  6 | 2025-11-10   |           7 |        2 | Mingla Weni Mangrasyon      |            NULL |  101615.0 |       2000.0 | NULL                                            | 85.5,80.9,77.7,92.2,71.5,79.2 |
-|  7 | 2025-11-11   |           7 |     NULL | NULL                        |            NULL |      NULL |         NULL | himo 3 anay, 2 butakal                          | NULL                          |
-|  8 | 2025-11-10   |           9 |     NULL | NULL                        |            NULL |      NULL |         NULL | NULL                                            | NULL                          |
-|  9 | 2025-11-26   |           9 |        3 | Ting Rasyon sa Naga merkado |            NULL |   42810.0 |       1350.0 | plete baboy 350 isa, sakwat baboy 100 isa       | 63,61,83                      |
-| 10 | 2025-11-28   |           9 |        4 | Silingan Punod Namatyan     |            NULL |   44505.0 |          0.0 | walay plete kay silingan                        | 75,80,52                      |
-| 11 | 2025-11-29   |           9 |        3 | Ting Rasyon sa Naga merkado |            NULL |  104015.0 |       4130.0 | plete baboy 350 isa, sakwat baboy 100 isa       | 65,58,75,82,82,65,83          |
-| 12 | 2025-12-02   |           9 |        5 | Silingan Punod Palit Anay   |            NULL |   36120.0 |          0.0 | Gitupong ang timbangs a pinakabugat na narasyon | NULL                          |
-| 13 | 2026-02-04   |          13 |        3 | Ting Rasyon sa Naga merkado |            NULL |   86520.0 |       2700.0 | plete baboy 2100, sakwat baboy 600              | NULL                          |
-| 14 | 2026-02-05   |          13 |        6 | Nagbuhat sa Farrowing       |            NULL |   49140.0 |          0.0 | Gitupong ang timbang sa pinakabugat na narasyon | NULL                          |
-+----+--------------+-------------+----------+-----------------------------+-----------------+-----------+--------------+-------------------------------------------------+-------------------------------+
-
-ALTER TABLE pig_production ADD COLUMN harvest_wt_pp_live    VARCHAR(400)  AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_wt_pp_live    VARCHAR(400)  AFTER cost_finisher;  
-ALTER TABLE pig_production ADD COLUMN harvest_wt_slaughter_ave  DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_wt_slaughter  DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_wt_live_ave   DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_wt_live       DECIMAL(6,1) UNSIGNED AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_num_sold_pigs INT UNSIGNED AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_num_sold_boar INT UNSIGNED AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_num_sold_gilt INT UNSIGNED AFTER cost_finisher;
-ALTER TABLE pig_production ADD COLUMN harvest_num_int_sow_boar INT UNSIGNED AFTER cost_finisher;
 
 SELECT id, name, num_births, num_pigs_wean FROm sow_boar;
 

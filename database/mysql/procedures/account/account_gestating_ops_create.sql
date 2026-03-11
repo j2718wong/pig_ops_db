@@ -27,7 +27,7 @@ DECLARE PIG_OPERATION_TYPE_WEANING_SOW_OPS      INT             DEFAULT 5;
 
 
 /* Default account gestating operation; num_days since insemination*/
-DECLARE GESTATING_OPS_NUM_DAYS_CHECK_PREGNANT   INT             DEFAULT 21;
+DECLARE GESTATING_OPS_NUM_DAYS_CHECK_REHEAT     INT             DEFAULT 21;
 DECLARE GESTATING_OPS_NUM_DAYS_INJECT_IRON      INT             DEFAULT 80;
 DECLARE GESTATING_OPS_NUM_DAYS_DEWORM           INT             DEFAULT 100;
 
@@ -47,9 +47,9 @@ INSERT INTO account_pig_ops (
     in_account_id,
     PIG_OPERATION_TYPE_GESTATING,
     1,
-    GESTATING_OPS_NUM_DAYS_CHECK_PREGNANT,
-    "Check Pregnant",
-    "CheckPregnant"
+    GESTATING_OPS_NUM_DAYS_CHECK_REHEAT,
+    "Check Reheat",
+    "Check Reheat"
 );
 
 INSERT INTO account_pig_ops (
