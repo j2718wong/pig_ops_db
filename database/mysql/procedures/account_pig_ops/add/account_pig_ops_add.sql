@@ -141,13 +141,7 @@ IF cur_account_pig_ops_id > 0 THEN
 END IF;
 
 
-/* Get the version number of the account_pig_ops_gestating*/
-SELECT  ver_num_gestating_ops
-INTO    cur_account_ver_num_gestating_ops
-FROM    account 
-WHERE   id = cur_user_account_id;
 
-SET cur_account_ver_num_gestating_ops = cur_account_ver_num_gestating_ops + 1;
 
 
 SET cur_account_pig_ops_flag = 0;
@@ -161,7 +155,6 @@ INSERT INTO account_pig_ops(
     account_id,
     operation_type,
     num_days_since,
-    version_num,
     flag,
     
     name,
@@ -173,7 +166,6 @@ INSERT INTO account_pig_ops(
     cur_user_account_id,
     in_operation_type,
     in_num_days_since,
-    cur_account_ver_num_gestating_ops,
     cur_account_pig_ops_flag,
     
     in_name,
@@ -186,12 +178,14 @@ INSERT INTO account_pig_ops(
 SELECT LAST_INSERT_ID() INTO cur_account_pig_ops_id;
 
 
-UPDATE account SET 
-    ver_num_gestating_ops = cur_account_ver_num_gestating_ops
-WHERE id = cur_user_account_id;
 
 
 IF in_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+    UPDATE account SET 
+        ver_num_gestating_ops = ver_num_gestating_ops + 1
+    WHERE id = cur_user_account_id;
+
+    
     CALL account_pig_ops_add_update_prod_gestating(
         cur_user_account_id,
         in_operation_type,
@@ -201,8 +195,11 @@ IF in_operation_type = PIG_OPERATION_TYPE_GESTATING THEN
 END IF;
 
 
-IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
-    in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+IF in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+    UPDATE account SET 
+        ver_num_lactating_piglets_ops = ver_num_lactating_piglets_ops + 1
+    WHERE id = cur_user_account_id;
+    
     
     CALL account_pig_ops_add_update_prod_lactating(
         cur_user_account_id,
@@ -213,7 +210,28 @@ IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
 END IF;
 
 
+
+IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW THEN 
+    UPDATE account SET 
+        ver_num_lactating_sow_ops = ver_num_lactating_sow_ops + 1
+    WHERE id = cur_user_account_id;
+    
+    
+    CALL account_pig_ops_add_update_prod_lactating(
+        cur_user_account_id,
+        in_operation_type,
+        cur_account_pig_ops_id,
+        in_num_days_since
+    );
+END IF;
+
+
+
 IF in_operation_type = PIG_OPERATION_TYPE_GILT_OPS THEN 
+    UPDATE account SET 
+        ver_num_gilt_ops = ver_num_gilt_ops + 1
+    WHERE id = cur_user_account_id;
+    
     CALL account_pig_ops_add_update_gilts(
         cur_user_account_id,
         in_operation_type,
@@ -223,7 +241,12 @@ IF in_operation_type = PIG_OPERATION_TYPE_GILT_OPS THEN
 END IF;
 
 
+
 IF in_operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS THEN 
+    UPDATE account SET 
+        ver_num_weaning_sow_ops = ver_num_weaning_sow_ops + 1
+    WHERE id = cur_user_account_id;
+    
     CALL account_pig_ops_add_update_gilts(
         cur_user_account_id,
         in_operation_type,

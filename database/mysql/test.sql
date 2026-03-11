@@ -455,6 +455,27 @@ num_starter
 FROm feed_balance
 
 
+SELECT
+a.id,
+a.sow_id,
+b.name,
+a.prod_status_id
+FROm pig_production a
+LEFt OUTER JOIN sow_boar b ON a.sow_id = b.id;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -522,5 +543,12 @@ FROm pig_farm;
 
 
 
+SELECT 
+    routine_name
+FROM
+    information_schema.routines
+WHERE
+    routine_type = 'PROCEDURE'
+        AND routine_schema = 'pig_operations';
 
 

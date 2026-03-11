@@ -102,6 +102,8 @@ END IF;
 
 UPDATE account SET
     name                = in_name,
+
+    data_ver_num_account = data_ver_num_account  + 1, 
     
     last_update_user_id = in_user_id,
     dt_last_update      = CURRENT_TIMESTAMP

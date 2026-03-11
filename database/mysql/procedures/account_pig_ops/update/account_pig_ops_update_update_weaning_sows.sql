@@ -34,7 +34,7 @@ DECLARE num_days_to_add                         INT             DEFAULT 0;
 
 
 DECLARE l_last_row_fetched TINYINT;
-DECLARE c_account_sows CURSOR FOR
+DECLARE c_account_weaning_sows CURSOR FOR
     SELECT  a.id,
             b.date_weaning
     FROM    sow_boar a
@@ -63,11 +63,11 @@ SET num_days_to_add = in_num_days_since;
     
     
 SET l_last_row_fetched=0;
-OPEN c_account_sows;   
+OPEN c_account_weaning_sows;   
     
 
 loop_here: LOOP
-    FETCH c_account_sows INTO 
+    FETCH c_account_weaning_sows INTO 
         cur_sow_id,
         cur_sow_date_wean;
         
@@ -80,7 +80,7 @@ loop_here: LOOP
 
 END LOOP loop_here;
  
-CLOSE c_account_sows;
+CLOSE c_account_weaning_sows;
 SET l_last_row_fetched=0;   
 
 END $$

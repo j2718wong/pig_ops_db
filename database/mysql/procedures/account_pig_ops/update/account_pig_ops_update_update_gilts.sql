@@ -41,7 +41,8 @@ DECLARE c_account_gilts CURSOR FOR
     WHERE   account_id      = in_account_id AND 
             sex = 'F'                       AND
             date_of_birth IS NOT NULL       AND
-            sow_status_id   = SOW_STATUS_GROWING
+            sow_status_id   = SOW_STATUS_GROWING AND
+            mate_count      = 0
     ORDER BY id ASC; 
 
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET l_last_row_fetched=1; 

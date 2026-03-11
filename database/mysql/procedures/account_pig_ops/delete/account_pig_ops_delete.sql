@@ -104,20 +104,66 @@ WHERE id =  in_account_pig_ops_id;
 
 
 IF cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_GESTATING THEN 
+    UPDATE account SET 
+        ver_num_gestating_ops = ver_num_gestating_ops + 1
+    WHERE id = cur_account_pig_ops_account_id;
+    
+    
     CALL account_pig_ops_delete_update_prod_gestating(
         cur_user_account_id,
         in_account_pig_ops_id
     );
 END IF;
 
-IF  cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW OR
-    cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+
+IF  cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS  THEN 
+    UPDATE account SET 
+        ver_num_lactating_piglets_ops = ver_num_lactating_piglets_ops + 1
+    WHERE id = cur_account_pig_ops_account_id;
+    
     
     CALL account_pig_ops_delete_update_prod_lactating(
         cur_user_account_id,
         in_account_pig_ops_id
     );
 END IF;
+
+
+IF  cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW  THEN 
+    UPDATE account SET 
+        ver_num_lactating_sow_ops = ver_num_lactating_sow_ops + 1
+    WHERE id = cur_account_pig_ops_account_id;
+    
+    CALL account_pig_ops_delete_update_prod_lactating(
+        cur_user_account_id,
+        in_account_pig_ops_id
+    );
+END IF;
+
+
+IF  cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_GILT_OPS  THEN 
+    UPDATE account SET 
+        ver_num_gilt_ops = ver_num_gilt_ops + 1
+    WHERE id = cur_account_pig_ops_account_id;
+    
+    CALL account_pig_ops_delete_update_gilts(
+        cur_user_account_id,
+        in_account_pig_ops_id
+    );
+END IF;
+
+
+IF  cur_account_pig_ops_operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS  THEN 
+    UPDATE account SET 
+        ver_num_weaning_sow_ops = ver_num_weaning_sow_ops + 1
+    WHERE id = cur_account_pig_ops_account_id;
+    
+    CALL account_pig_ops_delete_update_weaning_sows(
+        cur_user_account_id,
+        in_account_pig_ops_id
+    );
+END IF;
+
 
 
 
