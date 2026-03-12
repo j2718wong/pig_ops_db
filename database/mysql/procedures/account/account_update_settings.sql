@@ -129,15 +129,17 @@ END IF;
 
 
 UPDATE account SET
-    flag_settings               = cur_account_flag_settings,
-    num_days_wean               = in_days_wean,
-    num_days_harvest_from_birth = in_days_harvest_from_birth,
-    num_days_harvest_from_wean  = in_days_harvest_from_wean,
+    flag_settings                   = cur_account_flag_settings,
+    num_days_wean                   = in_days_wean,
+    num_days_harvest_from_birth     = in_days_harvest_from_birth,
+    num_days_harvest_from_wean      = in_days_harvest_from_wean,
+        
+    weight_unit                     = in_weight_unit,
     
-    weight_unit                 = in_weight_unit,
+    last_update_settings_user_id    = in_user_id,
+    dt_last_update_settings         = CURRENT_TIMESTAMP,
     
-    last_update_settings_user_id     = in_user_id,
-    dt_last_update_settings          = CURRENT_TIMESTAMP
+    data_ver_num_account            = data_ver_num_account + 1
 WHERE id = cur_user_account_id;
 
 
