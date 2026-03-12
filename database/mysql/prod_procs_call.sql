@@ -127,6 +127,9 @@ CALL feed_buy_add(1, NULL, 16, NULL, '2026-01-31', 2, 1, 1, 1, 50, 1670, 1670);
 CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-09', 2, 1, 1, 1, 50, 1670, 1670);
 CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-09', 3, 1, 1, 4, 1, 75, 300);
 CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-17', 3, 1, 1, 12, 1, 75, 1000);
+CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-25', 2, 1, 1, 1, 50, 1670, 1670);
+CALL feed_buy_add(1, NULL, 16, NULL, '2026-02-25', 4, 1, 1, 1, 25, 1350, 1350);
+
 
 
 

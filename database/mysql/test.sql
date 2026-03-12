@@ -420,8 +420,7 @@ a.unit_cost,
 a.total_cost
 FROm feed_buy a
 LEFT OUTER JOIN feed_type b ON a.feed_type_id = b.id
-WHERE a.pig_farm_feed_buy_id = 1
-ORDER BY a.id;
+ORDER BY a.id DESC LIMIT 10;
 
 
 SELECT
@@ -466,10 +465,8 @@ LEFt OUTER JOIN sow_boar b ON a.sow_id = b.id;
 
 
 
-
-
-
-
+SELECT id, account_id, pig_farm_id, pig_prod_id, sow_boar_id, 
+date_notes, notes FROm pig_prod_notes ORDER BY id DESC LIMIT 5;
 
 
 

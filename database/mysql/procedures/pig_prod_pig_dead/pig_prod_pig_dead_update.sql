@@ -50,6 +50,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_dead_pig_prod_id                INT             DEFAULT 0;
 DECLARE cur_pig_dead_production_group_id        INT             DEFAULT 0;
 DECLARE cur_pig_dead_notes_id                   INT             DEFAULT 0;
@@ -80,6 +81,8 @@ SELECT
         a.pig_prod_id,
         a.production_group_id,
         a.notes_id,
+        
+        b.pig_farm_id,
         b.prod_status_id,
         b.date_weaning
 INTO    
@@ -87,10 +90,12 @@ INTO
         cur_pig_dead_pig_prod_id,
         cur_pig_dead_production_group_id,
         cur_pig_dead_notes_id,
+        
+        cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id,
         cur_pig_prod_date_weaning
 FROM    pig_prod_pig_dead a 
-LEFT OUTER JOIN pig_production b ON a.account_id = b.id
+LEFT OUTER JOIN pig_production b ON a.pig_prod_id = b.id
 WHERE   a.id = in_pig_prod_pig_dead_id
 LIMIT   1;
 
@@ -198,6 +203,8 @@ IF cur_pig_dead_notes_id > 0 THEN
 ELSE
     IF in_notes IS NOT NULL THEN 
         INSERT INTO pig_prod_notes (
+            account_id,
+            pig_farm_id,
             pig_prod_id,
             
             notes,
@@ -205,6 +212,8 @@ ELSE
             added_by_user_id
             
         ) VALUES (
+            cur_pig_prod_account_id, 
+            cur_pig_prod_pig_farm_id,
             cur_pig_dead_pig_prod_id,
             
             in_notes,

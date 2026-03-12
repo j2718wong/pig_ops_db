@@ -276,6 +276,9 @@ END IF;
 
 
 INSERT INTO pig_prod_notes (
+    account_id,
+    pig_farm_id,
+    
     pig_prod_id,
     sow_boar_id,
     
@@ -284,6 +287,9 @@ INSERT INTO pig_prod_notes (
     added_by_user_id
     
 ) VALUES (
+    cur_pig_farm_account_id,
+    in_pig_farm_id,
+
     NULL,
     cur_sow_boar_id,
     

@@ -542,6 +542,9 @@ END IF;
 /* Add comments*/
 IF in_comments IS NOT NULL THEN 
     INSERT INTO pig_prod_notes (
+        account_id,
+        pig_farm_id,
+        
         pig_prod_id,
         sow_boar_id,
         
@@ -550,6 +553,9 @@ IF in_comments IS NOT NULL THEN
         added_by_user_id
         
     ) VALUES (
+        cur_sow_boar_account_id,
+        cur_sow_boar_pig_farm_id,
+    
         cur_pig_prod_id,
         in_sow_id,
         

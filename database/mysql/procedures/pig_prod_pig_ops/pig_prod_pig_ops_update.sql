@@ -192,6 +192,8 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
         INSERT INTO pig_prod_notes (
             account_id,
             pig_farm_id,
+            
+            
             pig_prod_id,
             sow_boar_id,
             production_group_id,
@@ -202,7 +204,8 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             
         ) VALUES (
             cur_pig_prod_account_id,
-            NULL,
+            cur_pig_prod_pig_farm_id,
+            
             cur_pig_prod_id,
             cur_pig_prod_sow_id,
             NULL,
@@ -220,6 +223,7 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
         INSERT INTO pig_prod_notes (
             account_id,
             pig_farm_id,
+            
             pig_prod_id,
             sow_boar_id,
             production_group_id,
@@ -230,7 +234,8 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             
         ) VALUES (
             cur_pig_prod_account_id,
-            NULL,
+            cur_pig_prod_pig_farm_id,
+            
             cur_pig_prod_id,
             NULL,
             NULL,
@@ -247,6 +252,8 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
                                                 PIG_OPERATION_TYPE_WEANING_SOW_OPS) THEN
         INSERT INTO pig_prod_notes (
             account_id,
+            pig_farm_id,
+            
             pig_prod_id,
             sow_boar_id,
             
@@ -256,6 +263,8 @@ IF cur_pig_prod_pig_ops_notes_id IS NULL OR cur_pig_prod_pig_ops_notes_id = 0 TH
             
         ) VALUES (
             cur_pig_prod_account_id,
+            cur_pig_prod_pig_farm_id,
+            
             NULL,
             cur_pig_prod_sow_id,
             

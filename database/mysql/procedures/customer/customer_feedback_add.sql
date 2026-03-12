@@ -74,7 +74,7 @@ END IF;
 
 INSERT INTO customer_feedback (
     account_id,
-    user_id_id,
+    user_id,
     
     notes
     
