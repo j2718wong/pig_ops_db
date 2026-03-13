@@ -499,7 +499,7 @@ CALL production_calculate_current_pigs(13, 0, @cur_pigs);
 
 SELECT id,
 prod_status_id,
-num_pigs_live_m,
+num_pigs_live_m,pig_farm
 num_pigs_live_f,
 num_pigs_weaning_m,
 num_pigs_weaning_f,
@@ -548,4 +548,7 @@ WHERE
     routine_type = 'PROCEDURE'
         AND routine_schema = 'pig_operations';
 
+
+SELECT id, signup_country_id, signup_social_media_id,
+account_id, email FROm user;
 

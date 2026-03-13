@@ -6,6 +6,10 @@ CREATE PROCEDURE pig_farm_add(
 
     in_name                 VARCHAR(50),
     
+    in_new_country_code     VARCHAR(5),
+    in_new_country_name     VARCHAR(50),
+    
+    
     in_country_id           INT, 
     in_address_level_1_id   INT,
     in_address_level_2_id   INT,
@@ -42,11 +46,14 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+DECLARE cur_app_country_id                      INT             DEFAULT 0;
+
 
 DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
 DECLARE cur_pig_farm_flag                       INT             DEFAULT 0;
 DECLARE cur_pig_farm_name                       VARCHAR(50)     DEFAULT '';
 
+DECLARE cur_count                               INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -95,6 +102,48 @@ IF cur_pig_farm_id > 0 THEN
     LEAVE process_user;
 END IF;
 
+
+/* Create new app_country if not yet created.*/
+IF in_new_country_code IS NOT NULL THEN 
+    SELECT  id 
+    INTO    cur_app_country_id
+    FROM    app_country
+    WHERE   country_code = in_new_country_code
+    LIMIT   1;
+    
+    IF cur_app_country_id = 0 THEN 
+        INSERT INTO app_country(
+            country_code,
+            name
+        )
+        VALUES(
+            in_new_country_code,
+            in_new_country_name
+        );
+        
+        SELECT LAST_INSERT_ID() INTO cur_app_country_id;
+    
+    END IF;
+    
+    SET in_country_id = cur_app_country_id;
+
+END IF;
+
+
+/* Count the farms already in the account*/
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    pig_farm
+WHERE   account_id =  cur_user_account_id;
+
+
+/* Update the account country based on the first pig_farm country. */
+IF cur_count = 0 THEN 
+    UPDATE account SET
+        country_id = in_country_id
+    WHERE id = cur_user_account_id;
+
+END IF;
 
 
 INSERT INTO pig_farm(

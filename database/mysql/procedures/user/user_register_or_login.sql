@@ -159,6 +159,7 @@ IF cur_user_id = 0 THEN
         name_first,
         email,
         
+        signup_country_id,
         signup_social_media_id
     ) VALUES (
         in_name,
@@ -166,6 +167,7 @@ IF cur_user_id = 0 THEN
         in_name_first,
         in_email,
         
+        cur_country_id,
         in_login_social_media_id
     );
 
