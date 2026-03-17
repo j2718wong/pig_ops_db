@@ -417,20 +417,20 @@ WHERE   id        = cur_user_id;
 
 
 SELECT 
-    res_num                             AS result_number,
-    res_code                            AS result_code,
-    res_desc                            AS result_desc,
+    res_num                         AS result_number,
+    res_code                        AS result_code,
+    res_desc                        AS result_desc,
+        
+    cur_user_id                     AS user_id,
+    cur_user_account_id             AS user_account_id,
+    cur_user_flag                   AS user_flag,
     
-    cur_user_id                         AS user_id,
-    cur_user_account_id                 AS user_account_id,
-    cur_user_flag                       AS user_flag,
-    
-    cur_user_unverified_id              AS user_unverified_id,
-    cur_user_verify_id                  AS user_verify_code_id,                  
-    cur_user_verify_code                AS user_verify_code,
-    cur_user_verify_code_ts_expiry      AS code_ts_expiry,
-    cur_user_verify_code_dt_expiry      AS code_dt_expiry,
-    NUM_MINUTES_CODE_EXPIRY             AS expiry_minutes;
+    cur_user_unverified_id          AS user_unverified_id,
+    cur_user_verify_id              AS user_verify_code_id,                  
+    cur_user_verify_code            AS user_verify_code,
+    cur_user_verify_code_ts_expiry  AS code_ts_expiry,
+    cur_user_verify_code_dt_expiry  AS code_dt_expiry,
+    NUM_MINUTES_CODE_EXPIRY         AS expiry_minutes;
     
 
 END $$

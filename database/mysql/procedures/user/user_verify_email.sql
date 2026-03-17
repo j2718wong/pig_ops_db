@@ -109,7 +109,7 @@ IF cur_user_verify_code = in_auth_code THEN
         /* Update code verification*/
         UPDATE user_verify SET
             dt_verified         = CURRENT_TIMESTAMP
-        WHERE id = cur_mfa_id;
+        WHERE id = cur_user_verify_id;
         
         
         /* Covert user from unverified user to verified user.*/
@@ -137,7 +137,7 @@ IF cur_user_verify_code = in_auth_code THEN
         
         UPDATE app_country SET
             signup_count = signup_count + 1
-        WHERE id = cur_country_id;
+        WHERE id = cur_user_signup_country_id;
 
 
 
