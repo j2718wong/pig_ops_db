@@ -417,7 +417,7 @@ WHEN BUSINESS_OBJ_ID_USER THEN
 WHEN BUSINESS_OBJ_ID_ACCOUNT THEN
     SET cur_group_flag = cur_user_grp_flag_priv_account;
 
-WHEN BUSINESS_OBJ_ID_ACCOUNT_REQUEST THEN
+WHEN BUSINESS_OBJ_ID_USER_REQUEST THEN
     SET cur_group_flag = cur_user_grp_flag_priv_acc_request;
 
 WHEN BUSINESS_OBJ_ID_USER_GROUP THEN

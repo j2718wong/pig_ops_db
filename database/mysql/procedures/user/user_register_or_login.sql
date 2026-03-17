@@ -179,7 +179,7 @@ LIMIT   1;
 
 process_user : BEGIN
 
-IF in_login_social_media_id = 0  THEN 
+IF in_login_social_media_id IS NULL THEN 
 
 
     /* Unverified user signup or login. */
@@ -188,11 +188,17 @@ IF in_login_social_media_id = 0  THEN
         INSERT INTO user_unverified(
             email,
             signup_country_id,
-            login_count
+            login_count,
+            login_loc_trace_id,
+            
+            date_signup
         ) VALUES (
             in_email,
             cur_country_id,
-            1
+            1,
+            cur_login_loc_trace_id,
+            
+            CURRENT_DATE
         );
         SELECT LAST_INSERT_ID() INTO cur_user_unverified_id;
         
@@ -288,10 +294,19 @@ to login or signup, it is assumed verified.
 - user already registered and verified.
 */
 
+IF cur_user_unverified_id > 0 THEN 
+    DELETE FROM user_unverified 
+    WHERE id = cur_user_unverified_id;
+
+END IF;
+
 
 
 IF cur_user_id = 0 THEN 
     /* user signup using social media*/
+
+    SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
+    
 
     INSERT INTO user(
         name,
@@ -299,6 +314,7 @@ IF cur_user_id = 0 THEN
         name_first,
         email,
         
+        flag,
         login_count,
         
         signup_country_id,
@@ -309,6 +325,7 @@ IF cur_user_id = 0 THEN
         in_name_first,
         in_email,
         
+        cur_user_flag,
         1,
         
         cur_country_id,
@@ -321,15 +338,6 @@ IF cur_user_id = 0 THEN
     UPDATE app_country SET
         signup_count = signup_count + 1
     WHERE id = cur_country_id;
-
-
- 
-    /* No need to send verification code if logging in via social media.*/
- 
-    SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
-    UPDATE user SET
-        flag = cur_user_flag
-    WHERE id = cur_user_id;
 
 
 
@@ -421,7 +429,8 @@ SELECT
     cur_user_verify_id                  AS user_verify_code_id,                  
     cur_user_verify_code                AS user_verify_code,
     cur_user_verify_code_ts_expiry      AS code_ts_expiry,
-    cur_user_verify_code_dt_expiry      AS code_dt_expiry;
+    cur_user_verify_code_dt_expiry      AS code_dt_expiry,
+    NUM_MINUTES_CODE_EXPIRY             AS expiry_minutes;
     
 
 END $$

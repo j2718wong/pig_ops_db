@@ -9,7 +9,7 @@ In debian
 
 find procedures -name "*.sql" -type f | sort | xargs -I {} sh -c 'cat "{}"; echo; echo "\n\n-----------------------------------------------------------\n\n"' > combined.sql
 
-
+find . -name "*.sql" -type f -exec cat {} \; > all_procedures.sql
 
 
 

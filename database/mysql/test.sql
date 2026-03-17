@@ -89,7 +89,7 @@ SELECT
     ROUTINE_NAME as `Procedure`
     
 FROM INFORMATION_SCHEMA.ROUTINES
-WHERE ROUTINE_SCHEMA = 'pig_ops_dev'
+WHERE ROUTINE_SCHEMA = 'pig_operations'
     AND ROUTINE_TYPE = 'PROCEDURE'
 ORDER BY ROUTINE_NAME;
 
@@ -545,10 +545,14 @@ SELECT
 FROM
     information_schema.routines
 WHERE
-    routine_type = 'PROCEDURE'
-        AND routine_schema = 'pig_operations';
+    routine_type = 'PROCEDURE' AND 
+    routine_schema = 'pig_operations';
 
 
 SELECT id, signup_country_id, signup_social_media_id,
 account_id, email FROm user;
+
+
+mysqldump -u root -p   pig_operations > pig_operations.sql
+mysqldump -u root -p --routines pig_operations > pig_operations_routines.sql
 
