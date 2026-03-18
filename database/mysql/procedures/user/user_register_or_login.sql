@@ -5,6 +5,9 @@ CREATE PROCEDURE user_register_or_login(
     in_login_social_media_id INT,
     in_social_media_user_id VARCHAR(120),/* This should be NULL if in_login_social_media_id is 0 or NULL*/
 
+    in_acc_access_code_id   INT,
+
+
     in_name                 VARCHAR(80),
     in_name_last            VARCHAR(50),
     in_name_first           VARCHAR(50),
@@ -24,6 +27,48 @@ CREATE PROCEDURE user_register_or_login(
 
 BEGIN
 
+/**
+2026-03-18: Notes on login without email or social media.
+
+1.) The previous flow of users who wish to join a pig farm account is
+- create user (via email or social media).
+- then request an account access; these users need to input the account code of the farm account.
+- then the account owner codes access to the user via user_request table.
+- this is the default flow and is working.
+
+
+User creation via pre approved tokens.
+======================================
+
+As of this writing the social media login proves to be challenging as it requires 
+business papers and will take time to review the process.
+
+2.) So another solution is explored. Only the account owner (which is likely 
+the farm owner or manager) needs an email to register. 
+
+
+3.) The owner can create pre approved tokens who wants  to access the farm data
+and has a pre assigned role.
+
+The user who needs to register this method must provide
+
+1.) user first name - filled up by user
+2.) user last name - filled up by user
+3.) token_id - this is given by the farm account owner to user. This is saved 
+in account_access_code table; 
+
+There is still some deliberation if this is a one-time access and cannot be 
+recycled. But as of this writing this is assumed resusable until revoked by farm  
+manager.
+
+
+This access can elevate a user to a Manager or Admin role as well; in this case
+there should be a mechanism to force the user to have an email for recovery
+purposes.
+
+*/
+
+
 /** 
  * Will create user entry. This is usually used when a user registers from
  * a mobile app or web application. All parameter input cannot be null or empty.
@@ -34,6 +79,9 @@ BEGIN
  */
 
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
+
+
+DECLARE RES_NUM_INVALID_ACCESS_TOKEN            INT             DEFAULT 1;
 
 
 DECLARE NUM_MINUTES_CODE_EXPIRY                 INT             DEFAULT 5;
@@ -49,6 +97,9 @@ DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 
 
+DECLARE cur_access_code_account_id             INT             DEFAULT 0;
+DECLARE cur_access_code_user_group_id          INT             DEFAULT 0;
+DECLARE cur_access_code_used_by_user_id        INT             DEFAULT 0;
 
 
 DECLARE cur_user_unverified_id                  INT             DEFAULT 0;
@@ -190,6 +241,125 @@ LIMIT   1;
 
 
 process_user : BEGIN
+
+
+IF in_acc_access_code_id IS NOT NULL THEN 
+    SELECT  account_id,
+            user_group_id,
+            used_by_user_id
+    
+    INTO    cur_access_code_account_id,
+            cur_access_code_user_group_id,
+            cur_access_code_used_by_user_id
+    
+    FROM account_access_code
+    WHERE id =  in_account_acc_code_id;
+    
+    
+    IF cur_access_code_account_id = 0 THEN 
+        SET res_num     = RES_NUM_INVALID_ACCESS_TOKEN;
+        SET res_code    = "RES_NUM_INVALID_ACCESS_TOKEN";
+    
+        LEAVE process_user;
+    END IF;
+    
+    
+    SELECT  id
+    INTO    cur_access_code_user_group_id
+    FROM    user_group
+    WHERE   account_id = cur_access_code_account_id AND
+            group_num = cur_access_code_user_group_id
+    LIMIT   1;
+    
+    
+    /** DELIBERATION FOR one time access or waht*/
+    
+    
+    
+    
+    SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE;
+
+
+    /* Use will have an automatic account, from the codeing account.*/
+    INSERT INTO user(
+        name_last,
+        name_first,
+        
+        account_id,
+        account_access_code_id,
+        
+        user_group_id,
+        
+        flag,
+        login_count,
+        
+        signup_country_id,
+        signup_social_media_id,
+        social_media_user_id
+        
+    ) VALUES (
+        in_name_last,
+        in_name_first,
+        
+        cur_access_code_account_id,
+        in_acc_access_code_id,
+        
+        cur_access_code_user_group_id,
+        
+        cur_user_flag,
+        1,
+        
+        cur_country_id,
+        in_login_social_media_id,
+        in_social_media_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_user_id;
+    
+    
+    UPDATE app_country SET
+        signup_count = signup_count + 1
+    WHERE id = cur_country_id;
+
+
+
+    /** Will also create a user_login entry and user should be automatically logged in*/
+    INSERT INTO user_login(
+        user_id,
+        
+        viewport_width,
+        viewport_height,
+        
+        ip_address,
+        country_code_login,
+        login_loc_trace_id
+    ) 
+    VALUES (
+        cur_user_id,
+        
+        in_viewport_width,
+        in_viewport_height,
+        
+        in_ip_address,
+        in_login_country_code,
+        cur_login_loc_trace_id     
+    );
+    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+    
+    UPDATE user SET 
+        last_user_login_id      = cur_user_login_id
+    WHERE id = cur_user_id;
+
+    
+    SET cur_user_account_id     = cur_access_code_account_id;
+    
+    
+    LEAVE process_user;
+END IF;
+
+
+
+
 
 IF in_login_social_media_id IS NULL THEN 
     /* Create verification code to be sent to user email.*/
@@ -459,7 +629,7 @@ IF cur_user_id = 0 AND cur_user_using_social_media_id = 0 THEN
         last_user_login_id      = cur_user_login_id
     WHERE id = cur_user_id;
     
-    
+
 ELSE
     /* user login using social media*/
     
