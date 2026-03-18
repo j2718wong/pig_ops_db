@@ -3,6 +3,7 @@
 DROP PROCEDURE IF EXISTS user_register_or_login $$
 CREATE PROCEDURE user_register_or_login(
     in_login_social_media_id INT,
+    in_social_media_user_id VARCHAR(120),/* This should be NULL if in_login_social_media_id is 0 or NULL*/
 
     in_name                 VARCHAR(80),
     in_name_last            VARCHAR(50),
@@ -63,6 +64,12 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_flag                           INT             DEFAULT 0;
 
 
+DECLARE cur_user_login_id                       INT             DEFAULT 0;
+DECLARE cur_user_using_social_media_id          INT             DEFAULT 0;
+
+
+/* Resolves user from either email or social ID */
+DECLARE use_this_user_id                        INT             DEFAULT 0;
 
 
 DECLARE cur_country_id                          INT             DEFAULT 0;
@@ -79,74 +86,78 @@ SET res_code    = "SUCCESS";
 
 
 /** Save country if not yet saved;*/
-SELECT  id
-INTO    cur_country_id
-FROM    app_country 
-WHERE   country_code = in_login_country_code;
+IF in_login_country_code IS NOT NULL THEN
+
+    SELECT  id
+    INTO    cur_country_id
+    FROM    app_country 
+    WHERE   country_code = in_login_country_code;
 
 
-IF cur_country_id = 0 THEN 
-    INSERT INTO app_country(
-        country_code,
-        name
-    )
-    VALUES(
-        in_login_country_code,
-        in_login_country_name
-    );
-    
-    SELECT LAST_INSERT_ID() INTO cur_country_id;
-END IF;
+    IF cur_country_id = 0 THEN 
+        INSERT INTO app_country(
+            country_code,
+            name
+        )
+        VALUES(
+            in_login_country_code,
+            in_login_country_name
+        );
+        
+        SELECT LAST_INSERT_ID() INTO cur_country_id;
+    END IF;
 
 
 
-/** Save Ip location trace*/
-IF in_login_city IS NOT NULL AND in_login_region IS NOT NULL THEN 
-    SELECT  id 
-    INTO    cur_login_loc_trace_id
-    FROM    user_login_ip_loc_trace
-    WHERE   app_country_id      = cur_country_id AND
-            ip_loc_trace_city   = in_login_city AND 
-            ip_loc_trace_region = in_login_region
-    LIMIT   1;
-
-ELSE
-    IF in_login_city IS NOT NULL THEN
+    /** Save IP location trace*/
+    IF in_login_city IS NOT NULL AND in_login_region IS NOT NULL THEN 
         SELECT  id 
         INTO    cur_login_loc_trace_id
         FROM    user_login_ip_loc_trace
         WHERE   app_country_id      = cur_country_id AND
                 ip_loc_trace_city   = in_login_city AND 
-                ip_loc_trace_region = NULL
+                ip_loc_trace_region = in_login_region
         LIMIT   1;
-    END IF;
-    
-    IF in_login_region IS NOT NULL THEN
-        SELECT  id 
-        INTO    cur_login_loc_trace_id
-        FROM    user_login_ip_loc_trace
-        WHERE   app_country_id      = cur_country_id AND
-                ip_loc_trace_region = in_login_region AND 
-                ip_loc_trace_city   = NULL
-        LIMIT   1;
-    END IF;
+
+    ELSE
+        IF in_login_city IS NOT NULL THEN
+            SELECT  id 
+            INTO    cur_login_loc_trace_id
+            FROM    user_login_ip_loc_trace
+            WHERE   app_country_id      = cur_country_id AND
+                    ip_loc_trace_city   = in_login_city AND 
+                    ip_loc_trace_region = NULL
+            LIMIT   1;
+        END IF;
         
-END IF;
+        IF in_login_region IS NOT NULL THEN
+            SELECT  id 
+            INTO    cur_login_loc_trace_id
+            FROM    user_login_ip_loc_trace
+            WHERE   app_country_id      = cur_country_id AND
+                    ip_loc_trace_region = in_login_region AND 
+                    ip_loc_trace_city   = NULL
+            LIMIT   1;
+        END IF;
+            
+    END IF;
 
 
 
-IF cur_login_loc_trace_id = 0 THEN 
-    INSERT INTO user_login_ip_loc_trace (
-        app_country_id,
-        ip_loc_trace_city,
-        ip_loc_trace_region
-    ) VALUES(
-        cur_country_id,
-        in_login_city,
-        in_login_region
-    );
-    
-    SELECT LAST_INSERT_ID() INTO cur_login_loc_trace_id;
+    IF cur_login_loc_trace_id = 0 THEN 
+        INSERT INTO user_login_ip_loc_trace (
+            app_country_id,
+            ip_loc_trace_city,
+            ip_loc_trace_region
+        ) VALUES(
+            cur_country_id,
+            in_login_city,
+            in_login_region
+        );
+        
+        SELECT LAST_INSERT_ID() INTO cur_login_loc_trace_id;
+    END IF;
+
 END IF;
 
 
@@ -163,6 +174,7 @@ WHERE   email        = in_email
 LIMIT   1;
 
 
+/* Check email if already in user table.*/
 SELECT  id,
         account_id,
         flag
@@ -180,6 +192,24 @@ LIMIT   1;
 process_user : BEGIN
 
 IF in_login_social_media_id IS NULL THEN 
+    /* Create verification code to be sent to user email.*/
+    SET cur_user_verify_code = ROUND(100000 + RAND() * (999000 - 100000));
+        
+        
+    /* Add NUM_MINUTES_CODE_EXPIRY from NOW*/ 
+    INSERT INTO user_verify(
+        email,
+        auth_code,
+        ts_expiry,
+        dt_expiry
+    ) VALUES (
+        in_email,
+        cur_user_verify_code,
+        UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL NUM_MINUTES_CODE_EXPIRY MINUTE)),  /* UNIX timestamp expiry */
+        DATE_ADD(NOW(), INTERVAL NUM_MINUTES_CODE_EXPIRY MINUTE)                   /* Datetime expiry */
+    );
+    SELECT LAST_INSERT_ID() INTO cur_user_verify_id;
+        
 
 
     /* Unverified user signup or login. */
@@ -202,27 +232,7 @@ IF in_login_social_media_id IS NULL THEN
         );
         SELECT LAST_INSERT_ID() INTO cur_user_unverified_id;
         
-      
-        
-        /* Create verification code to be sent to user email.*/
-        SET cur_user_verify_code = ROUND(100000 + RAND() * (999000 - 100000));
-            
-            
-        /* Add NUM_MINUTES_CODE_EXPIRY from NOW*/ 
-        INSERT INTO user_verify(
-            email,
-            auth_code,
-            ts_expiry,
-            dt_expiry
-        ) VALUES (
-            in_email,
-            cur_user_verify_code,
-            UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL NUM_MINUTES_CODE_EXPIRY MINUTE)),  /* UNIX timestamp expiry */
-            DATE_ADD(NOW(), INTERVAL NUM_MINUTES_CODE_EXPIRY MINUTE)                   /* Datetime expiry */
-        );
-        SELECT LAST_INSERT_ID() INTO cur_user_verify_id;
-            
-            
+
         UPDATE user_unverified SET 
             user_verify_id = cur_user_verify_id
         WHERE id = cur_user_unverified_id;
@@ -244,24 +254,6 @@ IF in_login_social_media_id IS NULL THEN
     
     /* Unverified user signup or login again. */
     IF cur_user_unverified_id > 0 AND cur_user_id = 0 THEN
-        /* Create verification code to be sent to user email.*/
-        SET cur_user_verify_code = ROUND(100000 + RAND() * (999000 - 100000));
-            
-            
-        /* Add NUM_MINUTES_CODE_EXPIRY from NOW*/ 
-        INSERT INTO user_verify(
-            email,
-            auth_code,
-            ts_expiry,
-            dt_expiry
-        ) VALUES (
-            in_email,
-            cur_user_verify_code,
-            UNIX_TIMESTAMP(DATE_ADD(NOW(), INTERVAL NUM_MINUTES_CODE_EXPIRY MINUTE)),  /* UNIX timestamp expiry */
-            DATE_ADD(NOW(), INTERVAL NUM_MINUTES_CODE_EXPIRY MINUTE)                   /* Datetime expiry */
-        );
-        SELECT LAST_INSERT_ID() INTO cur_user_verify_id;
-            
             
         UPDATE user_unverified SET 
             user_verify_id  = cur_user_verify_id,
@@ -283,6 +275,49 @@ IF in_login_social_media_id IS NULL THEN
     
     
     
+    /* This is a manual email login; The cur_user_id > 0; this means the user 
+    need to input authentication code. Generate Verify code.  
+    */
+    /** Will also create a user_login entry and user should be automatically logged in*/
+    INSERT INTO user_login(
+        user_id,
+        viewport_width,
+        viewport_height,
+        
+        ip_address,
+        country_code_login,
+        login_loc_trace_id
+    ) 
+    VALUES (
+        cur_user_id,        
+        in_viewport_width,
+        in_viewport_height,
+        
+        in_ip_address,
+        in_login_country_code,
+        cur_login_loc_trace_id     
+    );
+    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+    
+    
+    
+    UPDATE user SET 
+        last_user_verify_id     = cur_user_verify_id,
+        last_user_login_id      = cur_user_login_id
+    WHERE id = cur_user_id;
+    
+    
+    SELECT  ts_expiry,
+            dt_expiry
+            
+    INTO    cur_user_verify_code_ts_expiry,
+            cur_user_verify_code_dt_expiry
+    
+    FROM    user_verify
+    WHERE   id = cur_user_verify_id;
+
+    LEAVE process_user;
+    
 END IF;
 
 
@@ -302,11 +337,64 @@ END IF;
 
 
 
-IF cur_user_id = 0 THEN 
-    /* user signup using social media*/
+/**
+2026-03-18: Notes on login using Social Media
+As of this writing, there are 3 Social Media channel supported or to be supported.
 
-    SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
+Login Via   To be supported     Development Status
+==========  ===============     ===============
+Google      fully supported     working correctly
+Facebook    must be supported   on development
+Tiktok      must be supported   not visible to users
+
+
+1.) Login using these social media are always assumed they are verified.
+So NO need to ask for verification codes.
+
+2.) The Google login, always provide user email, user name, user last name and 
+user first name.
+
+3.) Other social media aside from google are assumed they may or may not
+provide email.
+
+ 
+- Every login now creates user_login record
+- Screen dimensions captured for device analytics
+- Last login ID stored in user table for quick lookup
+- Location data enriched with IP trace
+
+
+*/
+
+
+/** Google does not provide this, only email that creates uniqueness.*/
+
+IF in_social_media_user_id IS NOT NULL THEN 
+    SELECT  id
+    INTO    cur_user_using_social_media_id
+    FROM    user
+    WHERE   signup_social_media_id = in_login_social_media_id AND
+            social_media_user_id = in_social_media_user_id
+    LIMIT 1;
     
+
+END IF;
+
+
+
+/* It is possible now not to have any user email as long as there is a 
+verified social media login.*/
+    
+
+IF cur_user_id = 0 AND cur_user_using_social_media_id = 0 THEN 
+    /* User signup using social media*/
+
+    IF in_email IS NOT NULL THEN 
+        SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
+    ELSE
+        SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE;
+    END IF;
+
 
     INSERT INTO user(
         name,
@@ -318,7 +406,9 @@ IF cur_user_id = 0 THEN
         login_count,
         
         signup_country_id,
-        signup_social_media_id
+        signup_social_media_id,
+        social_media_user_id
+        
     ) VALUES (
         in_name,
         in_name_last,
@@ -329,7 +419,8 @@ IF cur_user_id = 0 THEN
         1,
         
         cur_country_id,
-        in_login_social_media_id
+        in_login_social_media_id,
+        in_social_media_user_id
     );
 
     SELECT LAST_INSERT_ID() INTO cur_user_id;
@@ -362,11 +453,22 @@ IF cur_user_id = 0 THEN
         in_login_country_code,
         cur_login_loc_trace_id     
     );
-
+    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+    
+    UPDATE user SET 
+        last_user_login_id      = cur_user_login_id
+    WHERE id = cur_user_id;
     
     
 ELSE
     /* user login using social media*/
+    
+    IF cur_user_id > 0 THEN 
+        SET use_this_user_id = cur_user_id;
+    ELSE
+        SET use_this_user_id = cur_user_using_social_media_id;
+    END IF;
+    
     
     UPDATE user SET 
         name                    = in_name,
@@ -374,10 +476,8 @@ ELSE
         name_last               = in_name_last,
         name_first              = in_name_first,
         
-        login_count             = login_count + 1,
-        
-        signup_social_media_id  = in_login_social_media_id 
-    WHERE id = cur_user_id;
+        login_count             = login_count + 1
+    WHERE id = use_this_user_id;
     
     
     /** Will also create a user_login entry and user should be automatically logged in*/
@@ -391,7 +491,7 @@ ELSE
         login_loc_trace_id
     ) 
     VALUES (
-        cur_user_id,
+        use_this_user_id,
         
         in_viewport_width,
         in_viewport_height,
@@ -400,6 +500,11 @@ ELSE
         in_login_country_code,
         cur_login_loc_trace_id     
     );
+    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+    
+    UPDATE user SET 
+        last_user_login_id      = cur_user_login_id
+    WHERE id = use_this_user_id;
 
 END IF;
 

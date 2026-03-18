@@ -2,7 +2,9 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS user_verify_email $$
 CREATE PROCEDURE user_verify_email(
-    in_unverified_user_id   INT,
+    in_unverified_user_id   INT, /* Only one of this is not NULL and > 0. */
+    in_user_id              INT, /* Only one of this is not NULL and > 0. */
+    
     in_auth_code            INT,
     
     in_viewport_width       INT,
@@ -15,9 +17,9 @@ CREATE PROCEDURE user_verify_email(
 BEGIN
 
 /** 
- * Will verify multi factor auth entry for user email.
+ * Will verify  user email.
  * @author Jack Wong
- * @since January 4, 2024
+ * @since March 4, 2026
  *
  */
 
@@ -63,25 +65,45 @@ DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
 
 SET cur_unix_timestamp      = UNIX_TIMESTAMP();
 
-SELECT  a.user_verify_id,
-        a.signup_country_id,
-        a.login_loc_trace_id,
-        
-        b.email,
-        b.auth_code,
-        b.ts_expiry
- 
-INTO    
-        cur_user_verify_id,
-        cur_user_signup_country_id,
-        cur_user_login_loc_trace_id,
-        
-        cur_user_email,
-        cur_user_verify_code,
-        cur_user_verify_ts_expiry
-FROM    user_unverified a
-LEFT OUTER JOIN  user_verify b ON a.user_verify_id = b.id   
-WHERE   a.id = in_unverified_user_id;
+
+IF in_unverified_user_id > 0  THEN 
+    SELECT  a.user_verify_id,
+            a.signup_country_id,
+            a.login_loc_trace_id,
+            
+            b.email,
+            b.auth_code,
+            b.ts_expiry
+     
+    INTO    
+            cur_user_verify_id,
+            cur_user_signup_country_id,
+            cur_user_login_loc_trace_id,
+            
+            cur_user_email,
+            cur_user_verify_code,
+            cur_user_verify_ts_expiry
+    FROM    user_unverified a
+    LEFT OUTER JOIN  user_verify b ON a.user_verify_id = b.id   
+    WHERE   a.id = in_unverified_user_id;
+
+
+ELSE
+    SELECT  a.last_user_verify_id,
+            
+            b.auth_code,
+            b.ts_expiry
+     
+    INTO    
+            cur_user_verify_id,
+            
+            cur_user_verify_code,
+            cur_user_verify_ts_expiry
+    FROM    user a
+    LEFT OUTER JOIN  user_verify b ON a.last_user_verify_id = b.id   
+    WHERE   a.id = in_user_id;
+
+END IF;
 
 
 SET res_num      = 0;
@@ -112,61 +134,68 @@ IF cur_user_verify_code = in_auth_code THEN
         WHERE id = cur_user_verify_id;
         
         
-        /* Covert user from unverified user to verified user.*/
-        SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
-    
-
-        INSERT INTO user(
-            email,
-            
-            flag,
-            login_count,
-            
-            signup_country_id
-        ) VALUES (
-            cur_user_email,
-            
-            cur_user_flag,
-            1,
-            
-            cur_user_signup_country_id
-        );
-
-        SELECT LAST_INSERT_ID() INTO cur_user_id;
+        IF in_unverified_user_id > 0 THEN 
+            /* Covert user from unverified user to verified user.*/
+            SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE + FLAG_BIT_USER_EMAIL_VERIFIED;
         
+
+            INSERT INTO user(
+                email,
+                
+                flag,
+                login_count,
+                
+                signup_country_id
+            ) VALUES (
+                cur_user_email,
+                
+                cur_user_flag,
+                1,
+                
+                cur_user_signup_country_id
+            );
+
+            SELECT LAST_INSERT_ID() INTO cur_user_id;
+            
+            
+            UPDATE app_country SET
+                signup_count = signup_count + 1
+            WHERE id = cur_user_signup_country_id;
+
+
+
+            /** Will also create a user_login entry and user should be automatically logged in*/
+            INSERT INTO user_login(
+                user_id,
+                
+                viewport_width,
+                viewport_height,
+                
+                ip_address,
+                country_code_login,
+                login_loc_trace_id
+            ) 
+            VALUES (
+                cur_user_id,
+                
+                in_viewport_width,
+                in_viewport_height,
+                
+                in_ip_address,
+                cur_user_signup_country_id,
+                cur_user_login_loc_trace_id     
+            );
+
+
+            /* Delete unverified user*/
+            DELETE FROM user_unverified 
+            WHERE id = in_unverified_user_id;
         
-        UPDATE app_country SET
-            signup_count = signup_count + 1
-        WHERE id = cur_user_signup_country_id;
-
-
-
-        /** Will also create a user_login entry and user should be automatically logged in*/
-        INSERT INTO user_login(
-            user_id,
-            
-            viewport_width,
-            viewport_height,
-            
-            ip_address,
-            country_code_login,
-            login_loc_trace_id
-        ) 
-        VALUES (
-            cur_user_id,
-            
-            in_viewport_width,
-            in_viewport_height,
-            
-            in_ip_address,
-            cur_user_signup_country_id,
-            cur_user_login_loc_trace_id     
-        );
-
-
-        /* Delete unverified user*/
-        DELETE FROM user_unverified 
-        WHERE id = in_unverified_user_id;
+        ELSE
+            SET cur_user_id = in_user_id;
+        
+        END IF;
+        
         
     END IF;
 ELSE

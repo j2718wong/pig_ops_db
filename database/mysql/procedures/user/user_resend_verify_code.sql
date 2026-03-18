@@ -2,7 +2,8 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS user_resend_verify_code $$
 CREATE PROCEDURE user_resend_verify_code(
-    in_unverified_user_id   INT
+    in_unverified_user_id   INT, /* Only one of this is not NULL and > 0. */
+    in_user_id              INT /* Only one of this is not NULL and > 0. */
     
 )
 
@@ -21,8 +22,6 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 DECLARE NUM_MINUTES_CODE_EXPIRY                 INT             DEFAULT 5;
 
 
-
-DECLARE RES_NUM_CANNOT_FIND_VERIFICATION        INT             DEFAULT 1;
 
 
 
@@ -52,16 +51,25 @@ DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
 
 
 
+IF in_unverified_user_id > 0 THEN 
+    SELECT  email
+     
+    INTO    cur_user_email
+    
+    FROM    user_unverified 
+      
+    WHERE   id = in_unverified_user_id;
 
-SELECT  user_verify_id,
-        email
- 
-INTO    
-        cur_user_verify_id,
-        cur_user_email
-FROM    user_unverified 
-  
-WHERE   id = in_unverified_user_id;
+ELSE
+    SELECT  email
+     
+    INTO    cur_user_email
+    
+    FROM    user
+      
+    WHERE   id = in_user_id;
+
+END IF;
 
 
 SET res_num      = 0;
@@ -71,13 +79,6 @@ SET res_code     = 'SUCCESS';
 
 
 process_user : BEGIN
-
-IF cur_user_verify_id = 0 THEN 
-    SET res_num     = RES_NUM_CANNOT_FIND_VERIFICATION;
-    SET res_code    = "RES_NUM_CANNOT_FIND_VERIFICATION";
-    
-    LEAVE process_user;
-END IF;
 
 
 /* Create verification code to be sent to user email.*/
@@ -99,9 +100,17 @@ INSERT INTO user_verify(
 SELECT LAST_INSERT_ID() INTO cur_user_verify_id;
     
     
-UPDATE user_unverified SET 
-    user_verify_id = cur_user_verify_id
-WHERE id = in_unverified_user_id;
+IF in_unverified_user_id > 0 THEN 
+    UPDATE user_unverified SET 
+        user_verify_id = cur_user_verify_id
+    WHERE id = in_unverified_user_id;
+    
+ELSE
+    UPDATE user SET 
+        last_user_verify_id = cur_user_verify_id
+    WHERE id = in_user_id;
+
+END IF;
 
 
 SELECT  ts_expiry,
