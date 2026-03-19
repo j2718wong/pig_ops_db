@@ -6,6 +6,7 @@ CREATE PROCEDURE user_register_or_login(
     in_social_media_user_id VARCHAR(120),/* This should be NULL if in_login_social_media_id is 0 or NULL*/
 
     in_acc_access_code_id   INT,
+    in_acc_access_code      VARCHAR(10),
 
 
     in_name                 VARCHAR(80),
@@ -22,7 +23,19 @@ CREATE PROCEDURE user_register_or_login(
     
     in_viewport_width       INT,
     in_viewport_height      INT,
-    in_ip_address           VARCHAR(24)            
+    in_ip_address           VARCHAR(24),
+    
+    in_is_mobile            INT,
+    in_is_webview           INT,
+    
+    in_browser              VARCHAR(50),
+    in_browser_version      VARCHAR(20),
+    in_webview_platform     VARCHAR(30),
+    in_os                   VARCHAR(50),
+    in_os_version           VARCHAR(20),
+    in_device               VARCHAR(50),
+    in_device_type          VARCHAR(20)
+            
 )  
 
 BEGIN
@@ -81,8 +94,8 @@ purposes.
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_INVALID_ACCESS_CODE            INT             DEFAULT 1;
-
+DECLARE RES_NUM_INVALID_ACCESS_CODE             INT             DEFAULT 1;
+DECLARE RES_NUM_INVALID_USER_NAME               INT             DEFAULT 2;          
 
 DECLARE NUM_MINUTES_CODE_EXPIRY                 INT             DEFAULT 5;
 
@@ -222,32 +235,35 @@ END IF;
 /* Only verified emails are inserted into user table; not verified are assumed garbage.*/
 
 
-/* Check first if email is in the user_unverified*/
-SELECT  id
-INTO    cur_user_unverified_id
-FROM    user_unverified
-WHERE   email        = in_email
-LIMIT   1;
+IF in_email IS NOT NULL THEN 
+    /* Check first if email is in the user_unverified*/
+    SELECT  id
+    INTO    cur_user_unverified_id
+    FROM    user_unverified
+    WHERE   email        = in_email
+    LIMIT   1;
 
 
-/* Check email if already in user table.*/
-SELECT  id,
-        account_id,
-        flag
+    /* Check email if already in user table.*/
+    SELECT  id,
+            account_id,
+            flag
 
-INTO    cur_user_id,
-        cur_user_account_id,
-        cur_user_flag
+    INTO    cur_user_id,
+            cur_user_account_id,
+            cur_user_flag
 
-FROM    user
-WHERE   email        = in_email
-LIMIT   1;
+    FROM    user
+    WHERE   email        = in_email
+    LIMIT   1;
+
+END IF;
 
 
 
 process_user : BEGIN
 
-
+/* Check if user is login using access_code. */
 IF in_acc_access_code_id IS NOT NULL THEN 
     SELECT  account_id,
             user_group_id,
@@ -281,53 +297,116 @@ IF in_acc_access_code_id IS NOT NULL THEN
         FROM user
         WHERE id =  cur_access_code_used_by_user_id;
         
+        
         /* Staff relogin*/
         IF  LOWER(in_name_last) = cur_user_name_last AND
             LOWER(in_name_first) = cur_user_name_first THEN 
             
             
-            /** Will also create a user_login entry and user should be automatically logged in*/
-            INSERT INTO user_login(
-                user_id,
-                
-                viewport_width,
-                viewport_height,
-                
-                ip_address,
-                country_code_login,
-                login_loc_trace_id
-            ) 
-            VALUES (
-                cur_access_code_used_by_user_id,
-                
-                in_viewport_width,
-                in_viewport_height,
-                
-                in_ip_address,
-                in_login_country_code,
-                cur_login_loc_trace_id     
-            );
-            SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+            /** Will also create a user_login entry and user should be automatically logged in.
             
-            UPDATE user SET 
-                last_user_login_id      = cur_user_login_id
-            WHERE id = cur_access_code_used_by_user_id;
-
+            There are some noise in this data as it contains
+            
+            - screen dimension,
+            - ip_trace location
+            - browser and device details
+            
+            if no screen dimension OR no country 
+                it is just noise, dont save.
+            
+            */
+            
+            IF  in_login_country_code   IS NOT NULL  AND
+                in_viewport_width       IS NOT NULL  AND 
+                in_viewport_height      IS NOT NULL THEN  
+                
+            
+                INSERT INTO user_login(
+                    user_id,
+                    
+                    viewport_width,
+                    viewport_height,
+                    
+                    ip_address,
+                    country_code_login,
+                    login_loc_trace_id,
+                    
+                    
+                    is_mobile,       
+                    is_webview,      
+                    
+                    browser,         
+                    browser_version, 
+                    webview_platform,
+                    os,              
+                    os_version,      
+                    device,          
+                    device_type
+                ) 
+                VALUES (
+                    cur_access_code_used_by_user_id,
+                    
+                    in_viewport_width,
+                    in_viewport_height,
+                    
+                    in_ip_address,
+                    in_login_country_code,
+                    cur_login_loc_trace_id,
+                    
+                    in_is_mobile,       
+                    in_is_webview,      
+                    
+                    in_browser,         
+                    in_browser_version, 
+                    in_webview_platform,
+                    in_os,              
+                    in_os_version,      
+                    in_device,          
+                    in_device_type     
+                );
+                SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+                
+                UPDATE user SET 
+                    last_user_login_id      = cur_user_login_id
+                WHERE id = cur_access_code_used_by_user_id;
+            
+            END IF;
 
 
             SET cur_user_id =  cur_access_code_used_by_user_id;
+            
+            
+            /* Update user login count*/
+            UPDATE user SET 
+                login_count = login_count + 1
+            WHERE 
+                id = cur_user_id;
+            
             
             /* The user now has the same account_id as access_code.*/
             SET cur_user_account_id     = cur_access_code_account_id;
             
             
             LEAVE process_user;
+        
+        ELSE
+            /* Staff is using an access code but mismatch name.
+            This should return as invalid.
+            */
+            
+            SET res_num     = RES_NUM_INVALID_USER_NAME;
+            SET res_code    = "RES_NUM_INVALID_USER_NAME";
+        
+            LEAVE process_user;
+                
             
         END IF;
 
     END IF;
     
     
+    
+    /** Staff first time login */
     
     /* Get default farm of the account*/
     SELECT  default_farm_id
@@ -344,15 +423,11 @@ IF in_acc_access_code_id IS NOT NULL THEN
             group_num = cur_access_code_user_group_id
     LIMIT   1;
     
-    
 
-    
-    
     
     SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE;
 
-
-    /* User will have an automatic account, from the access_code_account.*/
+    /* User will have an automatic account, from the acount_access_code.*/
     INSERT INTO user(
         name_last,
         name_first,
@@ -365,9 +440,7 @@ IF in_acc_access_code_id IS NOT NULL THEN
         flag,
         login_count,
         
-        signup_country_id,
-        signup_social_media_id,
-        social_media_user_id
+        signup_country_id
         
     ) VALUES (
         in_name_last,
@@ -381,9 +454,7 @@ IF in_acc_access_code_id IS NOT NULL THEN
         cur_user_flag,
         1,
         
-        cur_country_id,
-        in_login_social_media_id,
-        in_social_media_user_id
+        cur_country_id
     );
 
     SELECT LAST_INSERT_ID() INTO cur_user_id;
@@ -395,33 +466,64 @@ IF in_acc_access_code_id IS NOT NULL THEN
 
 
 
-    /** Will also create a user_login entry and user should be automatically logged in*/
-    INSERT INTO user_login(
-        user_id,
-        
-        viewport_width,
-        viewport_height,
-        
-        ip_address,
-        country_code_login,
-        login_loc_trace_id
-    ) 
-    VALUES (
-        cur_user_id,
-        
-        in_viewport_width,
-        in_viewport_height,
-        
-        in_ip_address,
-        in_login_country_code,
-        cur_login_loc_trace_id     
-    );
-    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+    IF  in_login_country_code   IS NOT NULL  AND
+        in_viewport_width       IS NOT NULL  AND 
+        in_viewport_height      IS NOT NULL THEN  
     
-    UPDATE user SET 
-        last_user_login_id      = cur_user_login_id
-    WHERE id = cur_user_id;
 
+        /** Will also create a user_login entry and user should be automatically logged in*/
+        INSERT INTO user_login(
+            user_id,
+            
+            viewport_width,
+            viewport_height,
+            
+            ip_address,
+            country_code_login,
+            login_loc_trace_id,
+                    
+                    
+            is_mobile,       
+            is_webview,      
+            
+            browser,         
+            browser_version, 
+            webview_platform,
+            os,              
+            os_version,      
+            device,          
+            device_type
+        ) 
+        VALUES (
+            cur_user_id,
+            
+            in_viewport_width,
+            in_viewport_height,
+            
+            in_ip_address,
+            in_login_country_code,
+            cur_login_loc_trace_id,
+                    
+            in_is_mobile,       
+            in_is_webview,      
+            
+            in_browser,         
+            in_browser_version, 
+            in_webview_platform,
+            in_os,              
+            in_os_version,      
+            in_device,          
+            in_device_type     
+        );
+        SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+        
+        UPDATE user SET 
+            last_user_login_id      = cur_user_login_id
+        WHERE id = cur_user_id;
+    
+    
+    END IF;
+    
     
     /* Assign user to account default farm.*/
     INSERT INTO user_pig_farm(
@@ -435,13 +537,15 @@ IF in_acc_access_code_id IS NOT NULL THEN
     );
     
     
+    /* Update account_access_code*/
     UPDATE account_access_code SET 
+        access_code     = in_acc_access_code,
         used_by_user_id = cur_user_id
     WHERE id = in_acc_access_code_id;
     
     
     
-    /* The user now has the same account_id as access_code.*/
+    /* The user now has the same account_id as the access_code.*/
     SET cur_user_account_id     = cur_access_code_account_id;
     
     
@@ -535,37 +639,73 @@ IF in_login_social_media_id IS NULL THEN
     END IF;
     
     
+    IF  in_login_country_code   IS NOT NULL  AND
+        in_viewport_width       IS NOT NULL  AND 
+        in_viewport_height      IS NOT NULL THEN  
     
-    /* This is a manual email login; The cur_user_id > 0; this means the user 
-    need to input authentication code. Generate Verify code.  
-    */
-    /** Will also create a user_login entry and user should be automatically logged in*/
-    INSERT INTO user_login(
-        user_id,
-        viewport_width,
-        viewport_height,
+    
+        /* This is a manual email login; The cur_user_id > 0; this means the user 
+        need to input authentication code. Generate Verify code.  
+        */
+        /** Will also create a user_login entry and user should be automatically logged in*/
+        INSERT INTO user_login(
+            user_id,
+            viewport_width,
+            viewport_height,
+            
+            ip_address,
+            country_code_login,
+            login_loc_trace_id,
+                        
+                        
+            is_mobile,       
+            is_webview,      
+            
+            browser,         
+            browser_version, 
+            webview_platform,
+            os,              
+            os_version,      
+            device,          
+            device_type
+        ) 
+        VALUES (
+            cur_user_id,        
+            in_viewport_width,
+            in_viewport_height,
+            
+            in_ip_address,
+            in_login_country_code,
+            cur_login_loc_trace_id,
+                        
+            in_is_mobile,       
+            in_is_webview,      
+            
+            in_browser,         
+            in_browser_version, 
+            in_webview_platform,
+            in_os,              
+            in_os_version,      
+            in_device,          
+            in_device_type          
+        );
+        SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
         
-        ip_address,
-        country_code_login,
-        login_loc_trace_id
-    ) 
-    VALUES (
-        cur_user_id,        
-        in_viewport_width,
-        in_viewport_height,
         
-        in_ip_address,
-        in_login_country_code,
-        cur_login_loc_trace_id     
-    );
-    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+        
+        UPDATE user SET 
+            last_user_verify_id     = cur_user_verify_id,
+            last_user_login_id      = cur_user_login_id,
+            login_count             = login_count +1
+        WHERE id = cur_user_id;
     
+    ELSE
     
+        UPDATE user SET 
+            last_user_verify_id     = cur_user_verify_id
+        WHERE id = cur_user_id;
     
-    UPDATE user SET 
-        last_user_verify_id     = cur_user_verify_id,
-        last_user_login_id      = cur_user_login_id
-    WHERE id = cur_user_id;
+    END IF;
     
     
     SELECT  ts_expiry,
@@ -631,14 +771,14 @@ provide email.
 /** Google does not provide this, only email that creates uniqueness.*/
 
 IF in_social_media_user_id IS NOT NULL THEN 
-    SELECT  id
-    INTO    cur_user_using_social_media_id
-    FROM    user
-    WHERE   signup_social_media_id = in_login_social_media_id AND
-            social_media_user_id = in_social_media_user_id
-    LIMIT 1;
-    
-
+    IF in_social_media_user_id IS NOT NULL THEN 
+        SELECT  id
+        INTO    cur_user_using_social_media_id
+        FROM    user
+        WHERE   signup_social_media_id = in_login_social_media_id AND
+                social_media_user_id = in_social_media_user_id
+        LIMIT 1;
+    END IF;
 END IF;
 
 
@@ -692,33 +832,7 @@ IF cur_user_id = 0 AND cur_user_using_social_media_id = 0 THEN
     WHERE id = cur_country_id;
 
 
-
-    /** Will also create a user_login entry and user should be automatically logged in*/
-    INSERT INTO user_login(
-        user_id,
-        
-        viewport_width,
-        viewport_height,
-        
-        ip_address,
-        country_code_login,
-        login_loc_trace_id
-    ) 
-    VALUES (
-        cur_user_id,
-        
-        in_viewport_width,
-        in_viewport_height,
-        
-        in_ip_address,
-        in_login_country_code,
-        cur_login_loc_trace_id     
-    );
-    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
-    
-    UPDATE user SET 
-        last_user_login_id      = cur_user_login_id
-    WHERE id = cur_user_id;
+    SET use_this_user_id = cur_user_id;
     
 
 ELSE
@@ -731,25 +845,44 @@ ELSE
     END IF;
     
     
+    /* Do people can change their names in social media?*/
     UPDATE user SET 
         name                    = in_name,
     
         name_last               = in_name_last,
-        name_first              = in_name_first,
-        
-        login_count             = login_count + 1
+        name_first              = in_name_first
     WHERE id = use_this_user_id;
-    
-    
+
+
+END IF;
+
+
+IF  in_login_country_code       IS NOT NULL  AND
+        in_viewport_width       IS NOT NULL  AND 
+        in_viewport_height      IS NOT NULL THEN 
+        
     /** Will also create a user_login entry and user should be automatically logged in*/
     INSERT INTO user_login(
         user_id,
+        
         viewport_width,
         viewport_height,
         
         ip_address,
         country_code_login,
-        login_loc_trace_id
+        login_loc_trace_id,
+                    
+                    
+        is_mobile,       
+        is_webview,      
+        
+        browser,         
+        browser_version, 
+        webview_platform,
+        os,              
+        os_version,      
+        device,          
+        device_type
     ) 
     VALUES (
         use_this_user_id,
@@ -759,15 +892,29 @@ ELSE
         
         in_ip_address,
         in_login_country_code,
-        cur_login_loc_trace_id     
+        cur_login_loc_trace_id,
+                    
+        in_is_mobile,       
+        in_is_webview,      
+        
+        in_browser,         
+        in_browser_version, 
+        in_webview_platform,
+        in_os,              
+        in_os_version,      
+        in_device,          
+        in_device_type       
     );
     SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
     
     UPDATE user SET 
+        login_count             = login_count +1,
         last_user_login_id      = cur_user_login_id
-    WHERE id = use_this_user_id;
+    WHERE id = cur_user_id;
 
 END IF;
+    
+
 
 
 END process_user;

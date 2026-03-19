@@ -556,3 +556,36 @@ account_id, email FROm user;
 mysqldump -u root -p   pig_operations > pig_operations.sql
 mysqldump -u root -p --routines pig_operations > pig_operations_routines.sql
 
+
+SELECT id, 
+user_id, 
+date_login,
+viewport_width as vp_width, 
+viewport_height as vp_height, 
+country_code_login AS country, 
+login_loc_trace_id as trace_id
+
+ 
+FROm user_login
+ORDER by id DESC limit 5;
+; 
+
+
+SELECT id, 
+user_id, 
+date_login,
+is_mobile,       
+is_webview,      
+
+browser,         
+browser_version, 
+webview_platform,
+os,              
+os_version,      
+device,          
+device_type
+
+FROm user_login
+ORDER by id DESC limit 5;
+; 
+
