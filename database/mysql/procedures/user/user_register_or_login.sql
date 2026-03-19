@@ -96,6 +96,9 @@ DECLARE FLAG_BIT_USER_IS_DELETED                INT             DEFAULT 8;
 DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 
+DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT NULL;
+DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT NULL;
+
 
 DECLARE cur_access_code_account_id              INT             DEFAULT 0;
 DECLARE cur_access_code_user_group_id           INT             DEFAULT 0;
@@ -258,12 +261,72 @@ IF in_acc_access_code_id IS NOT NULL THEN
     WHERE id =  in_acc_access_code_id;
     
     
+    /** TODO more checks*/
+    
     IF cur_access_code_account_id = 0 THEN 
         SET res_num     = RES_NUM_INVALID_ACCESS_CODE;
         SET res_code    = "RES_NUM_INVALID_ACCESS_CODE";
     
         LEAVE process_user;
     END IF;
+    
+    
+    IF cur_access_code_used_by_user_id > 0 THEN 
+        SELECT  LOWER(name_last),
+                LOWER(name_first)
+                
+        INTO    cur_user_name_last,
+                cur_user_name_first
+        
+        FROM user
+        WHERE id =  cur_access_code_used_by_user_id;
+        
+        /* Staff relogin*/
+        IF  LOWER(in_name_last) = cur_user_name_last AND
+            LOWER(in_name_first) = cur_user_name_first THEN 
+            
+            
+            /** Will also create a user_login entry and user should be automatically logged in*/
+            INSERT INTO user_login(
+                user_id,
+                
+                viewport_width,
+                viewport_height,
+                
+                ip_address,
+                country_code_login,
+                login_loc_trace_id
+            ) 
+            VALUES (
+                cur_access_code_used_by_user_id,
+                
+                in_viewport_width,
+                in_viewport_height,
+                
+                in_ip_address,
+                in_login_country_code,
+                cur_login_loc_trace_id     
+            );
+            SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+            
+            UPDATE user SET 
+                last_user_login_id      = cur_user_login_id
+            WHERE id = cur_access_code_used_by_user_id;
+
+
+
+            SET cur_user_id =  cur_access_code_used_by_user_id;
+            
+            /* The user now has the same account_id as access_code.*/
+            SET cur_user_account_id     = cur_access_code_account_id;
+            
+            
+            LEAVE process_user;
+            
+        END IF;
+
+    END IF;
+    
     
     
     /* Get default farm of the account*/
@@ -282,8 +345,7 @@ IF in_acc_access_code_id IS NOT NULL THEN
     LIMIT   1;
     
     
-    /** Still DELIBERATION FOR one time access or waht*/
-    
+
     
     
     
