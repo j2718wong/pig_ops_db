@@ -2,14 +2,13 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS user_request_join_account $$
 CREATE PROCEDURE user_request_join_account(
-    in_account_id               INT,
+    in_access_code_id           INT,
     in_requesting_user_id       INT
 )
 
 BEGIN
 
 /** 
- * Will add user_request; this is initiated by the user.
  * @author Jack Wong
  * @since August 11, 2025
  *
@@ -23,7 +22,7 @@ DECLARE RES_NUM_USER_NOT_ACCOUNT_ADMIN          INT             DEFAULT 3;
 DECLARE RES_NUM_USER_NO_ACCOUNT_SET             INT             DEFAULT 4;
 
 DECLARE RES_NUM_USER_ALREADY_HAS_ACCOUNT        INT             DEFAULT 8;
-
+DECLARE RES_NUM_INVALID_ACCESS_CODE             INT             DEFAULT 9; 
 
 DECLARE RES_NUM_ACCOUNT_DISABLED                INT             DEFAULT 11;
 DECLARE RES_NUM_ACCOUNT_STATUS_TRIAL_EXPIRED    INT             DEFAULT 12;
@@ -62,16 +61,15 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_flag                           INT             DEFAULT 0;
 DECLARE cur_user_email                          VARCHAR(100);
 
+DECLARE cur_access_code_account_id              INT             DEFAULT 0;
+DECLARE cur_access_code_user_group_id           INT             DEFAULT 0;
+DECLARE cur_access_code_used_by_user_id         INT             DEFAULT 0;
+
 
 DECLARE cur_account_flag                        INT             DEFAULT 0;
 DECLARE cur_account_status_id                   INT             DEFAULT 0;
-DECLARE cur_account_name                        VARCHAR(100)    DEFAULT NULL; 
-DECLARE cur_account_date_trial_start            DATE;
-DECLARE cur_account_date_trial_end              DATE;
-
-DECLARE cur_user_req_id                         INT             DEFAULT 0;
-DECLARE cur_user_req_status_id                  INT             DEFAULT 0;
-
+DECLARE cur_account_default_farm_id             INT             DEFAULT 0;
+ 
 
 
 
@@ -107,12 +105,6 @@ IF cur_user_flag & FLAG_BIT_USER_IS_ACTIVE = 0 THEN
     LEAVE process_user;
 END IF;
 
-IF cur_user_flag & FLAG_BIT_USER_EMAIL_VERIFIED = 0 THEN 
-    SET res_num     = RES_NUM_USER_NOT_EMAIL_VERIFIED;
-    SET res_code    = "RES_NUM_USER_NOT_EMAIL_VERIFIED";
-
-    LEAVE process_user;    
-END IF;
 
 
 IF cur_user_account_id > 0 THEN 
@@ -124,18 +116,42 @@ END IF;
 
 
 
+SELECT  account_id,
+        user_group_id,
+        used_by_user_id
+        
+INTO    cur_access_code_account_id,
+        cur_access_code_user_group_id,
+        cur_access_code_used_by_user_id
+
+FROM    account_access_code
+
+WHERE id = in_access_code_id;
+
+
+IF cur_access_code_used_by_user_id > 0 THEN 
+    SET res_num     = RES_NUM_INVALID_ACCESS_CODE;
+    SET res_code    = "RES_NUM_INVALID_ACCESS_CODE";
+    SET res_desc    = "Already Used";
+    
+    LEAVE process_user;
+END IF;
+
+    
+
 /* Check account*/
 SELECT 
     flag,
     status_id,
+    default_farm_id
     name
 INTO
     cur_account_flag,
     cur_account_status_id,
-    cur_account_name
+    cur_account_default_farm_id
     
 FROM account
-WHERE id = in_account_id;
+WHERE id = cur_access_code_account_id;
 
 
 IF cur_account_flag & FLAG_BIT_ACCOUNT_ENABLE = 0 THEN 
@@ -152,52 +168,42 @@ IF cur_account_flag & FLAG_BIT_ACCOUNT_ENABLE = 0 THEN
 END IF;
 
 
-/* Check duplicate. */
-SELECT  id 
-INTO    cur_user_req_id
-FROM    user_request
-WHERE   account_id = in_account_id and requesting_user_id = in_requesting_user_id
-LIMIT   1;
 
 
-IF cur_user_req_id > 0 THEN
-    SET res_num     = RES_NUM_DUPLICATE_ENTRY;
-    SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
-    
-    LEAVE process_user;
-END IF;
-
-
-INSERT INTO user_request(
-    account_id,
-    requesting_user_id,
-    status_id
-) VALUES (
-    in_account_id,
-    in_requesting_user_id,
-    USER_REQUEST_STATUS_ID_PENDING
-);
-
-SELECT LAST_INSERT_ID() INTO cur_user_req_id;
-
-
+/* Update User*/
 UPDATE user SET 
-    user_req_join_acc_id = cur_user_req_id
+    account_id              = cur_access_code_account_id,
+    user_group_id           = cur_access_code_user_group_id,
+    account_access_code_id  = in_access_code_id
 WHERE 
     id = in_requesting_user_id;
+
+INSERT INTO user_pig_farm(
+    pig_farm_id,
+    user_id,
+    added_by_user_id
+) VALUES(
+    cur_account_default_farm_id,
+    in_requesting_user_id,
+    in_requesting_user_id
+);
+
+
+
+/* Update account_access_code*/
+UPDATE account_access_code SET
+    used_by_user_id = in_requesting_user_id
+WHERE id = in_access_code_id;
+
 
 
 END process_user;
 
 
-SELECT
-        status_id
-INTO 
-        cur_user_req_status_id
-
-FROM    user_request
-WHERE   id = cur_user_req_id;
-
+SELECT  account_id
+INTO    cur_user_account_id
+FROM    user
+WHERE   id =  in_requesting_user_id;
 
 
 SELECT 
@@ -205,10 +211,8 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_user_req_id                     AS acc_req_id,
-    cur_user_req_status_id              AS acc_req_status_id,
-    
-    cur_account_name                    AS acc_name;
+    cur_user_account_id                 AS user_account_id,
+    cur_user_email                      AS user_email;
 
 
 END $$

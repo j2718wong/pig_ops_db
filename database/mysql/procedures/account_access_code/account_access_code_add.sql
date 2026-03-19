@@ -4,7 +4,7 @@ DROP PROCEDURE IF EXISTS account_access_code_add $$
 CREATE PROCEDURE account_access_code_add(
     in_user_id              INT,
     
-    in_user_group_id        INT)  
+    in_user_group_num       INT)  
 
 BEGIN
 
@@ -33,8 +33,9 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
+DECLARE cur_account_user_group_id               INT             DEFAULT 0;
 
-DECLARE cur_account_access_code_id             INT             DEFAULT 0;
+DECLARE cur_account_access_code_id              INT             DEFAULT 0;
 
 
 
@@ -69,6 +70,11 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+SELECT  id
+INTO    cur_account_user_group_id
+FROM    user_group
+WHERE   account_id = cur_user_account_id AND  group_num = in_user_group_num;
+
 
 INSERT INTO account_access_code(
     account_id,
@@ -77,7 +83,7 @@ INSERT INTO account_access_code(
 ) VALUES (
     cur_user_account_id,
     in_user_id,
-    in_user_group_id
+    cur_account_user_group_id
 );
 
 SELECT LAST_INSERT_ID() INTO cur_account_access_code_id;
@@ -96,7 +102,9 @@ SELECT
     res_code                            AS result_code,
     res_desc                            AS result_desc,
     
-    cur_account_access_code_id         AS access_code_id;
+    cur_account_access_code_id          AS access_code_id,
+    cur_user_account_id                 AS user_account_id, 
+    cur_user_group_id                   AS user_group_id;
 
 END $$
 

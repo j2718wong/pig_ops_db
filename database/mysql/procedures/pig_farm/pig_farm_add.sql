@@ -130,21 +130,6 @@ IF in_new_country_code IS NOT NULL THEN
 END IF;
 
 
-/* Count the farms already in the account*/
-SELECT  COUNT(*)
-INTO    cur_count
-FROM    pig_farm
-WHERE   account_id =  cur_user_account_id;
-
-
-/* Update the account country based on the first pig_farm country. */
-IF cur_count = 0 THEN 
-    UPDATE account SET
-        country_id = in_country_id
-    WHERE id = cur_user_account_id;
-
-END IF;
-
 
 INSERT INTO pig_farm(
     account_id,
@@ -187,6 +172,24 @@ INSERT INTO user_pig_farm(
     in_user_id,
     in_user_id
 );
+
+
+
+/* Count the farms already in the account*/
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    pig_farm
+WHERE   account_id =  cur_user_account_id;
+
+
+/* Update the account country based on the first pig_farm country. */
+IF cur_count = 1 THEN 
+    UPDATE account SET
+        country_id      = in_country_id,
+        default_farm_id = cur_pig_farm_id
+    WHERE id = cur_user_account_id;
+
+END IF;
 
 
 END process_user;

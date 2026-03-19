@@ -81,7 +81,7 @@ purposes.
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
-DECLARE RES_NUM_INVALID_ACCESS_TOKEN            INT             DEFAULT 1;
+DECLARE RES_NUM_INVALID_ACCESS_CODE            INT             DEFAULT 1;
 
 
 DECLARE NUM_MINUTES_CODE_EXPIRY                 INT             DEFAULT 5;
@@ -97,9 +97,11 @@ DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 
 
-DECLARE cur_access_code_account_id             INT             DEFAULT 0;
-DECLARE cur_access_code_user_group_id          INT             DEFAULT 0;
-DECLARE cur_access_code_used_by_user_id        INT             DEFAULT 0;
+DECLARE cur_access_code_account_id              INT             DEFAULT 0;
+DECLARE cur_access_code_user_group_id           INT             DEFAULT 0;
+DECLARE cur_access_code_used_by_user_id         INT             DEFAULT 0;
+
+DECLARE cur_account_default_farm_id             INT             DEFAULT 0;
 
 
 DECLARE cur_user_unverified_id                  INT             DEFAULT 0;
@@ -253,15 +255,23 @@ IF in_acc_access_code_id IS NOT NULL THEN
             cur_access_code_used_by_user_id
     
     FROM account_access_code
-    WHERE id =  in_account_acc_code_id;
+    WHERE id =  in_acc_access_code_id;
     
     
     IF cur_access_code_account_id = 0 THEN 
-        SET res_num     = RES_NUM_INVALID_ACCESS_TOKEN;
-        SET res_code    = "RES_NUM_INVALID_ACCESS_TOKEN";
+        SET res_num     = RES_NUM_INVALID_ACCESS_CODE;
+        SET res_code    = "RES_NUM_INVALID_ACCESS_CODE";
     
         LEAVE process_user;
     END IF;
+    
+    
+    /* Get default farm of the account*/
+    SELECT  default_farm_id
+    INTO    cur_account_default_farm_id
+    FROM    account
+    WHERE   id = cur_access_code_account_id;
+    
     
     
     SELECT  id
@@ -272,7 +282,7 @@ IF in_acc_access_code_id IS NOT NULL THEN
     LIMIT   1;
     
     
-    /** DELIBERATION FOR one time access or waht*/
+    /** Still DELIBERATION FOR one time access or waht*/
     
     
     
@@ -280,7 +290,7 @@ IF in_acc_access_code_id IS NOT NULL THEN
     SET cur_user_flag = FLAG_BIT_USER_IS_ACTIVE;
 
 
-    /* Use will have an automatic account, from the codeing account.*/
+    /* User will have an automatic account, from the access_code_account.*/
     INSERT INTO user(
         name_last,
         name_first,
@@ -351,6 +361,25 @@ IF in_acc_access_code_id IS NOT NULL THEN
     WHERE id = cur_user_id;
 
     
+    /* Assign user to account default farm.*/
+    INSERT INTO user_pig_farm(
+        pig_farm_id,
+        user_id,
+        added_by_user_id
+    ) VALUES(
+        cur_account_default_farm_id,
+        cur_user_id,
+        cur_user_id
+    );
+    
+    
+    UPDATE account_access_code SET 
+        used_by_user_id = cur_user_id
+    WHERE id = in_acc_access_code_id;
+    
+    
+    
+    /* The user now has the same account_id as access_code.*/
     SET cur_user_account_id     = cur_access_code_account_id;
     
     
