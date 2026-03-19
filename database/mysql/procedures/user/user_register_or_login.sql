@@ -906,14 +906,35 @@ IF  in_login_country_code       IS NOT NULL  AND
         in_device_type       
     );
     SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
+
+ELSE
+    /*Minimum info*/
+
+
+    INSERT INTO user_login(
+        user_id,
+        viewport_width,
+        viewport_height,
+        
+        ip_address
+    ) VALUES (
+        use_this_user_id,
+        
+        in_viewport_width,
+        in_viewport_height,
+        
+        in_ip_address
+    ); 
+    SELECT LAST_INSERT_ID() INTO cur_user_login_id; 
     
-    UPDATE user SET 
-        login_count             = login_count +1,
-        last_user_login_id      = cur_user_login_id
-    WHERE id = cur_user_id;
 
 END IF;
-    
+
+
+UPDATE user SET 
+    login_count             = login_count +1,
+    last_user_login_id      = cur_user_login_id
+WHERE id = cur_user_id;
 
 
 
