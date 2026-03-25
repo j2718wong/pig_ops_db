@@ -272,6 +272,7 @@ IF in_pig_farm_id > 0 THEN
     INTO    cur_feed_balance_id
     FROM    feed_balance
     WHERE   pig_farm_id         = in_pig_farm_id    AND
+            pig_prod_id IS NULL  AND
             date_balance        = in_date_balance
     LIMIT   1;
 END IF;    

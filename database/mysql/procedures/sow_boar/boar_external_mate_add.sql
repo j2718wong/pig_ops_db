@@ -10,6 +10,9 @@ CREATE PROCEDURE boar_external_mate_add(
     in_customer_sow_name    VARCHAR(50),
     
     in_date_mate            VARCHAR(10),
+    in_date_expected_birth  VARCHAR(10),
+    in_date_expected_payment VARCHAR(10),
+    
     in_notes                VARCHAR(160)
 )  
 
@@ -127,6 +130,8 @@ INSERT INTO sow_boar_mate(
     customer_sow_name,
     
     date_mate,
+    date_expected_birth,
+    date_expected_payment,
     
     added_by_user_id
 ) VALUES (
@@ -135,6 +140,8 @@ INSERT INTO sow_boar_mate(
     in_customer_sow_name,
     
     in_date_mate,
+    in_date_expected_birth,
+    in_date_expected_payment,
     
     in_user_id
 );

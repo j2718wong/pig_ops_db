@@ -1,0 +1,543 @@
+﻿DELIMITER $$
+
+DROP PROCEDURE IF EXISTS basic_user_check $$
+CREATE PROCEDURE basic_user_check(
+    in_user_id                  INT,
+    in_user_must_have_account   INT,
+    in_compare_to_account_id    INT,
+    
+    in_business_obj_id_to_access INT, 
+    in_business_obj_operation   INT, /* This must be a FLAG_BIT_OPERATION value*/
+    
+    OUT out_user_account_id     INT,
+    OUT out_user_group_id       INT,
+    
+    OUT res_num                 INT,
+    OUT res_code                VARCHAR(80),
+    OUT res_desc                VARCHAR(180)
+)  
+
+BEGIN
+
+/** 
+ * Will perform user flag checks, account checks and user group checks.
+ * @author Jack Wong (j2718wong@gmail.com) 
+ * @since August 18, 2025
+ *
+ */
+
+DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
+
+DECLARE RES_NUM_USER_IS_INACTIVE                INT             DEFAULT 1;
+DECLARE RES_NUM_USER_NOT_EMAIL_VERIFIED         INT             DEFAULT 2;
+DECLARE RES_NUM_USER_NOT_ACCOUNT_ADMIN          INT             DEFAULT 3;
+DECLARE RES_NUM_USER_NO_ACCOUNT_SET             INT             DEFAULT 4;
+DECLARE RES_NUM_USER_NO_USER_GROUP_SET          INT             DEFAULT 5;
+
+
+DECLARE RES_NUM_ACCOUNT_DISABLED                INT             DEFAULT 6;
+DECLARE RES_NUM_ACCOUNT_STATUS_TRIAL_EXPIRED    INT             DEFAULT 7;
+DECLARE RES_NUM_ACCOUNT_MISMATCH                INT             DEFAULT 8;
+DECLARE RES_NUM_ACCOUNT_STATUS_UNPAID_BILL      INT             DEFAULT 9;
+
+
+DECLARE RES_NUM_USER_GROUP_HAS_NO_ACCESS        INT             DEFAULT 12;
+DECLARE RES_NUM_USER_GROUP_NO_ADD_PRIVILEGE     INT             DEFAULT 13;
+DECLARE RES_NUM_USER_GROUP_NO_UPDATE_PRIVILEGE  INT             DEFAULT 14;
+DECLARE RES_NUM_USER_GROUP_NO_DELETE_PRIVILEGE  INT             DEFAULT 15;
+
+/* user.flag bits*/
+DECLARE FLAG_BIT_USER_IS_ACTIVE                 INT             DEFAULT 1;
+DECLARE FLAG_BIT_USER_EMAIL_VERIFIED            INT             DEFAULT 2;
+DECLARE FLAG_BIT_USER_MOBILE_NUM_VERIFIED       INT             DEFAULT 4;
+DECLARE FLAG_BIT_USER_IS_DELETED                INT             DEFAULT 8;
+
+DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
+
+
+/* These system bits can be also embedded into user.flag*/
+DECLARE FLAG_BIT_SYSTEM_SUPPORT                 INT             DEFAULT 131072; /* 2^17*/
+DECLARE FLAG_BIT_SYSTEM_MARKETING               INT             DEFAULT 262144; /* 2^18*/
+DECLARE FLAG_BIT_SYSTEM_RESERVE_1               INT             DEFAULT 528288; /* 2^19*/
+DECLARE FLAG_BIT_SYSTEM_ADMIN                   INT             DEFAULT 1048576; /* 2^20*/
+
+/* reserved bits for future use*/
+DECLARE FLAG_BIT_SYSTEM_SUPER_USER              INT             DEFAULT 33554432; /* 2^25*/
+
+
+
+/* account.flag bits*/
+DECLARE FLAG_BIT_ACCOUNT_ENABLE                 INT             DEFAULT 1;
+
+DECLARE ACCOUNT_STATUS_ID_ON_TRIAL              INT             DEFAULT 1;
+DECLARE ACCOUNT_STATUS_ID_TRIAL_EXPIRED         INT             DEFAULT 2;
+DECLARE ACCOUNT_STATUS_ID_UNPAID_BILL           INT             DEFAULT 3;
+
+
+
+/* This is read from a02_business_object table. */
+DECLARE BUSINESS_OBJ_ID_USER                    INT             DEFAULT 1;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT                 INT             DEFAULT 2;
+DECLARE BUSINESS_OBJ_ID_USER_REQUEST            INT             DEFAULT 3;
+DECLARE BUSINESS_OBJ_ID_USER_GROUP              INT             DEFAULT 4;
+
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_TRANSLATION     INT             DEFAULT 5;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_BILLING         INT             DEFAULT 6;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER       INT             DEFAULT 7;
+DECLARE BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS         INT             DEFAULT 8;
+
+
+DECLARE BUSINESS_OBJ_ID_PIG_FARM                INT             DEFAULT 9;
+DECLARE BUSINESS_OBJ_ID_PIG_FARM_STAFF          INT             DEFAULT 10;
+
+DECLARE BUSINESS_OBJ_ID_PIG_RACE_LINE           INT             DEFAULT 12;
+
+
+DECLARE BUSINESS_OBJ_ID_FEED_BUY                INT             DEFAULT 17;
+DECLARE BUSINESS_OBJ_ID_FEED_BALANCE            INT             DEFAULT 18;
+
+
+DECLARE BUSINESS_OBJ_ID_SOW_BOAR                INT             DEFAULT 19;
+DECLARE BUSINESS_OBJ_ID_SEMEN_SOURCE            INT             DEFAULT 20;
+DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 21;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_AI             INT             DEFAULT 22;
+
+
+
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_OPS        INT             DEFAULT 23;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD       INT             DEFAULT 24;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_NOTES          INT             DEFAULT 25;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_HARVEST        INT             DEFAULT 26;
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD        INT             DEFAULT 27;
+
+DECLARE BUSINESS_OBJ_ID_PIG_DEAD_TYPE           INT             DEFAULT 28;
+
+DECLARE BUSINESS_OBJ_ID_SOW_BOAR_BALANCE        INT             DEFAULT 30;
+
+DECLARE BUSINESS_OBJ_ID_PIG_PROD_RESERVED_2     INT             DEFAULT 32;
+
+DECLARE BUSINESS_OBJ_ID_PIG_PEN                 INT             DEFAULT 33;
+DECLARE BUSINESS_OBJ_ID_PRODUCTION_GROUP        INT             DEFAULT 34;
+
+
+DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
+DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
+DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
+
+
+DECLARE SYS_USER_FLAG_MASK                      INT             DEFAULT 0;
+
+DECLARE cur_user_flag                           INT             DEFAULT 0;
+DECLARE cur_user_is_system_super_user           INT             DEFAULT 0;
+
+DECLARE cur_biz_obj_flag_bit_num                INT             DEFAULT 0;
+
+DECLARE cur_user_grp_flag_business_obj_1        BIGINT          DEFAULT 0;
+DECLARE cur_user_grp_flag_business_obj_2        BIGINT          DEFAULT 0;
+
+        
+DECLARE cur_user_grp_flag_priv_user             INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_account          INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_acc_request      INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_user_group       INT             DEFAULT 0;
+
+
+DECLARE cur_user_grp_flag_priv_acc_translation  INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_acc_billing      INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_acc_pig_buyer    INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_acc_pig_ops      INT             DEFAULT 0;
+
+
+DECLARE cur_user_grp_flag_priv_pig_farm         INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_farm_staff   INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_race_line    INT             DEFAULT 0;
+
+
+
+DECLARE cur_user_grp_flag_priv_feed_buy         INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_feed_balance     INT             DEFAULT 0;
+
+
+DECLARE cur_user_grp_flag_priv_sow_boar         INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_semen_source     INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_production   INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_prod_ai      INT             DEFAULT 0;
+
+
+
+DECLARE cur_user_grp_flag_priv_pig_prod_pig_ops INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_prod_pig_dead INT            DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_prod_notes   INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_prod_harvest INT             DEFAULT 0;
+DECLARE cur_user_grp_flag_priv_pig_prod_pig_add INT             DEFAULT 0;
+
+DECLARE cur_user_grp_flag_priv_sow_boar_balance INT             DEFAULT 0;
+
+DECLARE cur_user_grp_flag_priv_pig_pen          INT             DEFAULT 0;
+
+
+DECLARE cur_account_flag                        INT             DEFAULT 0;
+DECLARE cur_account_status_id                   INT             DEFAULT 0;
+
+
+DECLARE flag_bit                                BIGINT          DEFAULT 0;
+DECLARE cur_group_flag                          INT             DEFAULT 0;
+
+
+SET res_num     = RES_NUM_SUCCESS;
+SET res_code    = "SUCCESS";
+
+SELECT  bit_num
+INTO    cur_biz_obj_flag_bit_num
+FROM    a02_business_object
+WHERE   id = in_business_obj_id_to_access;
+
+
+SELECT  
+    a.flag,
+    a.account_id,
+    a.user_group_id,
+    
+    b.flag_business_obj_1,
+    b.flag_business_obj_2,
+    
+    b.flag_priv_user,
+    b.flag_priv_account,
+    b.flag_priv_acc_request,
+    b.flag_priv_user_group,
+    
+    b.flag_priv_acc_translation,
+    b.flag_priv_acc_billing,
+    b.flag_priv_acc_pig_buyer,
+    b.flag_priv_acc_pig_ops,
+    
+    b.flag_priv_pig_farm,
+    b.flag_priv_pig_farm_staff,
+    b.flag_priv_pig_race_line,
+    
+    b.flag_priv_feed_buy,
+    b.flag_priv_feed_balance,
+    
+    
+    b.flag_priv_sow_boar,
+    b.flag_priv_semen_source,
+    b.flag_priv_pig_production,
+    b.flag_priv_pig_prod_ai,
+    
+    
+    b.flag_priv_pig_prod_pig_ops,
+    b.flag_priv_pig_prod_pig_dead,
+    b.flag_priv_pig_prod_notes,
+    b.flag_priv_pig_prod_harvest,
+    b.flag_priv_pig_prod_pig_add,
+    
+    b.flag_priv_sow_boar_balance,
+    
+    b.flag_priv_pig_pen
+    
+
+INTO    
+    cur_user_flag,
+    out_user_account_id,
+    out_user_group_id,
+        
+    cur_user_grp_flag_business_obj_1,
+    cur_user_grp_flag_business_obj_2,
+    
+        
+    cur_user_grp_flag_priv_user,
+    cur_user_grp_flag_priv_account,
+    cur_user_grp_flag_priv_acc_request,
+    cur_user_grp_flag_priv_user_group,
+    
+    cur_user_grp_flag_priv_acc_translation,
+    cur_user_grp_flag_priv_acc_billing,
+    cur_user_grp_flag_priv_acc_pig_buyer,
+    cur_user_grp_flag_priv_acc_pig_ops,
+    
+    cur_user_grp_flag_priv_pig_farm,
+    cur_user_grp_flag_priv_pig_farm_staff,
+    cur_user_grp_flag_priv_pig_race_line,
+    
+
+    cur_user_grp_flag_priv_feed_buy,
+    cur_user_grp_flag_priv_feed_balance,
+    
+    
+    cur_user_grp_flag_priv_sow_boar,
+    cur_user_grp_flag_priv_semen_source,
+    cur_user_grp_flag_priv_pig_production,
+    cur_user_grp_flag_priv_pig_prod_ai,
+    
+    
+    cur_user_grp_flag_priv_pig_prod_pig_ops,
+    cur_user_grp_flag_priv_pig_prod_pig_dead,
+    cur_user_grp_flag_priv_pig_prod_notes,
+    cur_user_grp_flag_priv_pig_prod_harvest,
+    cur_user_grp_flag_priv_pig_prod_pig_add,
+    
+    cur_user_grp_flag_priv_sow_boar_balance,
+    
+    cur_user_grp_flag_priv_pig_pen
+    
+FROM  user a 
+LEFT OUTER JOIN  user_group b ON  a.user_group_id = b.id
+WHERE   a.id = in_user_id;
+
+
+
+process_user : BEGIN
+
+/* Check user*/
+IF cur_user_flag & FLAG_BIT_USER_IS_ACTIVE = 0 THEN 
+    SET res_num     = RES_NUM_USER_IS_INACTIVE;
+    SET res_code    = "RES_NUM_USER_IS_INACTIVE";
+
+    LEAVE process_user;    
+END IF;
+
+
+IF cur_user_flag & FLAG_BIT_USER_EMAIL_VERIFIED = 0 THEN 
+    SET res_num     = RES_NUM_USER_NOT_EMAIL_VERIFIED;
+    SET res_code    = "RES_NUM_USER_NOT_EMAIL_VERIFIED";
+
+    LEAVE process_user;
+END IF;
+
+
+IF in_user_must_have_account = 0 THEN 
+    LEAVE process_user;
+END IF;
+
+
+/* Check if the user is a  system super user*/
+IF cur_user_flag & FLAG_BIT_SYSTEM_SUPER_USER > 0 THEN 
+    SET cur_user_is_system_super_user = 1;
+END IF;
+
+
+/* User must be associated to an account */
+
+IF out_user_account_id = 0 THEN 
+    SET res_num     = RES_NUM_USER_NO_ACCOUNT_SET;
+    SET res_code    = "RES_NUM_USER_NO_ACCOUNT_SET";
+
+    LEAVE process_user;
+END IF;
+
+
+IF out_user_group_id = 0 THEN 
+    SET res_num     = RES_NUM_USER_NO_USER_GROUP_SET;
+    SET res_code    = "RES_NUM_USER_NO_USER_GROUP_SET";
+
+    LEAVE process_user;
+END IF;
+
+
+
+
+/* Check account*/
+SELECT 
+    flag,
+    status_id
+INTO
+    cur_account_flag,
+    cur_account_status_id
+    
+FROM account
+WHERE id = out_user_account_id;
+
+
+/* Will ignore these checks if user is a system super user. */
+IF cur_user_is_system_super_user = 0 THEN
+    IF cur_account_flag & FLAG_BIT_ACCOUNT_ENABLE = 0 THEN 
+        SET res_num     = RES_NUM_ACCOUNT_DISABLED;
+        SET res_code    = "RES_NUM_ACCOUNT_DISABLED";
+        
+        IF cur_account_status_id = ACCOUNT_STATUS_ID_UNPAID_BILL THEN
+            SET res_num     = RES_NUM_ACCOUNT_STATUS_UNPAID_BILL;
+            SET res_code    = "RES_NUM_ACCOUNT_STATUS_UNPAID_BILL";
+        
+        END IF;
+        
+        LEAVE process_user;
+    END IF;
+
+
+    IF in_compare_to_account_id > 0 THEN 
+        IF out_user_account_id != in_compare_to_account_id THEN 
+            SET res_num     = RES_NUM_ACCOUNT_MISMATCH;
+            SET res_code    = "RES_NUM_ACCOUNT_MISMATCH";
+
+            LEAVE process_user;
+        END IF;
+
+    END IF;
+
+
+    IF in_business_obj_id_to_access = 0 THEN 
+        /* This is means the business_object is a public business object.*/
+        LEAVE process_user;
+    END IF;
+
+
+
+    /* Check user.usergroup privileges. */
+
+    SET flag_bit = POWER(2, cur_biz_obj_flag_bit_num);
+
+    IF in_business_obj_id_to_access <= 32 THEN 
+        IF cur_user_grp_flag_business_obj_1 & flag_bit =  0 THEN
+            SET res_num     = RES_NUM_USER_GROUP_HAS_NO_ACCESS;
+            SET res_code    = "RES_NUM_USER_GROUP_HAS_NO_ACCESS";
+
+            LEAVE process_user;
+        END IF;
+    END IF;
+    
+    IF in_business_obj_id_to_access > 32 AND in_business_obj_id_to_access <= 64 THEN
+        IF cur_user_grp_flag_business_obj_2 & flag_bit =  0 THEN
+            SET res_num     = RES_NUM_USER_GROUP_HAS_NO_ACCESS;
+            SET res_code    = "RES_NUM_USER_GROUP_HAS_NO_ACCESS";
+
+            LEAVE process_user;
+        END IF;
+    END IF;
+END IF;
+
+
+
+
+
+CASE in_business_obj_id_to_access
+
+WHEN BUSINESS_OBJ_ID_USER THEN 
+    SET cur_group_flag = cur_user_grp_flag_priv_user;
+
+WHEN BUSINESS_OBJ_ID_ACCOUNT THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_account;
+
+WHEN BUSINESS_OBJ_ID_USER_REQUEST THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_acc_request;
+
+WHEN BUSINESS_OBJ_ID_USER_GROUP THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_user_group;
+    
+    
+    
+WHEN BUSINESS_OBJ_ID_ACCOUNT_TRANSLATION THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_acc_translation;
+    
+WHEN BUSINESS_OBJ_ID_ACCOUNT_BILLING THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_acc_billing;
+    
+WHEN BUSINESS_OBJ_ID_ACCOUNT_PIG_BUYER THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_acc_pig_buyer;
+    
+WHEN BUSINESS_OBJ_ID_ACCOUNT_PIG_OPS THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_acc_pig_ops;
+    
+    
+WHEN BUSINESS_OBJ_ID_PIG_FARM THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_farm;
+    
+WHEN BUSINESS_OBJ_ID_PIG_FARM_STAFF THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_farm_staff;
+    
+WHEN BUSINESS_OBJ_ID_PIG_RACE_LINE THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_race_line;
+
+
+
+WHEN BUSINESS_OBJ_ID_FEED_BUY THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_feed_buy;
+        
+WHEN BUSINESS_OBJ_ID_FEED_BALANCE THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_feed_balance;
+           
+
+WHEN BUSINESS_OBJ_ID_SOW_BOAR THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_sow_boar;
+        
+WHEN BUSINESS_OBJ_ID_SEMEN_SOURCE THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_semen_source;
+    
+WHEN BUSINESS_OBJ_ID_PIG_PRODUCTION THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_production;
+              
+WHEN BUSINESS_OBJ_ID_PIG_PROD_AI THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_ai;
+
+
+WHEN BUSINESS_OBJ_ID_PIG_PROD_PIG_OPS THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_pig_ops;
+        
+WHEN BUSINESS_OBJ_ID_PIG_PROD_PIG_DEAD THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_pig_dead;
+        
+WHEN BUSINESS_OBJ_ID_PIG_PROD_NOTES THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_notes;
+
+WHEN BUSINESS_OBJ_ID_PIG_PROD_HARVEST THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_harvest;
+    
+WHEN BUSINESS_OBJ_ID_PIG_PROD_PIG_ADD THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_prod_pig_add;
+    
+
+WHEN BUSINESS_OBJ_ID_SOW_BOAR_BALANCE THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_sow_boar_balance;
+
+
+WHEN BUSINESS_OBJ_ID_PIG_PEN THEN
+    SET cur_group_flag = cur_user_grp_flag_priv_pig_pen;
+
+
+
+END CASE;
+
+
+/* Will ignore these checks if user is a system super user. */
+IF cur_user_is_system_super_user = 0 THEN
+
+    IF in_business_obj_operation = FLAG_BIT_OPERATION_ADD THEN 
+        IF cur_group_flag & FLAG_BIT_OPERATION_ADD = 0 THEN 
+            SET res_num     = RES_NUM_USER_GROUP_NO_ADD_PRIVILEGE;
+            SET res_code    = "RES_NUM_USER_GROUP_NO_ADD_PRIVILEGE";
+        
+            LEAVE process_user;
+        END IF;
+    END IF;
+
+    IF in_business_obj_operation = FLAG_BIT_OPERATION_UPDATE THEN 
+        IF cur_group_flag & FLAG_BIT_OPERATION_UPDATE = 0 THEN 
+            SET res_num     = RES_NUM_USER_GROUP_NO_UPDATE_PRIVILEGE;
+            SET res_code    = "RES_NUM_USER_GROUP_NO_UPDATE_PRIVILEGE";
+        
+            LEAVE process_user;
+        END IF;
+    END IF;
+
+    IF in_business_obj_operation = FLAG_BIT_OPERATION_DELETE THEN 
+        IF cur_group_flag & FLAG_BIT_OPERATION_DELETE = 0 THEN 
+            SET res_num     = RES_NUM_USER_GROUP_NO_DELETE_PRIVILEGE;
+            SET res_code    = "RES_NUM_USER_GROUP_NO_DELETE_PRIVILEGE";
+        
+            LEAVE process_user;
+        END IF;
+    END IF;
+
+END IF;
+
+
+
+
+END process_user;
+
+
+
+
+
+END $$
+
+DELIMITER ;

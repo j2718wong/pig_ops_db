@@ -452,6 +452,57 @@ num_starter
 
 
 FROm feed_balance
+ORDER BY id  DESC
+LIMIT 5;
+
+
+
+SELECT 
+id,
+pig_prod_id,
+date_balance,
+num_pigs,
+num_b_gestating AS b_gesta,
+num_b_lactating AS b_lacta,
+num_b_booster   AS b_bost,
+num_b_prestarter AS b_pre,
+num_b_starter   AS b_start,
+
+
+num_gestating   AS gesta,
+num_lactating   AS lacta,
+num_booster     AS bost,
+num_prestarter  AS pre,
+num_starter     AS star
+
+
+FROm feed_balance
+ORDER BY id  DESC
+LIMIT 5;
+
+
+
+SELECT 
+id,
+pig_prod_id,
+pig_farm_id,
+date_balance,
+
+num_gestating   AS gesta,
+num_lactating   AS lacta,
+num_booster     AS bost,
+num_prestarter  AS pre,
+num_starter     AS star,
+num_grower      AS grower,
+num_finisher    AS finish
+
+FROm feed_balance
+ORDER BY id  DESC
+LIMIT 5;
+
+
+
+
 
 
 SELECT
@@ -560,6 +611,7 @@ mysqldump -u root -p --routines pig_operations > pig_operations_routines.sql
 SELECT id, 
 user_id, 
 date_login,
+ip_address,
 viewport_width as vp_width, 
 viewport_height as vp_height, 
 country_code_login AS country, 
@@ -568,7 +620,7 @@ login_loc_trace_id as trace_id
  
 FROm user_login
 ORDER by id DESC limit 5;
-; 
+
 
 
 SELECT id, 
@@ -587,5 +639,5 @@ device_type
 
 FROm user_login
 ORDER by id DESC limit 5;
-; 
+
 
