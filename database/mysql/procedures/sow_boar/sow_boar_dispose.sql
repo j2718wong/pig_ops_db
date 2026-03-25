@@ -82,8 +82,10 @@ INTO    cur_sow_boar_pig_farm_id,
         cur_pig_prod_id,
         cur_pig_prod_status_id
         
-FROM    sow_boar
-WHERE   id = in_sow_boar_id
+FROM    sow_boar a
+LEFT OUTER JOIN pig_production b ON a.last_pig_production_id = b.id
+
+WHERE   a.id = in_sow_boar_id
 LIMIT   1;
 
 

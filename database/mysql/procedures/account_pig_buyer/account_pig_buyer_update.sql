@@ -137,6 +137,12 @@ UPDATE account_pig_buyer SET
 WHERE id =  in_account_pig_buyer_id;
 
 
+/* Update data version counter*/
+UPDATE account SET 
+    data_ver_num_pig_buyer = data_ver_num_pig_buyer +1
+WHERE id = cur_account_pig_buyer_account_id;
+
+
 
 END process_user;
 

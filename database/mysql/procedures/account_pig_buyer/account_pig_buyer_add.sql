@@ -170,6 +170,12 @@ INSERT INTO account_pig_buyer(
 SELECT LAST_INSERT_ID() INTO cur_account_pig_buyer_id;
 
 
+/* Update data version counter*/
+UPDATE account SET 
+    data_ver_num_pig_buyer = data_ver_num_pig_buyer +1
+WHERE id = cur_user_account_id;
+
+
 
 END process_user;
 

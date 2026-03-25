@@ -72,7 +72,8 @@ SELECT  account_id,
 INTO    
         cur_sow_boar_account_id,
         cur_sow_boar_pig_farm_id
-WHERE   id = in_pig_farm_id
+FROM    sow_boar
+WHERE   id = in_boar_id
 LIMIT   1;
 
 
@@ -125,6 +126,7 @@ END IF;
     
     
 INSERT INTO sow_boar_mate(
+    pig_farm_id,
     sow_boar_id,
     boar_customer_id,
     customer_sow_name,
@@ -135,6 +137,7 @@ INSERT INTO sow_boar_mate(
     
     added_by_user_id
 ) VALUES (
+    cur_sow_boar_pig_farm_id,
     in_boar_id,
     in_boar_customer_id,
     in_customer_sow_name,
