@@ -3,6 +3,19 @@
 # Usage: ./migrate.sh [dev|local|prod]
 # Default: dev (safe for development)
 
+
+# To View applied migrations
+# For development environment
+#ls -la ~/.db_migrations_dev/
+
+# For local environment  
+#ls -la ~/.db_migrations_local/
+
+# For production environment
+#ls -la /root/.db_migrations_prod/
+
+
+
 set -e
 
 # Colors
@@ -33,9 +46,6 @@ case "$ENV" in
     *)
         echo "Invalid environment: $ENV"
         echo "Usage: $0 [dev|local|prod]"
-        echo "  dev   - Development database (default)"
-        echo "  local - Local production database"
-        echo "  prod  - DigitalOcean production (requires confirmation)"
         exit 1
         ;;
 esac
@@ -48,9 +58,12 @@ echo "Database: $DATABASE"
 echo "Started: $(date)"
 echo ""
 
-# Migration paths
-MIGRATIONS_DIR="/root/projects/jsys/pig_ops_db/database/mysql/migrations"
-MARKERS_DIR="/root/projects/jsys/.db_migrations_${ENV}"
+# Get script directory (works anywhere)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Paths relative to script location
+MIGRATIONS_DIR="$SCRIPT_DIR/database/mysql/migrations"
+MARKERS_DIR="$HOME/.db_migrations_${ENV}"
 
 mkdir -p "$MARKERS_DIR"
 
@@ -64,7 +77,7 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
         echo -e "${YELLOW}📦 Applying: $script_name${NC}"
         
         # Run the migration
-        mysql -u root "$DATABASE" < "$script"
+        mysql "$DATABASE" < "$script"
         
         if [ $? -eq 0 ]; then
             touch "$marker"
