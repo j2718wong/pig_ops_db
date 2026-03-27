@@ -152,6 +152,13 @@ INSERT INTO sow_boar_mate(
 SELECT LAST_INSERT_ID() INTO cur_sow_boar_mate_id;
 
 
+UPDATE sow_boar SET 
+    mate_count      = mate_count + 1,
+    date_last_mate  = in_date_mate
+WHERE id = in_boar_id;
+
+
+
 IF in_notes IS NOT NULL THEN
     INSERT INTO pig_prod_notes (
         sow_boar_id,

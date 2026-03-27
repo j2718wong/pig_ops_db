@@ -523,11 +523,23 @@ IF in_pig_prod_id > 0 THEN
     
 END IF;
 
+IF in_pig_farm_id > 0 THEN 
+    UPDATE pig_farm SET 
+        data_ver_num_feed_balance = data_ver_num_feed_balance + 1
+    WHERE id = in_pig_farm_id;
+
+END IF;
+
 
 IF in_pig_prod_id > 0 THEN 
     UPDATE pig_production SET  
         data_ver_num_feed_balance = data_ver_num_feed_balance + 1
     WHERE id = in_pig_prod_id;
+    
+    /** This needs to be updated too.*/
+    UPDATE pig_farm SET 
+        data_ver_num_feed_balance = data_ver_num_feed_balance + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
 END IF;
 
 IF in_prod_group_id > 0 THEN 
