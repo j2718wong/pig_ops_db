@@ -53,7 +53,7 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     fi
 done
 
-# If no pending migrations, exit quietly
+# If no pending migrations, exit quietly (no prompt)
 if [ $PENDING_MIGRATIONS -eq 0 ]; then
     echo "✅ No pending migrations to apply"
     exit 0
