@@ -1,20 +1,6 @@
 #!/bin/bash
 # migrate.sh - Run database migrations
 # Usage: ./migrate.sh [dev|local|prod]
-# Default: dev (safe for development)
-
-
-# To View applied migrations
-# For development environment
-#ls -la ~/.db_migrations_dev/
-
-# For local environment  
-#ls -la ~/.db_migrations_local/
-
-# For production environment
-#ls -la /root/.db_migrations_prod/
-
-
 
 set -e
 
@@ -40,8 +26,6 @@ case "$ENV" in
         ;;
     prod)
         DATABASE="pig_operations"
-        echo -e "${RED}⚠️  RUNNING ON PRODUCTION DATABASE!${NC}"
-        read -p "Press Enter to continue, Ctrl+C to cancel" 
         ;;
     *)
         echo "Invalid environment: $ENV"
@@ -49,6 +33,38 @@ case "$ENV" in
         exit 1
         ;;
 esac
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Paths
+MIGRATIONS_DIR="$SCRIPT_DIR/database/mysql/migrations"
+MARKERS_DIR="$HOME/.db_migrations_${ENV}"
+
+mkdir -p "$MARKERS_DIR"
+
+# Check if there are any pending migrations
+PENDING_MIGRATIONS=0
+for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
+    script_name=$(basename "$script")
+    marker="$MARKERS_DIR/$script_name.done"
+    if [ ! -f "$marker" ]; then
+        PENDING_MIGRATIONS=$((PENDING_MIGRATIONS + 1))
+    fi
+done
+
+# If no pending migrations, exit quietly
+if [ $PENDING_MIGRATIONS -eq 0 ]; then
+    echo "✅ No pending migrations to apply"
+    exit 0
+fi
+
+# Only show confirmation if there ARE pending migrations
+if [ "$ENV" = "prod" ]; then
+    echo -e "${RED}⚠️  RUNNING ON PRODUCTION DATABASE!${NC}"
+    echo -e "${YELLOW}Found $PENDING_MIGRATIONS pending migration(s)${NC}"
+    read -p "Press Enter to continue, Ctrl+C to cancel" 
+fi
 
 echo ""
 echo -e "${BLUE}================================${NC}"
@@ -58,16 +74,7 @@ echo "Database: $DATABASE"
 echo "Started: $(date)"
 echo ""
 
-# Get script directory (works anywhere)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# Paths relative to script location
-MIGRATIONS_DIR="$SCRIPT_DIR/database/mysql/migrations"
-MARKERS_DIR="$HOME/.db_migrations_${ENV}"
-
-mkdir -p "$MARKERS_DIR"
-
-# Run migrations in order
+# Run migrations
 count=0
 for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     script_name=$(basename "$script")
