@@ -40,6 +40,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Paths
 MIGRATIONS_DIR="$SCRIPT_DIR/database/mysql/migrations"
 MARKERS_DIR="$HOME/.db_migrations_${ENV}"
+MIGRATION_APPLIED_FILE="$HOME/.db_migrations_${ENV}_last_run"
 
 mkdir -p "$MARKERS_DIR"
 
@@ -53,7 +54,7 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     fi
 done
 
-# If no pending migrations, exit quietly (no prompt)
+# If no pending migrations, exit quietly
 if [ $PENDING_MIGRATIONS -eq 0 ]; then
     echo "✅ No pending migrations to apply"
     exit 0
@@ -99,6 +100,13 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     fi
 done
 
-echo ""
-echo -e "${GREEN}✅ Migration complete! ($count applied)${NC}"
+# Create timestamp file if any migrations were applied
+if [ $count -gt 0 ]; then
+    date > "$MIGRATION_APPLIED_FILE"
+    echo "✅ Migration complete! ($count applied)"
+    echo "   Timestamp saved to: $MIGRATION_APPLIED_FILE"
+else
+    echo "✅ No migrations applied"
+fi
+
 echo "Completed: $(date)"
