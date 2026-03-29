@@ -84,10 +84,8 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     if [ ! -f "$marker" ]; then
         echo -e "${YELLOW}📦 Applying: $script_name${NC}"
         
-        # Run the migration
-        mysql "$DATABASE" < "$script"
-        
-        if [ $? -eq 0 ]; then
+        # Run the migration - FIXED: check mysql directly
+        if mysql "$DATABASE" < "$script"; then
             touch "$marker"
             echo -e "${GREEN}   ✅ Done${NC}"
             ((count++))
