@@ -84,13 +84,16 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     if [ ! -f "$marker" ]; then
         echo -e "${YELLOW}📦 Applying: $script_name${NC}"
         
-        # Run the migration - FIXED: check mysql directly
-        if mysql "$DATABASE" < "$script"; then
+        # Run the migration
+        mysql "$DATABASE" < "$script" 2>&1
+        MYSQL_EXIT=$?
+
+        if [ $MYSQL_EXIT -eq 0 ]; then
             touch "$marker"
             echo -e "${GREEN}   ✅ Done${NC}"
             ((count++))
         else
-            echo -e "${RED}   ❌ Failed${NC}"
+            echo -e "${RED}   ❌ Failed (exit code: $MYSQL_EXIT)${NC}"
             exit 1
         fi
     else
