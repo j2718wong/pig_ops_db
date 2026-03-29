@@ -100,9 +100,15 @@ done
 
 # Create timestamp file if any migrations were applied
 if [ $count -gt 0 ]; then
-    date > "$MIGRATION_APPLIED_FILE"
-    echo "✅ Migration complete! ($count applied)"
-    echo "   Timestamp saved to: $MIGRATION_APPLIED_FILE"
+    # Ensure directory exists
+    mkdir -p "$(dirname "$MIGRATION_APPLIED_FILE")"
+    
+    if date > "$MIGRATION_APPLIED_FILE" 2>/dev/null; then
+        echo "✅ Migration complete! ($count applied)"
+        echo "   Timestamp saved to: $MIGRATION_APPLIED_FILE"
+    else
+        echo "⚠️  Could not save timestamp, but migrations applied"
+    fi
 else
     echo "✅ No migrations applied"
 fi
