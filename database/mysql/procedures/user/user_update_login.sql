@@ -10,6 +10,9 @@ CREATE PROCEDURE user_update_login(
     in_login_city           VARCHAR(50), /* This should be in upper case*/
     in_login_region         VARCHAR(50), /* This should be in upper case*/
     
+    in_latitude             DECIMAL(10,5),
+    in_longitude            DECIMAL(10,5),
+    
     
     in_viewport_width       INT,
     in_viewport_height      INT,
@@ -144,7 +147,10 @@ IF cur_count = 1 THEN
                                      
             viewport_width          = in_viewport_width,       
             viewport_height         = in_viewport_height,      
-            ip_address              = in_ip_address,           
+            ip_address              = in_ip_address,  
+            
+            latitude                = in_latitude,
+            longitude               = in_longitude,
                                      
             is_mobile               = in_is_mobile,            
             is_webview              = in_is_webview,           
@@ -179,7 +185,10 @@ IF in_ip_address IS NOT  NULL THEN
                                
             viewport_width,     
             viewport_height,    
-            ip_address,         
+            ip_address, 
+            
+            latitude,
+            longitude,       
                                
             is_mobile,          
             is_webview,         
@@ -202,7 +211,10 @@ IF in_ip_address IS NOT  NULL THEN
             
             in_viewport_width,    
             in_viewport_height,   
-            in_ip_address,        
+            in_ip_address,   
+            
+            in_latitude,
+            in_longitude,     
             
             in_is_mobile,         
             in_is_webview,        
