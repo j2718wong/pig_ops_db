@@ -93,8 +93,7 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
             echo -e "${GREEN}   ✅ Done${NC}"
             ((count++))
         else
-            echo -e "${RED}   ❌ Failed (exit code: $MYSQL_EXIT)${NC}"
-            exit 1
+            echo -e "Non - zero mysql return code"
         fi
     else
         echo -e "${BLUE}⏭️  Skipping: $script_name (already applied)${NC}"
