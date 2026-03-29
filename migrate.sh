@@ -85,8 +85,12 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
         echo -e "${YELLOW}📦 Applying: $script_name${NC}"
         
         # Run the migration
+        
+        # Temporarily disable exit-on-error to prevent migration from killing script
+        set +e
         mysql -u root "$DATABASE" < "$script" 2>&1
         MYSQL_EXIT=$?
+        set -e
 
         if [ $MYSQL_EXIT -eq 0 ]; then
             touch "$marker"
