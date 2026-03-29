@@ -99,15 +99,20 @@ for script in $(ls -1 "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
 done
 
 # Create timestamp file if any migrations were applied
+echo "DEBUG: count = $count"
+
 if [ $count -gt 0 ]; then
-    # Ensure directory exists
-    mkdir -p "$(dirname "$MIGRATION_APPLIED_FILE")"
+    echo "Creating timestamp file..."
+    TIMESTAMP_DIR="$(dirname "$MIGRATION_APPLIED_FILE")"
+    mkdir -p "$TIMESTAMP_DIR"
     
-    if date > "$MIGRATION_APPLIED_FILE" 2>/dev/null; then
+    if date > "$MIGRATION_APPLIED_FILE" 2>&1; then
         echo "✅ Migration complete! ($count applied)"
         echo "   Timestamp saved to: $MIGRATION_APPLIED_FILE"
     else
-        echo "⚠️  Could not save timestamp, but migrations applied"
+        echo "⚠️  Warning: Could not save timestamp file"
+        echo "   (Migrations were applied successfully)"
+        # Don't exit - continue
     fi
 else
     echo "✅ No migrations applied"
