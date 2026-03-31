@@ -8,6 +8,8 @@ CREATE PROCEDURE pig_farm_report_add_or_update(
     in_report_type_id       INT,
     
     in_report_date          VARCHAR(10),
+    in_report_language      VARCHAR(8),
+    
     in_file_path            VARCHAR(255),
     in_notes                VARCHAR(160)
 )  
@@ -15,7 +17,7 @@ CREATE PROCEDURE pig_farm_report_add_or_update(
 BEGIN
 
 /** 
- * Will add account_pig_buyer entry to the system.
+ * Will add pig_farm_report entry to the system.
  * 
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
@@ -100,7 +102,8 @@ IF cur_pig_farm_report_id = 0 THEN
         pig_farm_id,
         report_type_id,
         
-        report_date,   
+        report_date,  
+        report_language, 
         
         file_path,
         notes,
@@ -113,6 +116,8 @@ IF cur_pig_farm_report_id = 0 THEN
         in_report_type_id,
         
         in_report_date,
+        in_report_language,
+        
         in_file_path,
         in_notes,
         
