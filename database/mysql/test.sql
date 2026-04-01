@@ -641,3 +641,34 @@ FROm user_login
 ORDER by id DESC limit 5;
 
 
+
+SELECT 
+id, 
+pig_prod_id,
+date_balance,
+num_gestating AS gesta,
+num_lactating AS lacta,
+num_booster AS boost,
+num_prestarter as pres,
+num_starter as star,
+num_grower as grower,
+num_finisher as finish
+
+FROM feed_balance WHERE pig_prod_id = 18;
+
+SELECT a.id,
+a.last_feed_balance_id,
+b.date_balance 
+FROM pig_production a 
+LEFT OUTER JOIN feed_balance b ON a.last_feed_balance_id = b.id
+WHERE a.id = 17;
+
+
+SELECT id,
+date_buy,
+feed_type_id,
+quantity
+
+FROm feed_buy WHERE pig_prod_feed_id = 1;
+
+

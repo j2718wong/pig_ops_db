@@ -509,25 +509,6 @@ IF in_pig_prod_id > 0 THEN
     WHERE id = in_pig_prod_id;
     
     
-    /* This is now computed separately; Preferrably every weekend
-    UPDATE feed_balance SET 
-        num_days_since_birth    = cur_num_days_since_birth,
-        num_weeks_since_birth   = cur_num_weeks_since_birth,
-        
-        consumed_kg_booster     = cur_consumed_kg_booster,
-        consumed_kg_lactating   = cur_consumed_kg_lactating,
-        consumed_kg_prestarter  = cur_consumed_kg_prestarter,
-        consumed_kg_starter     = cur_consumed_kg_starter,
-        consumed_kg_grower      = cur_consumed_kg_grower,
-        consumed_kg_finisher    = cur_consumed_kg_finisher,
-        
-        consumed_kg_total       = curr_consumed_kg_total,
-        diff_consumed_kg_total  = diff_consumed_kg_total,
-        diff_consumption_per_pig = consumption_per_pig
-        
-    WHERE id = cur_feed_balance_id;
-    */
-    
     UPDATE feed_balance SET 
         num_days_since_birth    = cur_num_days_since_birth,
         num_weeks_since_birth   = cur_num_weeks_since_birth

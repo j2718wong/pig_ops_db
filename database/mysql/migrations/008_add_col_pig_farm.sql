@@ -19,7 +19,7 @@ BEGIN
     IF col_exists = 0 THEN
         ALTER TABLE pig_farm 
         ADD COLUMN last_feed_balance_date DATE  
-        AFTER name;
+        AFTER last_production_group_id;
     END IF;
     
    
