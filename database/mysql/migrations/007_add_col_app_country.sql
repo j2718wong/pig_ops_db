@@ -38,7 +38,7 @@ BEGIN
     
     
     UPDATE app_country SET
-        report_languages = "en, ph-tag, ph-bis"
+        report_languages = "en, tag, bis"
     WHERE id = 1;
     
     

@@ -71,6 +71,7 @@ DECLARE cur_account_status_id                   INT             DEFAULT 0;
 DECLARE cur_account_default_farm_id             INT             DEFAULT 0;
  
 
+DECLARE cur_count                               INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -178,16 +179,25 @@ UPDATE user SET
 WHERE 
     id = in_requesting_user_id;
 
-INSERT INTO user_pig_farm(
-    pig_farm_id,
-    user_id,
-    added_by_user_id
-) VALUES(
-    cur_account_default_farm_id,
-    in_requesting_user_id,
-    in_requesting_user_id
-);
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    user_pig_farm
+WHERE   user_id = in_requesting_user_id AND 
+        pig_farm_id =  cur_account_default_farm_id;
 
+
+IF cur_count = 0 THEN 
+
+    INSERT INTO user_pig_farm(
+        pig_farm_id,
+        user_id,
+        added_by_user_id
+    ) VALUES(
+        cur_account_default_farm_id,
+        in_requesting_user_id,
+        in_requesting_user_id
+    );
+END IF;
 
 
 /* Update account_access_code*/

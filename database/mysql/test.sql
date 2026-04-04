@@ -672,3 +672,17 @@ quantity
 FROm feed_buy WHERE pig_prod_feed_id = 1;
 
 
+CALL user_request_join_account(2, 15);
+
+SELECT id,
+account_id,
+user_group_id,
+email,
+account_access_code_id as access_id
+FROM user;
+
+SELECT id, 
+account_id, 
+user_group_id, 
+used_by_user_id 
+from  account_access_code;

@@ -3,10 +3,15 @@
 # Configuration
 REMOTE_SERVER="68.183.225.10"
 REMOTE_USER="root"
-REMOTE_DUMP_PATH="/root/temp"
+REMOTE_DUMP_DIR="/root/temp"
+REMOTE_DB_NAME="pig_operations" 
 LOCAL_DUMP_PATH="/home/dev01/Downloads/pig_ops_prod_dumps"
 LOCAL_DB_NAME="pig_operations"
 LOG_FILE="/home/dev01/projects/jsys/pig_ops_db/sync_log.log"
+
+# Dump file naming
+DATE=$(date +%Y%m%d_%H%M%S)
+REMOTE_DUMP_FILE="${REMOTE_DUMP_DIR}/pig_operations_prod_${DATE}.sql"
 
 # Colors for output
 RED='\033[0;31m'
@@ -34,22 +39,73 @@ print_info() {
     log_message "INFO: $1"
 }
 
-# Function to get latest dump file (outputs ONLY the filename to stdout)
-get_latest_dump() {
-    ssh ${REMOTE_USER}@${REMOTE_SERVER} "ls -t ${REMOTE_DUMP_PATH}/pig_operations_prod_*.sql 2>/dev/null | head -n1"
-}
-
-test_mysql_connection() {
-    print_info "Testing MySQL connection..."
-    if mysql -e "SELECT 1" &>/dev/null; then
-        print_status "MySQL connection successful"
+# Test MySQL connection on remote
+test_remote_mysql() {
+    print_info "Testing remote MySQL connection..."
+    ssh ${REMOTE_USER}@${REMOTE_SERVER} "mysql -e 'SELECT 1'" &>/dev/null
+    if [ $? -eq 0 ]; then
+        print_status "Remote MySQL connection successful"
+        return 0
     else
-        print_error "Cannot connect to MySQL"
+        print_error "Cannot connect to remote MySQL"
+        print_info "Check if MySQL is running and credentials are configured on remote"
         exit 1
     fi
 }
 
-check_database_exists() {
+# Create dump on remote server
+create_remote_dump() {
+    print_info "Creating database dump on remote server..."
+    print_info "Remote database: $REMOTE_DB_NAME"
+    print_info "Remote dump file: $REMOTE_DUMP_FILE"
+    
+    # Create dump on remote server
+    ssh ${REMOTE_USER}@${REMOTE_SERVER} "mysqldump --no-create-info --extended-insert --complete-insert $REMOTE_DB_NAME > $REMOTE_DUMP_FILE"
+    
+    if [ $? -eq 0 ]; then
+        # Check file size on remote
+        REMOTE_SIZE=$(ssh ${REMOTE_USER}@${REMOTE_SERVER} "stat -c%s $REMOTE_DUMP_FILE 2>/dev/null || stat -f%z $REMOTE_DUMP_FILE 2>/dev/null")
+        if [ "$REMOTE_SIZE" -gt 0 ]; then
+            print_status "Remote dump created successfully (Size: $(echo $REMOTE_SIZE | awk '{print int($1/1024)}')KB)"
+            return 0
+        else
+            print_error "Remote dump file is empty"
+            exit 1
+        fi
+    else
+        print_error "Failed to create remote dump"
+        exit 1
+    fi
+}
+
+# Alternative: Use compressed dump (saves bandwidth)
+create_remote_dump_compressed() {
+    print_info "Creating compressed database dump on remote server..."
+    ssh ${REMOTE_USER}@${REMOTE_SERVER} "mysqldump --no-create-info --extended-insert --complete-insert $REMOTE_DB_NAME | gzip > ${REMOTE_DUMP_FILE}.gz"
+    
+    if [ $? -eq 0 ]; then
+        print_status "Remote compressed dump created: ${REMOTE_DUMP_FILE}.gz"
+        REMOTE_DUMP_FILE="${REMOTE_DUMP_FILE}.gz"  # Update to use compressed file
+        return 0
+    else
+        print_error "Failed to create remote compressed dump"
+        exit 1
+    fi
+}
+
+# Test local MySQL connection
+test_local_mysql() {
+    print_info "Testing local MySQL connection..."
+    if mysql -e "SELECT 1" &>/dev/null; then
+        print_status "Local MySQL connection successful"
+    else
+        print_error "Cannot connect to local MySQL"
+        exit 1
+    fi
+}
+
+# Check if local database exists
+check_local_database() {
     print_info "Checking if database $LOCAL_DB_NAME exists..."
     if mysql -e "USE $LOCAL_DB_NAME" &>/dev/null; then
         print_status "Database $LOCAL_DB_NAME exists"
@@ -60,24 +116,28 @@ check_database_exists() {
     fi
 }
 
+# Clean up old remote dumps (keep last 5)
+cleanup_remote_dumps() {
+    print_info "Cleaning up old remote dumps (keeping last 5)..."
+    ssh ${REMOTE_USER}@${REMOTE_SERVER} "cd ${REMOTE_DUMP_DIR} && ls -t pig_operations_prod_*.sql* 2>/dev/null | tail -n +6 | xargs -r rm"
+    print_status "Remote cleanup completed"
+}
+
 # Main execution
-print_info "Starting database sync from remote server to local..."
+print_info "========================================"
+print_info "Starting database sync from remote server"
+print_info "========================================"
 
-# Test MySQL connection
-test_mysql_connection
+# Test connections
+test_remote_mysql
+test_local_mysql
+check_local_database
 
-# Check if database exists
-check_database_exists
-
-# Check local directory
+# Check local dump directory
 print_info "Checking local directory: $LOCAL_DUMP_PATH"
 if [ ! -d "$LOCAL_DUMP_PATH" ]; then
     print_info "Creating directory: $LOCAL_DUMP_PATH"
     mkdir -p "$LOCAL_DUMP_PATH"
-    if [ $? -ne 0 ]; then
-        print_error "Failed to create directory"
-        exit 1
-    fi
 fi
 
 if [ ! -w "$LOCAL_DUMP_PATH" ]; then
@@ -86,24 +146,17 @@ if [ ! -w "$LOCAL_DUMP_PATH" ]; then
 fi
 print_status "Local directory is writable"
 
-# Get the latest dump file
-print_info "Finding latest dump file on remote server..."
-LATEST_REMOTE_DUMP=$(get_latest_dump)
+# Create dump on remote
+create_remote_dump
+# Uncomment the line below if you want compressed dump (saves bandwidth)
+# create_remote_dump_compressed
 
-if [ -z "$LATEST_REMOTE_DUMP" ]; then
-    print_error "No dump file found in ${REMOTE_DUMP_PATH} on remote server"
-    exit 1
-fi
-
-DUMP_FILENAME=$(basename "$LATEST_REMOTE_DUMP")
+# Copy the dump file
+DUMP_FILENAME=$(basename "$REMOTE_DUMP_FILE")
 LOCAL_FILE="${LOCAL_DUMP_PATH}/${DUMP_FILENAME}"
 
-print_info "Remote file: $LATEST_REMOTE_DUMP"
-print_info "Local file: $LOCAL_FILE"
-
-# Copy the file
-print_info "Copying file from remote server..."
-scp ${REMOTE_USER}@${REMOTE_SERVER}:"${LATEST_REMOTE_DUMP}" "${LOCAL_FILE}"
+print_info "Copying dump file from remote server..."
+scp ${REMOTE_USER}@${REMOTE_SERVER}:"${REMOTE_DUMP_FILE}" "${LOCAL_FILE}"
 
 if [ $? -ne 0 ]; then
     print_error "SCP failed"
@@ -111,35 +164,21 @@ if [ $? -ne 0 ]; then
 fi
 
 print_status "File copied successfully"
-
-# Verify file
-if [ ! -f "$LOCAL_FILE" ]; then
-    print_error "File not found after copy: $LOCAL_FILE"
-    exit 1
-fi
-
-FILE_SIZE=$(stat -c%s "$LOCAL_FILE" 2>/dev/null || stat -f%z "$LOCAL_FILE" 2>/dev/null)
-if [ "$FILE_SIZE" -eq 0 ]; then
-    print_error "File is empty after copy"
-    exit 1
-fi
-
+print_info "Local file: $LOCAL_FILE"
 print_info "File size: $(du -h "$LOCAL_FILE" | cut -f1)"
 
-# Truncate tables
+# Truncate local tables
 print_info "Truncating all tables in $LOCAL_DB_NAME..."
 
-# Disable foreign key checks (just in case)
 mysql -D $LOCAL_DB_NAME -e "SET FOREIGN_KEY_CHECKS=0;"
 
-# Get and truncate tables
 TABLES=$(mysql -D $LOCAL_DB_NAME -e "SHOW TABLES;" -s -N 2>/dev/null)
 
 if [ -z "$TABLES" ]; then
     print_info "No tables found to truncate"
 else
     TABLE_COUNT=$(echo "$TABLES" | wc -l)
-    print_info "Found $TABLE_COUNT tables"
+    print_info "Found $TABLE_COUNT tables to truncate"
     
     echo "$TABLES" | while read table; do
         print_info "Truncating: $table"
@@ -148,14 +187,18 @@ else
     print_status "All tables truncated"
 fi
 
-# Re-enable foreign key checks
 mysql -D $LOCAL_DB_NAME -e "SET FOREIGN_KEY_CHECKS=1;"
 
 # Import data
 print_info "Importing data into $LOCAL_DB_NAME..."
 print_info "This may take a while..."
 
-mysql $LOCAL_DB_NAME < "$LOCAL_FILE"
+# Handle compressed files
+if [[ "$LOCAL_FILE" == *.gz ]]; then
+    gunzip -c "$LOCAL_FILE" | mysql $LOCAL_DB_NAME
+else
+    mysql $LOCAL_DB_NAME < "$LOCAL_FILE"
+fi
 
 if [ $? -eq 0 ]; then
     print_status "Data imported successfully"
@@ -164,23 +207,29 @@ else
     exit 1
 fi
 
-# Cleanup old dumps (keep last 5)
-print_info "Cleaning up old dump files..."
+# Clean up old remote dumps
+cleanup_remote_dumps
+
+# Clean up local old dumps (keep last 5)
+print_info "Cleaning up old local dumps..."
 cd "$LOCAL_DUMP_PATH" || exit 1
-ls -t pig_operations_prod_*.sql 2>/dev/null | tail -n +6 | while read old_file; do
-    print_info "Removing old dump: $old_file"
+ls -t pig_operations_prod_*.sql* 2>/dev/null | tail -n +6 | while read old_file; do
+    print_info "Removing old local dump: $old_file"
     rm "$old_file"
 done
+
+# Optional: Remove the remote dump file after copying (if you want to save space)
+# print_info "Removing remote dump file..."
+# ssh ${REMOTE_USER}@${REMOTE_SERVER} "rm ${REMOTE_DUMP_FILE}"
 
 # Final summary
 print_info "========================================"
 print_status "Sync completed successfully!"
-print_info "Database: $LOCAL_DB_NAME"
-print_info "Imported: $DUMP_FILENAME"
+print_info "Remote database: $REMOTE_DB_NAME"
+print_info "Local database: $LOCAL_DB_NAME"
+print_info "Imported file: $DUMP_FILENAME"
 print_info "Size: $(du -h "$LOCAL_FILE" | cut -f1)"
 print_info "Time: $(date)"
 print_info "========================================"
 
 exit 0
-
-
