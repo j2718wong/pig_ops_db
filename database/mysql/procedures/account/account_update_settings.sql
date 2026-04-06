@@ -7,6 +7,7 @@ CREATE PROCEDURE account_update_settings(
     in_day_1_on_dob             INT,
     in_day_1_on_insem           INT,
     
+    in_days_move_to_farrow      INT,
     in_days_wean                INT,
     
     in_days_harvest_from_birth  INT,
@@ -130,7 +131,10 @@ END IF;
 
 UPDATE account SET
     flag_settings                   = cur_account_flag_settings,
+    
+    num_days_move_to_farrow         = in_days_move_to_farrow,
     num_days_wean                   = in_days_wean,
+    
     num_days_harvest_from_birth     = in_days_harvest_from_birth,
     num_days_harvest_from_wean      = in_days_harvest_from_wean,
         
