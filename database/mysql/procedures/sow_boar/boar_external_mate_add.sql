@@ -57,6 +57,10 @@ DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 DECLARE cur_count                               INT             DEFAULT 0;
 
 
+DECLARE cur_boar_customer_name                  VARCHAR(50)     DEFAULT '';
+
+DECLARE s_temp                                  VARCHAR(255)    DEFAULT '';
+
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
 DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
@@ -158,30 +162,41 @@ UPDATE sow_boar SET
 WHERE id = in_boar_id;
 
 
+SELECT  name
+INTO    cur_boar_customer_name
+FROM    account_pig_buyer
+WHERE   id = in_boar_customer_id; 
 
+SET s_temp = CONCAT('SYS: External Mate; boar_customer: ', cur_boar_customer_name);
 IF in_notes IS NOT NULL THEN
-    INSERT INTO pig_prod_notes (
-        sow_boar_id,
-        
-        notes,
-        date_notes,
-        added_by_user_id
-        
-    ) VALUES (
-        in_boar_id,
-        
-        in_notes,
-        in_date_mate,
-        in_user_id
-    );
-
-    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
-    
-    UPDATE sow_boar_mate SET
-        notes_id = cur_pig_prod_notes_id
-    WHERE id = cur_sow_boar_mate_id;
-
+    SET s_temp = CONCAT(s_temp, in_notes);
 END IF;
+
+SET s_temp = SUBSTRING(s_temp, 1, 160);
+
+
+INSERT INTO pig_prod_notes (
+    sow_boar_id,
+    
+    notes,
+    date_notes,
+    added_by_user_id
+    
+) VALUES (
+    in_boar_id,
+    
+    s_temp,
+    in_date_mate,
+    in_user_id
+);
+
+SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+
+UPDATE sow_boar_mate SET
+    notes_id = cur_pig_prod_notes_id
+WHERE id = cur_sow_boar_mate_id;
+
+
 
 
 UPDATE sow_boar SET 
