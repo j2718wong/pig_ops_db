@@ -7,6 +7,8 @@ CREATE PROCEDURE sow_boar_update(
     in_sow_boar_id          INT,
     in_line_id              INT,
     in_sow_status_id        INT,
+    
+    in_num_nipples          INT,
     in_is_external          INT,
     in_is_production_ready  INT,
     
@@ -134,6 +136,8 @@ END IF;
 UPDATE sow_boar SET
     line_id                 = in_line_id,
     sow_status_id           = in_sow_status_id,
+    
+    num_nipples             = in_num_nipples,
     
     is_external             = in_is_external,
     is_production_ready     = in_is_production_ready,

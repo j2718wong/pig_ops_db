@@ -12,7 +12,9 @@ CREATE PROCEDURE pig_farm_update(
     in_address_level_2_id   INT,
     in_address_level_3_id   INT,
     in_latitude             DECIMAL(10,5),
-    in_longitude            DECIMAL(10,5)
+    in_longitude            DECIMAL(10,5),
+    
+    in_num_farrowing_crates INT
     
 )  
 
@@ -97,8 +99,12 @@ UPDATE pig_farm SET
     latitude            = in_latitude,
     longitude           = in_longitude,
     
+    num_farrowing_crates= in_num_farrowing_crates,
+    
     last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP
+    dt_last_update      = CURRENT_TIMESTAMP,
+    
+    data_ver_num_farm   = data_ver_num_farm + 1
 WHERE id =  in_pig_farm_id;
 
 

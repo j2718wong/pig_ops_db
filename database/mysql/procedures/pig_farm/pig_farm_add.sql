@@ -15,8 +15,9 @@ CREATE PROCEDURE pig_farm_add(
     in_address_level_2_id   INT,
     in_address_level_3_id   INT,
     in_latitude             DECIMAL(10,5),
-    in_longitude            DECIMAL(10,5)
-    
+    in_longitude            DECIMAL(10,5),
+        
+    in_num_farrowing_crates INT
 )  
 
 BEGIN
@@ -143,6 +144,8 @@ INSERT INTO pig_farm(
     latitude,
     longitude,
     
+    num_farrowing_crates,
+    
     added_by_user_id
 ) VALUES (
     cur_user_account_id,
@@ -155,6 +158,8 @@ INSERT INTO pig_farm(
     in_address_level_3_id,
     in_latitude,
     in_longitude,
+    
+    in_num_farrowing_crates,
     
     in_user_id
 );
