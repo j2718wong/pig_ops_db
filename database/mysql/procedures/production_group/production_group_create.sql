@@ -272,6 +272,8 @@ INSERT INTO pig_production(
     pig_farm_id,
     farm_prod_id,
     
+    prod_status_id,
+    
     flag,
     
     date_actual_birth,
@@ -308,7 +310,10 @@ VALUES(
     cur_pig_prod_pig_farm_id,
     cur_pig_farm_last_pig_production_id,
     
+    PRODUCTION_STATUS_ID_GROWING,
+    
     FLAG_BIT_IS_A_GROUP,
+    
     cur_pig_prod_date_actual_birth,
     cur_pig_prod_num_pigs_current,
     cur_pig_prod_num_pigs_current,
