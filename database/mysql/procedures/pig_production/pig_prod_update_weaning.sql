@@ -15,6 +15,9 @@ CREATE PROCEDURE pig_prod_update_weaning(
     consuming to count per sex at wean. */
     in_num_pigs             INT,    
     
+    /* These are the the extra  small pigs.*/
+    in_num_pigs_xsmall      INT,
+    
     in_total_weight         DECIMAL(6,2),
     in_per_pig_weight       VARCHAR(200)
 )  
@@ -33,7 +36,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 DECLARE RES_NUM_PIG_PROD_ALREADY_CLOSED         INT             DEFAULT 20;
 DECLARE RES_NUM_UPDATE_WEAN_NOT_ALLOWED         INT             DEFAULT 21;
-
+DECLARE RES_NUM_NUM_PIGS_ALL_NULL               INT             DEFAULT 22;
 
 DECLARE BUSINESS_OBJ_ID_PIG_PRODUCTION          INT             DEFAULT 21;
 
@@ -54,6 +57,7 @@ DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
 
+DECLARE SOW_STATUS_ID_LACTATING                 INT             DEFAULT 3;
 DECLARE SOW_STATUS_ID_WEANING                   INT             DEFAULT 4;
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
@@ -97,6 +101,8 @@ DECLARE cur_num_pigs_weaning_f                  INT             DEFAULT 0;
 DECLARE cur_num_pigs_weaning                    INT             DEFAULT 0;
 
 DECLARE cur_num_pigs                            INT             DEFAULT 0;
+
+DECLARE cur_sow_status_id                       INT             DEFAULT 0;
 
 
 DECLARE date_temp                               DATE            DEFAULT NULL;
@@ -155,6 +161,15 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/** Check inputs */
+IF in_num_pigs_female IS NULL AND  in_num_pigs_male IS NULL AND in_num_pigs IS NULL THEN 
+    SET res_num     = RES_NUM_NUM_PIGS_ALL_NULL;
+    SET res_code    = "RES_NUM_NUM_PIGS_ALL_NULL";
+    
+    LEAVE process_user;
+END IF; 
+
+
 IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_LACTATING,
                                     PRODUCTION_STATUS_ID_WEANING) THEN 
     SET res_num     = RES_NUM_UPDATE_WEAN_NOT_ALLOWED;
@@ -185,6 +200,33 @@ ELSE
 END IF;
 
 
+/*
+2026-04-09 notes;
+1.) The number of piglets at wean should be the number BEFORE ANY harvest
+like selling newly weaned piglets or payment to Boar Mate if the boar is not 
+farm owned.
+
+2.) Users can save multiple times or maybe update the the per piglet weight after
+wean, and sometimes after harvest like selling piglets or boar payment;
+
+3.) Any harvest and pig dead should be reflected in the actual pig count
+when there is an update of weaning info; Otherwise the current pig count 
+presented in the UI will be more than the actual count after updating weaning info. 
+ 
+4.) There will be a double update in pig_production table because there is  
+dedicated actual pig counter procedure
+
+production_calculate_current_pigs
+
+5.) The first update is update pig_production weaning info;
+The second update is update pig_production.num_pigs_current;
+
+6.) There is a future plan to freeze the update_weaning_info after
+MAX_DAYS_ALLOWED_CHANGE_WEAN_INFO so that people cannot play around
+with updating. 
+
+*/
+
 
 
 IF in_num_pigs IS NOT NULL THEN 
@@ -196,7 +238,9 @@ IF in_num_pigs IS NOT NULL THEN
         num_pigs_weaning_f          = NULL,
         num_pigs_weaning            = in_num_pigs,
 
-        num_pigs_current            = in_num_pigs,
+        num_pigs_wean_xsmall        = in_num_pigs_xsmall,
+
+        num_pigs_current            = in_num_pigs, /* This is inaccurate*/
         
         wean_pigs_weight_total      = in_total_weight,
         wean_pigs_weight_pp         = in_per_pig_weight,
@@ -208,6 +252,7 @@ IF in_num_pigs IS NOT NULL THEN
         
     WHERE id = in_pig_prod_id;
     
+    
 ELSE
     UPDATE pig_production SET
         date_weaning                = in_date_weaning,
@@ -216,8 +261,10 @@ ELSE
         num_pigs_weaning_m          = in_num_pigs_male,
         num_pigs_weaning_f          = in_num_pigs_female,
         num_pigs_weaning            = NULL,
+        
+        num_pigs_wean_xsmall        = in_num_pigs_xsmall,
 
-        num_pigs_current            = in_num_pigs_male + in_num_pigs_female,
+        num_pigs_current            = in_num_pigs_male + in_num_pigs_female, /* This is inaccurate*/
         
         wean_pigs_weight_total      = in_total_weight,
         wean_pigs_weight_pp         = in_per_pig_weight,
@@ -231,6 +278,17 @@ ELSE
 
 
 END IF;
+
+
+/* Compute actual number of pigs. */
+CALL production_calculate_current_pigs(in_pig_prod_id, NULL, cur_num_pigs);
+
+
+/* Update pig_production.num_pigs_current*/
+UPDATE pig_production SET
+    num_pigs_current = cur_num_pigs
+WHERE id = in_pig_prod_id;
+
 
 
 /* SUM the number pigs weaned for this sow. */
@@ -261,84 +319,104 @@ END IF;
 
 
 
+/* Check the sow status if still LACTATING*/
 
-UPDATE sow_boar SET
-    sow_status_id       = SOW_STATUS_ID_WEANING,
-    num_pigs_wean       = cur_num_pigs,
-    data_ver_num_sow_boar = data_ver_num_sow_boar 
-WHERE id = cur_pig_prod_sow_id;
+SELECT  sow_status_id
+INTO    cur_sow_status_id
+FROM    sow_boar
+WHERE   id = cur_pig_prod_sow_id;
 
+IF cur_sow_status_id = SOW_STATUS_ID_LACTATING THEN 
 
-
-/* Count if there are pig operations to be done for weaning sow set by account.*/
-SELECT  COUNT(*)
-INTO    cur_count_account_pig_ops
-FROM    account_pig_ops
-WHERE   account_id = cur_pig_prod_account_id  AND 
-        operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS AND 
-        (flag & FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED) = 0;
+    UPDATE sow_boar SET
+        sow_status_id       = SOW_STATUS_ID_WEANING,
+        num_pigs_wean       = cur_num_pigs,
+        data_ver_num_sow_boar = data_ver_num_sow_boar 
+    WHERE id = cur_pig_prod_sow_id;
 
 
-IF cur_count_account_pig_ops > 0 THEN
-    /* Count if there are already created pig_ops*/
+
+    /* Count if there are pig operations to be done for weaning sow set by account.*/
     SELECT  COUNT(*)
-    INTO    cur_count_pig_prod_pig_ops
-    FROM    pig_prod_pig_ops
-    WHERE   pig_prod_id = in_pig_prod_id AND 
-            operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS;
+    INTO    cur_count_account_pig_ops
+    FROM    account_pig_ops
+    WHERE   account_id = cur_pig_prod_account_id  AND 
+            operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS AND 
+            (flag & FLAG_BIT_ACCOUNT_PIG_OPS_IS_DELETED) = 0;
 
-    IF cur_count_pig_prod_pig_ops = 0 THEN 
-        /* Create pig_prod_pig_ops entry*/
-        CALL pig_prod_pig_ops_add(
-            in_user_id,
+
+    IF cur_count_account_pig_ops > 0 THEN
+        /* Count if there are already created pig_ops*/
+        SELECT  COUNT(*)
+        INTO    cur_count_pig_prod_pig_ops
+        FROM    pig_prod_pig_ops
+        WHERE   pig_prod_id = in_pig_prod_id AND 
+                operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS;
+
+        IF cur_count_pig_prod_pig_ops = 0 THEN 
+            /* Create pig_prod_pig_ops entry*/
+            CALL pig_prod_pig_ops_add(
+                in_user_id,
+                
+                cur_pig_prod_account_id, 
+                PIG_OPERATION_TYPE_WEANING_SOW_OPS,
+                in_pig_prod_id,
+                in_date_weaning
+            );
             
-            cur_pig_prod_account_id, 
-            PIG_OPERATION_TYPE_WEANING_SOW_OPS,
-            in_pig_prod_id,
-            in_date_weaning
-        );
-        
-        /* Since this is a weaning sow pig ops, need to relate to SOW.*/
-        UPDATE pig_prod_pig_ops SET 
-            sow_boar_id = cur_pig_prod_sow_id
-        WHERE pig_prod_id = in_pig_prod_id AND operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS;
-        
-    ELSE
-        IF detected_date_weaning_change > 0 THEN
+            /* Since this is a weaning sow pig ops, need to relate to SOW.*/
+            UPDATE pig_prod_pig_ops SET 
+                sow_boar_id = cur_pig_prod_sow_id
+            WHERE pig_prod_id = in_pig_prod_id AND operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS;
             
-            /* Need to adjust Day 1 counting.*/
-            /*
-            IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN 
+        ELSE
+            IF detected_date_weaning_change > 0 THEN
+                
+                /* Need to adjust Day 1 counting.*/
+                /*
+                IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN 
+                    UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                        a.date_target = DATE_ADD(in_date_weaning, INTERVAL b.num_days_since DAY)
+                    WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                            a.operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS AND
+                            a.account_pig_ops_id = b.id;
+                
+                ELSE
+                    UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
+                        a.date_target = DATE_ADD(in_date_weaning, INTERVAL b.num_days_since - 1 DAY)
+                    WHERE   a.pig_prod_id = in_pig_prod_id AND 
+                            a.operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS AND
+                            a.account_pig_ops_id = b.id;
+                END IF;
+                
+                */
+                
+                
+                /* in_date_weaning is DAY 0 after wean */
                 UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
                     a.date_target = DATE_ADD(in_date_weaning, INTERVAL b.num_days_since DAY)
                 WHERE   a.pig_prod_id = in_pig_prod_id AND 
                         a.operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS AND
                         a.account_pig_ops_id = b.id;
             
-            ELSE
-                UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
-                    a.date_target = DATE_ADD(in_date_weaning, INTERVAL b.num_days_since - 1 DAY)
-                WHERE   a.pig_prod_id = in_pig_prod_id AND 
-                        a.operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS AND
-                        a.account_pig_ops_id = b.id;
             END IF;
-            
-            */
-            
-            
-            /* in_date_weaning is DAY 0 after wean */
-            UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
-                a.date_target = DATE_ADD(in_date_weaning, INTERVAL b.num_days_since DAY)
-            WHERE   a.pig_prod_id = in_pig_prod_id AND 
-                    a.operation_type = PIG_OPERATION_TYPE_WEANING_SOW_OPS AND
-                    a.account_pig_ops_id = b.id;
-        
+
         END IF;
+
 
     END IF;
 
+ELSE
+    /* Only update the sow_boar.num_pigs_wean if sow is already not LACTATING */
+    
+    UPDATE sow_boar SET
+        num_pigs_wean       = cur_num_pigs,
+        data_ver_num_sow_boar = data_ver_num_sow_boar 
+    WHERE id = cur_pig_prod_sow_id;
 
 END IF;
+
+
 
 
 END process_user;
