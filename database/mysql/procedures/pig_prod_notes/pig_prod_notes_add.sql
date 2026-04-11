@@ -6,7 +6,6 @@ CREATE PROCEDURE pig_prod_notes_add(
     
     in_pig_prod_id          INT,
     in_sow_boar_id          INT,
-    in_production_group_id  INT,
     
     in_is_health_issue      INT,
     
@@ -116,23 +115,6 @@ IF in_sow_boar_id > 0 THEN
 END IF;
 
 
-IF in_production_group_id > 0 THEN 
-    SELECT  
-            account_id,
-            pig_farm_id,
-            prod_status_id
-    INTO    
-            cur_pig_prod_account_id,
-            cur_pig_prod_pig_farm_id,
-            cur_pig_prod_status_id
-            
-    FROM    production_group 
-    WHERE   id = in_production_group_id
-    LIMIT   1;
-    
-    SET cur_account_id_to_check = cur_pig_prod_account_id;
-END IF;
-
 
 CALL basic_user_check(
     in_user_id, 
@@ -198,7 +180,6 @@ INSERT INTO pig_prod_notes (
     pig_farm_id,
     pig_prod_id,
     sow_boar_id,
-    production_group_id,
     flag,
     
     notes,
@@ -210,7 +191,6 @@ INSERT INTO pig_prod_notes (
     cur_pig_prod_pig_farm_id,
     in_pig_prod_id,
     in_sow_boar_id,
-    in_production_group_id,
     cur_flag,
     
     in_notes,
@@ -234,14 +214,6 @@ IF in_pig_prod_id > 0 THEN
         data_ver_num_health_notes = data_ver_num_health_notes + 1
     WHERE id = in_pig_prod_id;
 END IF;
-
-
-IF in_production_group_id > 0 THEN 
-    UPDATE pig_production SET 
-        data_ver_num_health_notes = data_ver_num_health_notes + 1
-    WHERE id = in_production_group_id;
-END IF;
-
 
 
 

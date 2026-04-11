@@ -41,7 +41,6 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
-DECLARE cur_pig_prod_group_id                   INT             DEFAULT 0;
 DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
 
 
@@ -72,11 +71,9 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  pig_prod_id,
-        production_group_id,
         sow_boar_id
 
 INTO    cur_pig_prod_id,
-        cur_pig_prod_group_id,
         cur_sow_boar_id
 
 FROM    pig_prod_notes 
@@ -192,13 +189,6 @@ IF cur_pig_prod_id > 0 THEN
     UPDATE pig_production SET 
         data_ver_num_health_notes = data_ver_num_health_notes + 1
     WHERE id = cur_pig_prod_id;
-END IF;
-
-
-IF cur_pig_prod_group_id > 0 THEN 
-    UPDATE pig_production SET 
-        data_ver_num_health_notes = data_ver_num_health_notes + 1
-    WHERE id = cur_pig_prod_group_id;
 END IF;
 
 

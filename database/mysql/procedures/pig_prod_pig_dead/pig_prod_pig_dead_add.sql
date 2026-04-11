@@ -5,7 +5,6 @@ CREATE PROCEDURE pig_prod_pig_dead_add(
     in_user_id              INT,
    
     in_pig_prod_id          INT,
-    in_production_group_id  INT,
     
     in_date_dead            VARCHAR(10),
     in_pig_dead_type_id     INT,
@@ -91,40 +90,22 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-IF in_pig_prod_id > 0 THEN 
-     /* pig_production */
-    SELECT  
-            account_id,
-            pig_farm_id,
-            prod_status_id,
-            
-            date_weaning
-    INTO    
-            cur_pig_prod_account_id,
-            cur_pig_prod_pig_farm_id,
-            cur_pig_prod_status_id,
-            
-            cur_pig_prod_date_weaning
-            
-    FROM    pig_production 
-    WHERE   id = in_pig_prod_id;
+SELECT  
+        account_id,
+        pig_farm_id,
+        prod_status_id,
+        
+        date_weaning
+INTO    
+        cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
+        cur_pig_prod_status_id,
+        
+        cur_pig_prod_date_weaning
+        
+FROM    pig_production 
+WHERE   id = in_pig_prod_id;
 
-ELSE
-    /* production_group */
-    SELECT  
-            account_id,
-            pig_farm_id,
-            prod_group_status_id
-    INTO    
-            cur_pig_prod_account_id,
-            cur_pig_prod_pig_farm_id,
-            cur_pig_prod_status_id
-            
-    FROM    production_group 
-    WHERE   id = in_production_group_id;
-
-
-END IF;
 
 
 CALL basic_user_check(
@@ -151,57 +132,35 @@ END IF;
 
 
 /* Check production status*/
-IF in_pig_prod_id > 0 THEN 
-    /* pig_production */
-    
-    IF cur_pig_prod_status_id IN (  PRODUCTION_STATUS_ID_CLOSED,
-                                    PRODUCTION_STATUS_ID_HARVESTED) THEN 
-        SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
-        SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
-        SET res_desc    = "Production status already HARVESTED or CLOSED.";
-    
-        LEAVE process_user;
-    END IF;
+IF cur_pig_prod_status_id IN (  PRODUCTION_STATUS_ID_CLOSED,
+                                PRODUCTION_STATUS_ID_HARVESTED) THEN 
+    SET res_num     = RES_NUM_PIG_PROD_ALREADY_CLOSED;
+    SET res_code    = "RES_NUM_PIG_PROD_ALREADY_CLOSED";
+    SET res_desc    = "Production status already HARVESTED or CLOSED.";
 
-    IF  cur_pig_prod_status_id < PRODUCTION_STATUS_ID_LACTATING THEN 
-        
-        SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD;
-        SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD";
-        SET res_desc    = "No pigs yet";
-        
-        LEAVE process_user;
-    END IF;
+    LEAVE process_user;
+END IF;
 
-ELSE
-    /* production_group */
-    IF cur_pig_prod_status_id != PRODUCTION_GROUP_STATUS_ID_GROWING THEN
-        SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD;
-        SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD";
-        SET res_desc    = "Production group status not GROWING.";
+IF  cur_pig_prod_status_id < PRODUCTION_STATUS_ID_LACTATING THEN 
     
-        LEAVE process_user;
+    SET res_num     = RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD;
+    SET res_code    = "RES_NUM_PIG_PROD_CANNOT_ADD_PIG_DEAD";
+    SET res_desc    = "No pigs yet";
     
-    END IF;
-    
-    
+    LEAVE process_user;
 END IF;
 
 
+
 /* Compute dead_at_stage*/
-IF in_pig_prod_id > 0 THEN 
-
-    IF cur_pig_prod_date_weaning IS NULL THEN 
-        SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
-    ELSE
-        IF in_date_dead >= cur_pig_prod_date_weaning THEN 
-            SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
-        ELSE
-            SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
-        END IF;
-    END IF;
-
+IF cur_pig_prod_date_weaning IS NULL THEN 
+    SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
 ELSE
-    SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
+    IF in_date_dead >= cur_pig_prod_date_weaning THEN 
+        SET cur_dead_at_stage = DEAD_AT_STAGE_GROWING;
+    ELSE
+        SET cur_dead_at_stage = DEAD_AT_STAGE_LACTATING;
+    END IF;
 END IF;
 
 
@@ -209,7 +168,6 @@ INSERT INTO pig_prod_pig_dead (
     account_id,
     pig_farm_id,
     pig_prod_id,
-    production_group_id,
     
     date_dead,
     dead_type_id,
@@ -222,7 +180,6 @@ INSERT INTO pig_prod_pig_dead (
     cur_user_account_id,
     cur_pig_prod_pig_farm_id,
     in_pig_prod_id,
-    in_production_group_id,
     
     in_date_dead,
     in_pig_dead_type_id,
@@ -272,44 +229,26 @@ END IF;
 
 
 /* Calculate current number of pigs.*/
-IF in_pig_prod_id > 0 THEN 
-    CALL production_calculate_current_pigs(in_pig_prod_id, 0, cur_num_pigs_current);
-    
-    IF cur_num_pigs_current < 0 THEN
-        /* Something is wrong*/
-        SET cur_num_pigs_current = 0;
-    END IF;
-    
-    
-    /* Dead after birth This can be NULL.*/
-    SELECT  SUM(num_pigs_dead)
-    INTO    cur_num_dead_pigs
-    FROM    pig_prod_pig_dead
-    WHERE   pig_prod_id = in_pig_prod_id;
-    
+CALL production_calculate_current_pigs(in_pig_prod_id, 0, cur_num_pigs_current);
 
-    UPDATE  pig_production SET
-        num_pigs_current        = cur_num_pigs_current,
-        num_dead_after_birth    = cur_num_dead_pigs,
-        data_ver_num_pig_prod   = data_ver_num_pig_prod +1
-    WHERE id = in_pig_prod_id;
-
-ELSE
-    CALL production_calculate_current_pigs(0, in_production_group_id, cur_num_pigs_current);
-    
-    IF cur_num_pigs_current < 0 THEN
-        /* Something is wrong*/
-        SET cur_num_pigs_current = 0;
-    END IF;
-    
-
-    UPDATE  production_group SET
-        num_pigs_current        = cur_num_pigs_current,
-        data_ver_num_pig_prod   = data_ver_num_pig_prod +1
-    WHERE id = in_production_group_id;
-    
+IF cur_num_pigs_current < 0 THEN
+    /* Something is wrong*/
+    SET cur_num_pigs_current = 0;
 END IF;
 
+
+/* Dead after birth This can be NULL.*/
+SELECT  SUM(num_pigs_dead)
+INTO    cur_num_dead_pigs
+FROM    pig_prod_pig_dead
+WHERE   pig_prod_id = in_pig_prod_id;
+
+
+UPDATE  pig_production SET
+    num_pigs_current        = cur_num_pigs_current,
+    num_dead_after_birth    = cur_num_dead_pigs,
+    data_ver_num_pig_prod   = data_ver_num_pig_prod +1
+WHERE id = in_pig_prod_id;
 
 
 END process_user;

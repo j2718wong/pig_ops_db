@@ -173,19 +173,6 @@ IF cur_pig_dead_pig_prod_id > 0 THEN
     UPDATE  pig_production SET
         num_pigs_current = cur_num_pigs_current
     WHERE id = cur_pig_dead_pig_prod_id;
-
-ELSE
-    CALL production_calculate_current_pigs(0, cur_pig_dead_production_group_id, cur_num_pigs_current);
-    
-    IF cur_num_pigs_current < 0 THEN
-        /* Something is wrong*/
-        SET cur_num_pigs_current = 0;
-    END IF;
-    
-
-    UPDATE  production_group SET
-        num_pigs_current = cur_num_pigs_current
-    WHERE id = cur_pig_dead_production_group_id;
     
 END IF;
 
