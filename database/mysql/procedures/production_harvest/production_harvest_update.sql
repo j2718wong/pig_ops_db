@@ -59,17 +59,11 @@ DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 
 
-DECLARE PRODUCTION_GROUP_STATUS_ID_GROWING      INT             DEFAULT 1;
-DECLARE PRODUCTION_GROUP_STATUS_ID_HARVESTED    INT             DEFAULT 2;
-DECLARE PRODUCTION_GROUP_STATUS_ID_CLOSED       INT             DEFAULT 3;
-
-
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_production_harvest_account_id       INT             DEFAULT 0;
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
-DECLARE cur_production_group_id                 INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
@@ -103,12 +97,10 @@ SET res_code    = "SUCCESS";
 
 SELECT 
     account_id,
-    pig_prod_id,
-    production_group_id
+    pig_prod_id
 INTO
     cur_production_harvest_account_id,
-    cur_pig_prod_id,
-    cur_production_group_id
+    cur_pig_prod_id
 
 FROM production_harvest 
 WHERE id = in_production_harvest_id;
@@ -145,48 +137,34 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
-/* Check production status*/
-IF cur_pig_prod_id > 0 THEN 
-    /* pig_production */
-    IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_WEANING, 
-                                        PRODUCTION_STATUS_ID_GROWING) THEN
-        SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
-        SET res_code    = "RES_NUM_HARVEST_ENTRY_NOT_ALLOWED";
-        SET res_desc    = "Production status not WEANING or GROWING.";
-    
-        LEAVE process_user;
-    
-    END IF;
 
-ELSE 
-    /* production_group */
-    IF cur_pig_prod_status_id != PRODUCTION_GROUP_STATUS_ID_GROWING THEN
-        SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
-        SET res_code    = "RES_NUM_HARVEST_ENTRY_NOT_ALLOWED";
-        SET res_desc    = "Production group status not GROWING.";
-    
-        LEAVE process_user;
-    
-    END IF;
-    
-END IF;
+IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_WEANING, 
+                                    PRODUCTION_STATUS_ID_GROWING) THEN
+    SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
+    SET res_code    = "RES_NUM_HARVEST_ENTRY_NOT_ALLOWED";
+    SET res_desc    = "Production status not WEANING or GROWING.";
 
-
-IF cur_pig_prod_id > 0 THEN 
-    SELECT  date_actual_birth
-    INTO    cur_pig_prod_date_actual_birth
-    FROM    pig_production
-    WHERE   id = cur_pig_prod_id;
-    
-    
-    IF cur_pig_prod_date_actual_birth IS NOT NULL THEN 
-        SET cur_num_days_since_birth = DATEDIFF(in_date_harvest, 
-                cur_pig_prod_date_actual_birth); 
-    ELSE
-        SET cur_num_days_since_birth = NULL;
-    END IF;
+    LEAVE process_user;
 
 END IF;
+
+
+
+
+
+SELECT  date_actual_birth
+INTO    cur_pig_prod_date_actual_birth
+FROM    pig_production
+WHERE   id = cur_pig_prod_id;
+
+
+IF cur_pig_prod_date_actual_birth IS NOT NULL THEN 
+    SET cur_num_days_since_birth = DATEDIFF(in_date_harvest, 
+            cur_pig_prod_date_actual_birth); 
+ELSE
+    SET cur_num_days_since_birth = NULL;
+END IF;
+
 
 
 IF in_live_weight IS NOT NULL THEN 
@@ -242,68 +220,43 @@ WHERE id = in_production_harvest_id;
 
 
 /* Calculate current number of pigs.*/
-IF cur_pig_prod_id > 0 THEN 
-    CALL production_calculate_current_pigs(cur_pig_prod_id, 0, cur_num_pigs_current);
-    
-    IF cur_num_pigs_current < 0 THEN
-        /* Something is wrong*/
-        SET cur_num_pigs_current = 0;
-        
-        UPDATE  pig_production SET
-            num_pigs_current = 0,
-            prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
-        WHERE id = cur_pig_prod_id;
-    END IF;
-    
 
-    IF cur_num_pigs_current > 0 THEN 
-        UPDATE  pig_production SET
-            num_pigs_current = cur_num_pigs_current
-        WHERE id = cur_pig_prod_id;
-    ELSE
-        
-        UPDATE  pig_production SET
-            num_pigs_current = 0,
-            prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
-        WHERE id = cur_pig_prod_id;
-    END IF;
+CALL production_calculate_current_pigs(cur_pig_prod_id, 0, cur_num_pigs_current);
 
-ELSE
-    CALL production_calculate_current_pigs(0, cur_production_group_id, cur_num_pigs_current);
+IF cur_num_pigs_current < 0 THEN
+    /* Something is wrong*/
+    SET cur_num_pigs_current = 0;
     
-    IF cur_num_pigs_current < 0 THEN
-        /* Something is wrong*/
-        SET cur_num_pigs_current = 0;
-    END IF;
-    
-
-    IF cur_num_pigs_current > 0 THEN 
-        UPDATE  production_group SET
-            num_pigs_current = cur_num_pigs_current
-        WHERE id = in_production_group_id;
-    ELSE
-        
-        UPDATE  production_group SET
-            num_pigs_current = 0,
-            prod_status_id = PRODUCTION_GROUP_STATUS_ID_HARVESTED
-        WHERE id = in_production_group_id;
-    END IF;
-    
-END IF;
-
-
-IF cur_pig_prod_id > 0 THEN 
-    UPDATE pig_production SET 
-        data_ver_num_harvest = data_ver_num_harvest + 1
+    UPDATE  pig_production SET
+        num_pigs_current = 0,
+        prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
     WHERE id = cur_pig_prod_id;
 END IF;
 
-IF cur_production_group_id > 0 THEN 
-    UPDATE pig_production SET 
-        data_ver_num_harvest = data_ver_num_harvest + 1
-    WHERE id = cur_production_group_id;
-END IF;
 
+IF cur_num_pigs_current > 0 THEN 
+    -- This only updates pig_production because of the change of number of pigs.
+    UPDATE  pig_production SET
+        num_pigs_current        = cur_num_pigs_current,
+        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
+    WHERE id = in_pig_prod_id;
+ELSE
+    -- This updates not only for the pig_production but also pig_farm;
+    -- This is because the production_entry becomes history; must be remove
+    -- from Fattening list of the farm
+    
+    UPDATE  pig_production SET
+        num_pigs_current = 0,
+        prod_status_id = PRODUCTION_STATUS_ID_HARVESTED,
+        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
+    WHERE id = in_pig_prod_id;
+
+
+    UPDATE pig_farm SET
+        data_ver_num_pig_prod = data_ver_num_pig_prod + 1 
+    WHERE id = cur_pig_prod_pig_farm_id;
+
+END IF;
 
 
 END process_user;

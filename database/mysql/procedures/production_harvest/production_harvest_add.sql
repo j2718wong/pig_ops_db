@@ -58,11 +58,6 @@ DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 
 
-DECLARE PRODUCTION_GROUP_STATUS_ID_GROWING      INT             DEFAULT 1;
-DECLARE PRODUCTION_GROUP_STATUS_ID_HARVESTED    INT             DEFAULT 2;
-DECLARE PRODUCTION_GROUP_STATUS_ID_CLOSED       INT             DEFAULT 3;
-
-
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
@@ -95,35 +90,20 @@ SET res_num     = RES_NUM_SUCCESS;
 SET res_code    = "SUCCESS";
 
 
-IF in_pig_prod_id > 0 THEN 
-    /* pig_production */
-    SELECT 
-        account_id,
-        pig_farm_id,
-        prod_status_id,
-        date_actual_birth
-    INTO
-        cur_pig_prod_account_id,
-        cur_pig_prod_pig_farm_id,
-        cur_pig_prod_status_id,
-        cur_pig_prod_date_actual_birth
-    FROM pig_production 
-    WHERE id = in_pig_prod_id;
 
-ELSE
-    /* production_group */
-    SELECT 
-        account_id,
-        prod_group_status_id
+SELECT 
+    account_id,
+    pig_farm_id,
+    prod_status_id,
+    date_actual_birth
+INTO
+    cur_pig_prod_account_id,
+    cur_pig_prod_pig_farm_id,
+    cur_pig_prod_status_id,
+    cur_pig_prod_date_actual_birth
+FROM pig_production 
+WHERE id = in_pig_prod_id;
 
-    INTO
-        cur_pig_prod_account_id,
-        cur_pig_prod_status_id
-
-    FROM production_group 
-    WHERE id = in_production_group_id;
-
-END IF;
 
 
 CALL basic_user_check(
@@ -149,27 +129,14 @@ END IF;
 
 
 /* Check for duplicate entry */
-IF in_pig_prod_id > 0 THEN 
-    /* pig_production */
-    SELECT  id
-    INTO    cur_production_harvest_id
-    FROM    production_harvest
-    WHERE   pig_prod_id         = in_pig_prod_id    AND
-            acc_pig_buyer_id    = in_acc_pig_buyer_id AND
-            date_harvest        = in_date_harvest
-    LIMIT   1;
-    
-ELSE
-    /* production_group */
-    SELECT  id
-    INTO    cur_production_harvest_id
-    FROM    production_harvest
-    WHERE   production_group_id = in_production_group_id    AND
-            acc_pig_buyer_id    = in_acc_pig_buyer_id AND
-            date_harvest        = in_date_harvest
-    LIMIT   1;
-    
-END IF;
+SELECT  id
+INTO    cur_production_harvest_id
+FROM    production_harvest
+WHERE   pig_prod_id         = in_pig_prod_id    AND
+        acc_pig_buyer_id    = in_acc_pig_buyer_id AND
+        date_harvest        = in_date_harvest
+LIMIT   1;
+
 
 IF cur_production_harvest_id > 0 THEN 
     SET res_num     = RES_NUM_DUPLICATE_ENTRY;
@@ -180,29 +147,14 @@ END IF;
 
 
 /* Check production status*/
-IF in_pig_prod_id > 0 THEN 
-    /* pig_production */
-    IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_WEANING, 
-                                        PRODUCTION_STATUS_ID_GROWING) THEN
-        SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
-        SET res_code    = "RES_NUM_HARVEST_ENTRY_NOT_ALLOWED";
-        SET res_desc    = "Production status not WEANING or GROWING.";
-    
-        LEAVE process_user;
-    
-    END IF;
+IF cur_pig_prod_status_id NOT IN (  PRODUCTION_STATUS_ID_WEANING, 
+                                    PRODUCTION_STATUS_ID_GROWING) THEN
+    SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
+    SET res_code    = "RES_NUM_HARVEST_ENTRY_NOT_ALLOWED";
+    SET res_desc    = "Production status not WEANING or GROWING.";
 
-ELSE 
-    /* production_group */
-    IF cur_pig_prod_status_id != PRODUCTION_GROUP_STATUS_ID_GROWING THEN
-        SET res_num     = RES_NUM_HARVEST_ENTRY_NOT_ALLOWED;
-        SET res_code    = "RES_NUM_HARVEST_ENTRY_NOT_ALLOWED";
-        SET res_desc    = "Production group status not GROWING.";
-    
-        LEAVE process_user;
-    
-    END IF;
-    
+    LEAVE process_user;
+
 END IF;
 
 
@@ -241,7 +193,6 @@ INSERT INTO production_harvest(
     pig_farm_id,
 
     pig_prod_id,
-    production_group_id,
     acc_pig_buyer_id,
     
     date_harvest,
@@ -275,7 +226,6 @@ INSERT INTO production_harvest(
     cur_pig_prod_pig_farm_id,
 
     in_pig_prod_id,
-    in_production_group_id,
     in_acc_pig_buyer_id,
     
     in_date_harvest,
@@ -309,63 +259,37 @@ SELECT LAST_INSERT_ID() INTO cur_production_harvest_id;
 
 
 /* Calculate current number of pigs.*/
-IF in_pig_prod_id > 0 THEN 
-    CALL production_calculate_current_pigs(in_pig_prod_id, 0, cur_num_pigs_current);
-    
-    IF cur_num_pigs_current < 0 THEN
-        /* Something is wrong*/
-        SET cur_num_pigs_current = 0;
-    END IF;
-    
+CALL production_calculate_current_pigs(in_pig_prod_id, 0, cur_num_pigs_current);
 
-    IF cur_num_pigs_current > 0 THEN 
-        UPDATE  pig_production SET
-            num_pigs_current = cur_num_pigs_current
-        WHERE id = in_pig_prod_id;
-    ELSE
-        
-        UPDATE  pig_production SET
-            num_pigs_current = 0,
-            prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
-        WHERE id = in_pig_prod_id;
-    END IF;
-
-ELSE
-    CALL production_calculate_current_pigs(0, in_production_group_id, cur_num_pigs_current);
-    
-    IF cur_num_pigs_current < 0 THEN
-        /* Something is wrong*/
-        SET cur_num_pigs_current = 0;
-    END IF;
-    
-
-    IF cur_num_pigs_current > 0 THEN 
-        UPDATE  production_group SET
-            num_pigs_current = cur_num_pigs_current
-        WHERE id = in_production_group_id;
-    ELSE
-        
-        UPDATE  production_group SET
-            num_pigs_current = 0,
-            prod_status_id = PRODUCTION_GROUP_STATUS_ID_HARVESTED
-        WHERE id = in_production_group_id;
-    END IF;
-    
+IF cur_num_pigs_current < 0 THEN
+    /* Something is wrong*/
+    SET cur_num_pigs_current = 0;
 END IF;
 
 
-IF in_pig_prod_id > 0 THEN 
-    UPDATE pig_production SET 
-        data_ver_num_harvest = data_ver_num_harvest + 1
+IF cur_num_pigs_current > 0 THEN 
+    -- This only updates pig_production because of the change of number of pigs.
+    UPDATE  pig_production SET
+        num_pigs_current        = cur_num_pigs_current,
+        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
     WHERE id = in_pig_prod_id;
-END IF;
+ELSE
+    -- This updates not only for the pig_production but also pig_farm;
+    -- This is because the production_entry becomes history; must be remove
+    -- from Fattening list of the farm
+    
+    UPDATE  pig_production SET
+        num_pigs_current = 0,
+        prod_status_id = PRODUCTION_STATUS_ID_HARVESTED,
+        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
+    WHERE id = in_pig_prod_id;
 
-IF in_production_group_id > 0 THEN 
-    UPDATE pig_production SET 
-        data_ver_num_harvest = data_ver_num_harvest + 1
-    WHERE id = in_production_group_id;
-END IF;
 
+    UPDATE pig_farm SET
+        data_ver_num_pig_prod = data_ver_num_pig_prod + 1 
+    WHERE id = cur_pig_prod_pig_farm_id;
+
+END IF;
 
 
 
