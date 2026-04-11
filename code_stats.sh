@@ -200,8 +200,9 @@ echo "8. SHELL SCRIPTS" | tee -a "$OUTPUT_FILE"
 echo "----------------" | tee -a "$OUTPUT_FILE"
 SH_DIR="$PROJECT_BASE"
 if [ -d "$SH_DIR" ]; then
-    SH_COUNT=$(find "$SH_DIR" -maxdepth 1 -type f -name "*.sh" 2>/dev/null | wc -l)
-    SH_LINES=$(find "$SH_DIR" -maxdepth 1 -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)
+    # Remove -maxdepth 1 to search all subdirectories
+    SH_COUNT=$(find "$SH_DIR" -type f -name "*.sh" 2>/dev/null | wc -l)
+    SH_LINES=$(find "$SH_DIR" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)
     echo "  Files: $SH_COUNT" | tee -a "$OUTPUT_FILE"
     echo "  Lines: $SH_LINES" | tee -a "$OUTPUT_FILE"
     if [ $SH_COUNT -gt 0 ]; then
@@ -210,9 +211,11 @@ if [ -d "$SH_DIR" ]; then
     echo "" | tee -a "$OUTPUT_FILE"
     
     echo "  All shell scripts:" | tee -a "$OUTPUT_FILE"
-    find "$SH_DIR" -maxdepth 1 -type f -name "*.sh" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
-        filename=$(basename "$file")
-        printf "    - %-60s %6s lines\n" "$filename" "$lines" | tee -a "$OUTPUT_FILE"
+    # Also remove -maxdepth 1 here
+    find "$SH_DIR" -type f -name "*.sh" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
+        # Get relative path from PROJECT_BASE
+        rel_path=$(echo "$file" | sed "s|$PROJECT_BASE/||")
+        printf "    - %-60s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
     done
 else
     echo "  Directory not found: $SH_DIR" | tee -a "$OUTPUT_FILE"
