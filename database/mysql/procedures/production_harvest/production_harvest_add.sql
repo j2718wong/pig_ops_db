@@ -286,7 +286,8 @@ ELSE
 
 
     UPDATE pig_farm SET
-        data_ver_num_pig_prod = data_ver_num_pig_prod + 1 
+        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1,
+        data_ver_num_prod_history = data_ver_num_prod_history + 1 
     WHERE id = cur_pig_prod_pig_farm_id;
 
 END IF;
