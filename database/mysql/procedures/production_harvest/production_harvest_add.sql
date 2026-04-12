@@ -267,15 +267,15 @@ END IF;
 
 
 IF cur_num_pigs_current > 0 THEN 
-    -- This only updates pig_production because of the change of number of pigs.
+    /* This only updates pig_production because of the change of number of pigs. */
     UPDATE  pig_production SET
         num_pigs_current        = cur_num_pigs_current,
         data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
     WHERE id = in_pig_prod_id;
 ELSE
-    -- This updates not only for the pig_production but also pig_farm;
-    -- This is because the production_entry becomes history; must be remove
-    -- from Fattening list of the farm
+    /* This updates not only for the pig_production but also pig_farm;
+       This is because the production_entry becomes history; must be remove
+       from Fattening list of the farm */
     
     UPDATE  pig_production SET
         num_pigs_current = 0,

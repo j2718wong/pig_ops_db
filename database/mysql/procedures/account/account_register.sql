@@ -47,13 +47,13 @@ DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
 /* account.flag bits
 bit 0: FLAG_BIT_ACCOUNT_ENABLE
-bit 1: FLAG_BIT_FREE_TRIAL_FINISHED
+bit 1: FLAG_BIT_FREE_TRIAL_STARTED
 bit 2:
 bit 3:  
 
 bit 4:  FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED
 0 = not exempted has to pay bill
-1 = exempted
+1 = exempted, no need to compute bill
 
 
 
@@ -61,6 +61,9 @@ bit 16: COMPANY_OWNED ACCOUNT
 
 */
 DECLARE FLAG_BIT_ACCOUNT_ENABLE                 INT             DEFAULT 1;
+DECLARE FLAG_BIT_FREE_TRIAL_STARTED             INT             DEFAULT 2;
+
+
 
 DECLARE ACCOUNT_STATUS_ID_ON_TRIAL              INT             DEFAULT 1;
 DECLARE ACCOUNT_STATUS_ID_TRIAL_EXPIRED         INT             DEFAULT 2;
