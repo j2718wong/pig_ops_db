@@ -56,26 +56,31 @@ echo "2. DATABASE MIGRATIONS" | tee -a "$OUTPUT_FILE"
 echo "----------------------" | tee -a "$OUTPUT_FILE"
 MIGRATIONS_DIR="$PROJECT_BASE/pig_ops_db/database/mysql/migrations"
 if [ -d "$MIGRATIONS_DIR" ]; then
+    # Count files (including symlinks)
     MIGRATIONS_COUNT=$(find "$MIGRATIONS_DIR" -maxdepth 1 -type f -o -type l 2>/dev/null | wc -l)
     
+    # Count only regular files (skip symlinks to avoid double-counting with procedures)
     MIGRATIONS_LINES=0
+    MIGRATIONS_REGULAR_COUNT=0
+    
     while IFS= read -r file; do
-        if [ -f "$file" ]; then
+        if [ -f "$file" ] && [ ! -L "$file" ]; then
+            # Regular file only - count its lines
             lines=$(cat "$file" 2>/dev/null | wc -l)
             MIGRATIONS_LINES=$((MIGRATIONS_LINES + lines))
+            MIGRATIONS_REGULAR_COUNT=$((MIGRATIONS_REGULAR_COUNT + 1))
         elif [ -L "$file" ]; then
-            target=$(readlink -f "$file" 2>/dev/null)
-            if [ -f "$target" ]; then
-                lines=$(cat "$target" 2>/dev/null | wc -l)
-                MIGRATIONS_LINES=$((MIGRATIONS_LINES + lines))
-            fi
+            # Symlink - do NOT count lines (already counted in procedures)
+            # Just note that it exists
+            :
         fi
     done < <(find "$MIGRATIONS_DIR" -maxdepth 1 -type f -o -type l | sort)
     
-    echo "  Files (including symlinks): $MIGRATIONS_COUNT" | tee -a "$OUTPUT_FILE"
-    echo "  Lines (actual content): $MIGRATIONS_LINES" | tee -a "$OUTPUT_FILE"
-    if [ $MIGRATIONS_COUNT -gt 0 ]; then
-        echo "  Average: $((MIGRATIONS_LINES / MIGRATIONS_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
+    echo "  Files (total, including symlinks): $MIGRATIONS_COUNT" | tee -a "$OUTPUT_FILE"
+    echo "  Regular migration files: $MIGRATIONS_REGULAR_COUNT" | tee -a "$OUTPUT_FILE"
+    echo "  Lines (regular files only): $MIGRATIONS_LINES" | tee -a "$OUTPUT_FILE"
+    if [ $MIGRATIONS_REGULAR_COUNT -gt 0 ]; then
+        echo "  Average: $((MIGRATIONS_LINES / MIGRATIONS_REGULAR_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
     fi
     echo "" | tee -a "$OUTPUT_FILE"
     
@@ -83,14 +88,15 @@ if [ -d "$MIGRATIONS_DIR" ]; then
     find "$MIGRATIONS_DIR" -maxdepth 1 -type f -o -type l | sort | while read file; do
         filename=$(basename "$file")
         if [ -L "$file" ]; then
+            # Symlink - show without line count
             target=$(readlink -f "$file" 2>/dev/null)
             if [ -f "$target" ]; then
-                lines=$(wc -l < "$target" 2>/dev/null)
-                echo "    - $filename -> $(basename "$target") ($lines lines)" | tee -a "$OUTPUT_FILE"
+                echo "    - $filename -> $(basename "$target") (symlink, counted in procedures)" | tee -a "$OUTPUT_FILE"
             else
                 echo "    - $filename -> (broken symlink)" | tee -a "$OUTPUT_FILE"
             fi
         else
+            # Regular file - show line count
             lines=$(wc -l < "$file" 2>/dev/null)
             printf "    - %-50s %6s lines\n" "$filename" "$lines" | tee -a "$OUTPUT_FILE"
         fi

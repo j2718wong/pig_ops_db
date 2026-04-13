@@ -5,6 +5,9 @@ CREATE PROCEDURE account_register(
     in_user_id              INT,
     
     in_country_id           INT,
+    
+    in_referral_id          INT, 
+    
     in_name                 VARCHAR(100)
 )  
 
@@ -72,9 +75,6 @@ DECLARE ACCOUNT_STATUS_ID_UNPAID_BILL           INT             DEFAULT 3;
 
 
 
-
-
-
 /* account.flag_setting bits
 bit 0: FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH
 0 = Date of birth is counted as DAY 0
@@ -103,6 +103,9 @@ DECLARE cur_user_account_id                     INT             DEFAULT 0;
 
 DECLARE cur_num_days_trial                      INT             DEFAULT 0;
 
+DECLARE cur_referral_used_by_account_id         INT             DEFAULT 0;
+
+DECLARE is_referred_by_account                  INT             DEFAULT 0;
 
 DECLARE cur_account_id                          INT             DEFAULT 0;
 DECLARE cur_account_flag                        INT             DEFAULT 0;
@@ -159,36 +162,90 @@ FROM    a01_list_of_values
 WHERE   id = LOV_ID_ACCOUNT_NUMDAYS_FREE_TRIAL;
 
 
+IF in_referral_id > 0 THEN 
+    SELECT  used_by_account_id
+    INTO    cur_referral_used_by_account_id
+    FROM    account_referral
+    WHERE   id = in_referral_id;
+
+    IF cur_referral_used_by_account_id IS NULL THEN 
+        SET is_referred_by_account = 1;
+    END IF;
+
+END IF;
 
 
-INSERT INTO account(
-    name,
-    country_id,
-    flag,
-    
-    flag_settings,
-    
-    status_id,
-    date_trial_start,
-    date_trial_end,
-    
-    added_by_user_id
-    
-) VALUES (
-    in_name,
-    in_country_id,
-    1,
-    
-    FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH,
-    
-    ACCOUNT_STATUS_ID_ON_TRIAL,
-    CURRENT_DATE,
-    DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY),
-    
-    in_user_id
-);
+IF is_referred_by_account = 0 THEN 
+    INSERT INTO account(
+        name,
+        country_id,
+        flag,
+        
+        flag_settings,
+        
+        status_id,
+        date_trial_start,
+        date_trial_end,
+        
+        added_by_user_id
+        
+    ) VALUES (
+        in_name,
+        in_country_id,
+        1,
+        
+        FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH,
+        
+        ACCOUNT_STATUS_ID_ON_TRIAL,
+        CURRENT_DATE,
+        DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY),
+        
+        in_user_id
+    );
 
-SELECT LAST_INSERT_ID() INTO cur_account_id;
+    SELECT LAST_INSERT_ID() INTO cur_account_id;
+
+ELSE 
+    INSERT INTO account(
+        name,
+        country_id,
+        flag,
+        account_referral_id,
+        
+        flag_settings,
+        
+        status_id,
+        date_trial_start,
+        date_trial_end,
+        
+        added_by_user_id
+        
+    ) VALUES (
+        in_name,
+        in_country_id,
+        1,
+        in_referral_id,
+        
+        FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH,
+        
+        ACCOUNT_STATUS_ID_ON_TRIAL,
+        CURRENT_DATE,
+        DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY),
+        
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_account_id;
+    
+    
+    UPDATE account_referral SET
+        used_by_account_id  = cur_account_id,
+        business_date       = CURRENT_DATE,
+        dt_used             = CURRENT_TIMESTAMP
+    WHERE id  = in_referral_id;
+
+END IF;
+
 
 
 CALL account_user_groups_create(cur_account_id);

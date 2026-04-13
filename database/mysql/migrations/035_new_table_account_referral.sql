@@ -33,7 +33,7 @@ BEGIN
     
     IF col_exists = 0 THEN
         ALTER TABLE account 
-        ADD COLUMN account_referral_id INT UNSIGNED DEFAULT 0  
+        ADD COLUMN account_referral_id INT UNSIGNED  
         AFTER status_id;
     END IF;
     
