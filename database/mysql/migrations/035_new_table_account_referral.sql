@@ -13,12 +13,9 @@ BEGIN
     CREATE TABLE IF NOT EXISTS `account_referral` (
     `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
     `account_id` int(10) unsigned DEFAULT NULL,
-    `used_by_account_id` int(10) unsigned DEFAULT NULL,
-    `referral_code` varchar(10) DEFAULT NULL,
+    `referred_account_id` int(10) unsigned DEFAULT NULL,
     `flag` int(10) unsigned DEFAULT 0,
-    `issued_by_user_id` int(10) unsigned DEFAULT NULL,
-    `business_date` date DEFAULT NULL,
-    `dt_used` datetime DEFAULT NULL,
+    `business_date_active` date DEFAULT NULL,
     `dt_entry` datetime NOT NULL DEFAULT current_timestamp(),
     PRIMARY KEY (`id`),
     KEY `INDEX_ACCOUNT_ID` (`account_id`)

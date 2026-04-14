@@ -64,6 +64,10 @@ DECLARE FLAG_BIT_ACCOUNT_ENABLE                 INT             DEFAULT 1;
 DECLARE FLAG_BIT_FREE_TRIAL_STARTED             INT             DEFAULT 2;
     
 
+/* account_referral.flag bits
+bit 0: FLAG_BIT_REFERRED_ACCOUNT_ACTIVE
+*/
+
 
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
@@ -80,6 +84,7 @@ DECLARE SOW_STATUS_ID_GROWING                   INT             DEFAULT 1;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+DECLARE cur_account_referral_id                 INT             DEFAULT 0;
 
 DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
 DECLARE cur_pig_farm_last_sow_id                INT             DEFAULT 0;
@@ -175,15 +180,20 @@ IF cur_sow_boar_id > 0 THEN
     LEAVE process_user;
 END IF;
 
+
 /*
 2026-04-12 Notes:
-1.) The account.date_trial_start is redefined when account has first 
+1.) The account.date_trial_start is redefined when the account has first 
      added its sow/boar/gilt.
 
 2.) This is not anymore on the date of registration to the give the user
     more time to evaluate the application.  
 
 3.) The account.date_trial_end will also be recomputed.
+
+4.) Will also check if account used a account_referral; 
+    The account_referral.business_date_active will also be updated, as this will
+    be used for calculating rewards for the account who give the referral_code.
 */
 
 SET cur_count = 0;
@@ -194,6 +204,20 @@ FROM    sow_boar
 WHERE   account_id = cur_user_account_id;
 
 IF cur_count = 0 THEN 
+    SELECT  account_referral_id
+    INTO    cur_account_referral_id
+    FROM    account
+    WHERE   id = cur_user_account_id;
+    
+    
+    IF cur_account_referral_id > 0 THEN 
+        UPDATE account_referral SET 
+            flag = flag | FLAG_BIT_REFERRED_ACCOUNT_ACTIVE,
+            business_date_active = CURRENT_DATE
+        WHERE id = account_referral_id;
+    END IF;
+
+
     /*ACCOUNT_NUMDAYS_FREE_TRIAL*/
     SELECT  val_int
     INTO    cur_temp

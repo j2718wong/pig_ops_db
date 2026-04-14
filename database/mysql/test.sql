@@ -686,3 +686,17 @@ account_id,
 user_group_id, 
 used_by_user_id 
 from  account_access_code;
+
+
+
+SELECT 
+a.id,
+a.name AS account_name,
+b.name AS farm_name,
+DATE(a.dt_entry) as date_acc_reg
+FROM account a
+LEFT OUTER JOIN pig_farm b ON a.default_farm_id = b.id 
+
+
+SELECT count(*) AS
+
