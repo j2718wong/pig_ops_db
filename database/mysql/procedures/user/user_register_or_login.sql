@@ -95,7 +95,9 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
 DECLARE RES_NUM_INVALID_ACCESS_CODE             INT             DEFAULT 1;
-DECLARE RES_NUM_INVALID_USER_NAME               INT             DEFAULT 2;          
+DECLARE RES_NUM_INVALID_USER_NAME               INT             DEFAULT 2; 
+DECLARE RES_NUM_EMAIL_HAS_NO_NAME               INT             DEFAULT 3;
+         
 
 DECLARE NUM_MINUTES_CODE_EXPIRY                 INT             DEFAULT 5;
 
@@ -554,7 +556,17 @@ END IF;
 
 
 
+/*
+2026-04-14 Notes
+1.) Manual email signup requires user name_first, name_last;
+Because the user initials are needed once user is logged in.
 
+2.) Manual email login does not require user name_first, name_last;
+if the email cannot be found in user_unverified and user table,
+this is a direct user_login without signing up; In this case
+it should return a non-zero result code and should direct Ui to fillup
+user name_first and name_last
+*/
 
 IF in_login_social_media_id IS NULL THEN 
     /* Create verification code to be sent to user email.*/
@@ -579,9 +591,21 @@ IF in_login_social_media_id IS NULL THEN
 
     /* Unverified user signup or login. */
     IF cur_user_unverified_id = 0 AND cur_user_id = 0 THEN 
+        IF in_name_last IS NULL OR in_name_first IS NULL THEN 
+            SET res_num     = RES_NUM_EMAIL_HAS_NO_NAME;
+            SET res_code    = "RES_NUM_EMAIL_HAS_NO_NAME";
+        
+            LEAVE process_user;
+        
+        END IF;
+    
+    
+    
         /* Insert to user_unverified. */
         INSERT INTO user_unverified(
             email,
+            name_last,
+            name_first,
             signup_country_id,
             login_count,
             login_loc_trace_id,
@@ -589,6 +613,8 @@ IF in_login_social_media_id IS NULL THEN
             date_signup
         ) VALUES (
             in_email,
+            in_name_last, 
+            in_name_first,
             cur_country_id,
             1,
             cur_login_loc_trace_id,
@@ -620,10 +646,33 @@ IF in_login_social_media_id IS NULL THEN
     /* Unverified user signup or login again. */
     IF cur_user_unverified_id > 0 AND cur_user_id = 0 THEN
             
-        UPDATE user_unverified SET 
-            user_verify_id  = cur_user_verify_id,
-            login_count     = login_count + 1
-        WHERE id = cur_user_unverified_id;
+        IF in_name_last IS NULL AND in_name_first IS NULL THEN  
+            
+            UPDATE user_unverified SET 
+                user_verify_id  = cur_user_verify_id,
+                login_count     = login_count + 1
+            WHERE id = cur_user_unverified_id;
+        
+            /* Needs to return*/
+            SET res_num     = RES_NUM_EMAIL_HAS_NO_NAME;
+            SET res_code    = "RES_NUM_EMAIL_HAS_NO_NAME";
+        
+            LEAVE process_user;
+        
+        END IF;
+
+        IF in_name_last IS NOT NULL AND in_name_first IS NOT NULL THEN  
+            /**Update user name ig given*/
+            UPDATE user_unverified SET 
+                name_last       = in_name_last,
+                name_first      = in_name_first,
+                user_verify_id  = cur_user_verify_id,
+                login_count     = login_count + 1
+            WHERE id = cur_user_unverified_id;
+        
+        END IF;
+
+
 
 
         SELECT  ts_expiry,

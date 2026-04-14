@@ -619,7 +619,7 @@ login_loc_trace_id as trace_id
 
  
 FROm user_login
-ORDER by id DESC limit 5;
+ORDER by id DESC limit 10;
 
 
 

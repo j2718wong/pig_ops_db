@@ -39,7 +39,8 @@ DECLARE cur_user_signup_country_id              INT             DEFAULT 0;
 DECLARE cur_user_signup_country_code            VARCHAR(5)      DEFAULT NULL;
 DECLARE cur_user_login_loc_trace_id             INT             DEFAULT 0;
 DECLARE cur_user_email                          VARCHAR(50)     DEFAULT NULL;
-
+DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT NULL;
+DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT NULL;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -59,12 +60,16 @@ SELECT
     a.signup_country_id,
     b.country_code,
     a.login_loc_trace_id,
-    a.email 
+    a.email,
+    a.name_last,
+    a.name_first
 INTO 
     cur_user_signup_country_id,
     cur_user_signup_country_code,
     cur_user_login_loc_trace_id,
-    cur_user_email
+    cur_user_email,
+    cur_user_name_last,
+    cur_user_name_first
 FROM user_unverified a
 LEFT OUTER JOIN app_country b ON a.signup_country_id = b.id
 WHERE a.id = in_user_unverified_id;
@@ -75,12 +80,16 @@ IF cur_user_email IS NOT NULL THEN
 
     INSERT INTO user(
         email,
+        name_last,
+        name_first,
         
         flag,
         login_count
     )
     VALUES (
         cur_user_email,
+        cur_user_name_last,
+        cur_user_name_first,
         
         cur_user_flag,
         1

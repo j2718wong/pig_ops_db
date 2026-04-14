@@ -50,7 +50,9 @@ DECLARE cur_user_verify_id                      INT             DEFAULT 0;
 DECLARE cur_user_signup_country_id              INT             DEFAULT 0;
 DECLARE cur_user_login_loc_trace_id             INT             DEFAULT 0;
         
-DECLARE cur_user_email                          VARCHAR(50)     DEFAULT 0;
+DECLARE cur_user_email                          VARCHAR(50)     DEFAULT NULL;
+DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT NULL;
+DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT NULL;
 DECLARE cur_user_verify_code                    INT             DEFAULT 0;
 DECLARE cur_user_verify_ts_expiry               BIGINT          DEFAULT 0;
 
@@ -71,7 +73,10 @@ IF in_unverified_user_id > 0  THEN
             a.signup_country_id,
             a.login_loc_trace_id,
             
-            b.email,
+            a.email,
+            a.name_last,
+            a.name_first,
+            
             b.auth_code,
             b.ts_expiry
      
@@ -81,6 +86,9 @@ IF in_unverified_user_id > 0  THEN
             cur_user_login_loc_trace_id,
             
             cur_user_email,
+            cur_user_name_last,
+            cur_user_name_first,
+            
             cur_user_verify_code,
             cur_user_verify_ts_expiry
     FROM    user_unverified a
@@ -141,6 +149,8 @@ IF cur_user_verify_code = in_auth_code THEN
 
             INSERT INTO user(
                 email,
+                name_last,
+                name_first,
                 
                 flag,
                 login_count,
@@ -148,6 +158,8 @@ IF cur_user_verify_code = in_auth_code THEN
                 signup_country_id
             ) VALUES (
                 cur_user_email,
+                cur_user_name_last,
+                cur_user_name_first,
                 
                 cur_user_flag,
                 1,
