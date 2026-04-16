@@ -688,6 +688,9 @@ IF in_login_social_media_id IS NULL THEN
     END IF;
     
     
+    
+    
+    
     IF  in_login_country_code   IS NOT NULL  AND
         in_viewport_width       IS NOT NULL  AND 
         in_viewport_height      IS NOT NULL THEN  

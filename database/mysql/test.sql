@@ -614,11 +614,11 @@ date_login,
 ip_address,
 viewport_width as vp_width, 
 viewport_height as vp_height, 
-country_code_login AS country, 
-login_loc_trace_id as trace_id
+country_code_login AS country 
 
  
 FROm user_login
+where user_id = 20
 ORDER by id DESC limit 10;
 
 

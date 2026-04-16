@@ -154,6 +154,30 @@ else
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
+# 3c. Python Files (Background Operations - pig_ops_bkops)
+echo "3c. PYTHON FILES (Background Ops - bkops)" | tee -a "$OUTPUT_FILE"
+echo "------------------------------------------" | tee -a "$OUTPUT_FILE"
+PYTHON_BKOPS_DIR="$PROJECT_BASE/pig_ops_bkops"
+if [ -d "$PYTHON_BKOPS_DIR" ]; then
+    PYTHON_BKOPS_COUNT=$(find "$PYTHON_BKOPS_DIR" -type f -name "*.py" 2>/dev/null | wc -l)
+    PYTHON_BKOPS_LINES=$(find "$PYTHON_BKOPS_DIR" -type f -name "*.py" -exec cat {} \; 2>/dev/null | wc -l)
+    echo "  Files: $PYTHON_BKOPS_COUNT" | tee -a "$OUTPUT_FILE"
+    echo "  Lines: $PYTHON_BKOPS_LINES" | tee -a "$OUTPUT_FILE"
+    if [ $PYTHON_BKOPS_COUNT -gt 0 ]; then
+        echo "  Average: $((PYTHON_BKOPS_LINES / PYTHON_BKOPS_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
+    fi
+    echo "" | tee -a "$OUTPUT_FILE"
+    
+    echo "  All bkops Python files:" | tee -a "$OUTPUT_FILE"
+    find "$PYTHON_BKOPS_DIR" -type f -name "*.py" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
+        rel_path=$(echo "$file" | sed "s|$PYTHON_BKOPS_DIR/||")
+        printf "    - %-50s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
+    done
+else
+    echo "  Directory not found: $PYTHON_BKOPS_DIR" | tee -a "$OUTPUT_FILE"
+fi
+echo "" | tee -a "$OUTPUT_FILE"
+
 # 4. HTML Files
 echo "4. HTML FILES" | tee -a "$OUTPUT_FILE"
 echo "-------------" | tee -a "$OUTPUT_FILE"
@@ -264,8 +288,8 @@ if [ -d "$MIGRATIONS_DIR" ]; then
     MIGRATIONS_SYMLINK_COUNT=$(find "$MIGRATIONS_DIR" -maxdepth 1 -type l 2>/dev/null | wc -l)
 fi
 
-TOTAL_FILES=$((PROC_COUNT + MIGRATIONS_REGULAR_COUNT + PYTHON_COUNT + PYTHON_UI_COUNT + HTML_COUNT + JSON_COUNT + JS_COUNT + SH_COUNT + 1))
-TOTAL_LINES=$((PROC_LINES + MIGRATIONS_LINES + PYTHON_LINES + PYTHON_UI_LINES + HTML_LINES + JSON_LINES + JS_LINES + SH_LINES + CSS_LINES))
+TOTAL_FILES=$((PROC_COUNT + MIGRATIONS_REGULAR_COUNT + PYTHON_COUNT + PYTHON_UI_COUNT + PYTHON_BKOPS_COUNT + HTML_COUNT + JSON_COUNT + JS_COUNT + SH_COUNT + 1))
+TOTAL_LINES=$((PROC_LINES + MIGRATIONS_LINES + PYTHON_LINES + PYTHON_UI_LINES + PYTHON_BKOPS_LINES + HTML_LINES + JSON_LINES + JS_LINES + SH_LINES + CSS_LINES))
 
 echo -e "${CYAN}Total Files:${NC} $TOTAL_FILES" | tee -a "$OUTPUT_FILE"
 echo -e "${CYAN}Total Lines:${NC} $TOTAL_LINES" | tee -a "$OUTPUT_FILE"
@@ -274,18 +298,19 @@ echo "" | tee -a "$OUTPUT_FILE"
 # Summary by type
 echo "Summary by Type:" | tee -a "$OUTPUT_FILE"
 echo "---------------" | tee -a "$OUTPUT_FILE"
-printf "%-40s %10s %12s %12s\n" "Type" "Files" "Lines" "Avg/File" | tee -a "$OUTPUT_FILE"
-printf "%-40s %10s %12s %12s\n" "-----" "-----" "-----" "--------" | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "MySQL Procedures" "$PROC_COUNT" "$PROC_LINES" "$((PROC_LINES / PROC_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "DB Migrations" "$MIGRATIONS_REGULAR_COUNT" "$MIGRATIONS_LINES" "$((MIGRATIONS_LINES / MIGRATIONS_REGULAR_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12s %12s\n" "DB Update Procedures" "$MIGRATIONS_SYMLINK_COUNT" "(symlinks)" "(see MySQL Procedures)" | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "Python (Backend)" "$PYTHON_COUNT" "$PYTHON_LINES" "$((PYTHON_LINES / PYTHON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "Python (Frontend Build)" "$PYTHON_UI_COUNT" "$PYTHON_UI_LINES" "$((PYTHON_UI_LINES / PYTHON_UI_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "HTML Files" "$HTML_COUNT" "$HTML_LINES" "$((HTML_LINES / HTML_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSON_LINES / JSON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "JavaScript Files" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12s\n" "CSS (main.css)" "1" "$CSS_LINES" "$CSS_LINES" | tee -a "$OUTPUT_FILE"
-printf "%-40s %10d %12d %12d\n" "Shell Scripts" "$SH_COUNT" "$SH_LINES" "$((SH_LINES / SH_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10s %12s %12s\n" "Type" "Files" "Lines" "Avg/File" | tee -a "$OUTPUT_FILE"
+printf "%-24s %10s %12s %12s\n" "-----" "-----" "-----" "--------" | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "MySQL Procedures" "$PROC_COUNT" "$PROC_LINES" "$((PROC_LINES / PROC_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "DB Migrations" "$MIGRATIONS_REGULAR_COUNT" "$MIGRATIONS_LINES" "$((MIGRATIONS_LINES / MIGRATIONS_REGULAR_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12s %12s\n" "DB Update Procedures" "$MIGRATIONS_SYMLINK_COUNT" "(symlinks)" "(see MySQL Procedures)" | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "Python (Backend)" "$PYTHON_COUNT" "$PYTHON_LINES" "$((PYTHON_LINES / PYTHON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "Python (Frontend Build)" "$PYTHON_UI_COUNT" "$PYTHON_UI_LINES" "$((PYTHON_UI_LINES / PYTHON_UI_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "Python (Background Ops)" "$PYTHON_BKOPS_COUNT" "$PYTHON_BKOPS_LINES" "$((PYTHON_BKOPS_LINES / PYTHON_BKOPS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "HTML Files" "$HTML_COUNT" "$HTML_LINES" "$((HTML_LINES / HTML_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSON_LINES / JSON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "JavaScript Files" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12s\n" "CSS (main.css)" "1" "$CSS_LINES" "$CSS_LINES" | tee -a "$OUTPUT_FILE"
+printf "%-24s %10d %12d %12d\n" "Shell Scripts" "$SH_COUNT" "$SH_LINES" "$((SH_LINES / SH_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 cat "$OUTPUT_FILE"
