@@ -26,9 +26,9 @@ DECLARE FLAG_BIT_USER_IS_TEST_USER              INT             DEFAULT 128;
 
 
 DECLARE cur_count_user                          INT             DEFAULT 0;
-DECLARE cur_user_inc_account                    INT             DEFAULT 0;
+DECLARE cur_user_no_account                     INT             DEFAULT 0;
 DECLARE cur_count_account                       INT             DEFAULT 0;
-
+DECLARE cur_count_not_started_trial             INT             DEFAULT 0;
 
 
 /* Count total users excluding test user. */
@@ -40,7 +40,7 @@ WHERE   flag & FLAG_BIT_USER_IS_TEST_USER = 0;
 
 /* Count users who signed up but not created account or join an account. */
 SELECT  COUNT(*) 
-INTO    cur_user_inc_account
+INTO    cur_user_no_account
 FROM    user
 WHERE   account_id IS NULL;
    
@@ -50,11 +50,20 @@ SELECT  COUNT(*)
 INTO    cur_count_account
 FROM    account;
 
-SELECT  
-    cur_count_user          AS count_user,
-    cur_user_inc_account    AS user_inc_account,
-    cur_count_account       AS count_account;
 
+/* Count accounts not started adding sow/boarstocks.*/
+SELECT  COUNT(*) 
+INTO    cur_count_not_started_trial
+FROM    account
+WHERE   flag &2 = 0;
+
+
+
+SELECT  
+    cur_count_user              AS count_user,
+    cur_user_no_account         AS user_no_account,
+    cur_count_account           AS count_account,
+    cur_count_not_started_trial AS account_not_started;
 
 END $$
 
