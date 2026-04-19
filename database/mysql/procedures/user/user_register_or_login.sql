@@ -110,6 +110,8 @@ DECLARE FLAG_BIT_USER_IS_DELETED                INT             DEFAULT 8;
 
 DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
 
+DECLARE FLAG_BIT_USER_IS_TEST_USER              INT             DEFAULT 128;
+
 
 DECLARE cur_user_name_last                      VARCHAR(50)     DEFAULT NULL;
 DECLARE cur_user_name_first                     VARCHAR(50)     DEFAULT NULL;
