@@ -51,11 +51,14 @@ INTO    cur_count_account
 FROM    account;
 
 
-/* Count accounts not started adding sow/boarstocks.*/
+/* Count accounts not started adding sow/boar stocks.*/
 SELECT  COUNT(*) 
 INTO    cur_count_not_started_trial
 FROM    account
 WHERE   flag &2 = 0;
+
+
+/* Count billable stocks*/
 
 
 

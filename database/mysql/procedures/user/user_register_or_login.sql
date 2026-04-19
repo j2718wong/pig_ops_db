@@ -826,16 +826,13 @@ provide email.
 
 
 /** Google does not provide this, only email that creates uniqueness.*/
-
 IF in_social_media_user_id IS NOT NULL THEN 
-    IF in_social_media_user_id IS NOT NULL THEN 
-        SELECT  id
-        INTO    cur_user_using_social_media_id
-        FROM    user
-        WHERE   signup_social_media_id = in_login_social_media_id AND
-                social_media_user_id = in_social_media_user_id
-        LIMIT 1;
-    END IF;
+    SELECT  id
+    INTO    cur_user_using_social_media_id
+    FROM    user
+    WHERE   signup_social_media_id = in_login_social_media_id AND
+            social_media_user_id = in_social_media_user_id
+    LIMIT 1;
 END IF;
 
 
