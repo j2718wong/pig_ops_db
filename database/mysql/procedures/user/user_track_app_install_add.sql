@@ -1,0 +1,101 @@
+﻿DELIMITER $$
+
+DROP PROCEDURE IF EXISTS user_track_app_install_add $$
+CREATE PROCEDURE user_track_app_install_add(
+    in_user_id              INT,
+    
+    in_event                VARCHAR(30),
+    
+    in_screen_width         INT,
+    in_screen_height        INT
+)  
+
+BEGIN
+
+/** 
+ * Will add user_track_app_install event.
+ * 
+ * 
+ * @author Jack Wong (j2718wong@gmail.com) 
+ * @since April 25, 2026
+ *
+ */
+
+DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
+
+
+DECLARE cur_user_account_id                     INT             DEFAULT 0;
+DECLARE cur_user_group_id                       INT             DEFAULT 0;
+
+
+DECLARE cur_user_track_app_install_id           INT             DEFAULT 0;
+
+
+DECLARE res_num                                 INT             DEFAULT 0;
+DECLARE res_code                                VARCHAR(80)     DEFAULT '';
+DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
+
+
+SET res_num     = RES_NUM_SUCCESS;
+SET res_code    = "SUCCESS";
+
+
+
+
+
+CALL basic_user_check(
+    in_user_id, 
+    1, /* user must have an account*/
+    0,
+    
+    0,
+    0,
+    
+    cur_user_account_id, 
+    cur_user_group_id,
+    res_num, 
+    res_code, 
+    res_desc);
+
+
+process_user : BEGIN
+
+IF res_num != RES_NUM_SUCCESS THEN 
+    LEAVE process_user;
+END IF;
+
+
+INSERT INTO user_track_app_install(
+    user_id,
+    
+    event,
+    user_agent,
+    screen_width,
+    screen_height,
+    date_event
+) VALUES (
+    in_user_id,
+    
+    in_event,
+    in_user_agent,
+    in_screen_width,
+    in_screen_height,
+    CURRENT_DATE
+);
+
+SELECT LAST_INSERT_ID() INTO cur_user_track_app_install_id;
+
+
+END process_user;
+
+
+SELECT 
+    res_num                             AS result_number,
+    res_code                            AS result_code,
+    res_desc                            AS result_desc,
+    
+    cur_user_track_app_install_id       AS track_app_install_id;
+
+END $$
+
+DELIMITER ;
