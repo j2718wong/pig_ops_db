@@ -618,7 +618,7 @@ country_code_login AS country
 
  
 FROm user_login
-where user_id = 20
+
 ORDER by id DESC limit 10;
 
 
