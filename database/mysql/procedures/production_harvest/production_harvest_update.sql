@@ -220,7 +220,6 @@ WHERE id = in_production_harvest_id;
 
 
 /* Calculate current number of pigs.*/
-
 CALL production_calculate_current_pigs(cur_pig_prod_id, 0, cur_num_pigs_current);
 
 IF cur_num_pigs_current < 0 THEN
@@ -230,7 +229,7 @@ IF cur_num_pigs_current < 0 THEN
     UPDATE  pig_production SET
         num_pigs_current = 0,
         prod_status_id = PRODUCTION_STATUS_ID_HARVESTED
-    WHERE id = cur_pig_prod_id;
+    WHERE id = in_pig_prod_id;
 END IF;
 
 

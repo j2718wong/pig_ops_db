@@ -5,10 +5,12 @@ CREATE PROCEDURE pig_prod_fattening_add(
     in_user_id              INT,
     in_pig_farm_id          INT,
     
-    in_num_pigs_added       INT,
+    in_num_pigs             INT,
     
+    in_date_birth           VARCHAR(10), /* in YYYY-MM-DD format*/
     in_date_weaning         VARCHAR(10), /* in YYYY-MM-DD format*/
-    in_date_added           VARCHAR(10)
+    
+    in_notes                VARCHAR(160)
 )  
 
 BEGIN
@@ -35,7 +37,11 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 /* pig_production.flag bits*/
-DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 2;
+DECLARE FLAG_BIT_PIG_PROD_IS_DELETED            INT             DEFAULT 1;
+
+DECLARE FLAG_BIT_IS_A_GROUP                     INT             DEFAULT 2;
+DECLARE FLAG_BIT_EXTERNAL_PIGLETS               INT             DEFAULT 4;
+
 
 
 
@@ -66,11 +72,11 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
 
 
-DECLARE cur_pig_farm_last_pig_production_id               INT             DEFAULT 0;
+DECLARE cur_pig_farm_last_pig_production_id     INT             DEFAULT 0;
 
 
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
-DECLARE cur_pig_prod_ai_id                      INT             DEFAULT 0;
+DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -111,6 +117,9 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+IF in_date_weaning IS NULL THEN 
+    SET in_date_weaning = CURRENT_DATE;
+END IF;
 
 
 /* Check for duplicate entry */
@@ -144,32 +153,72 @@ INSERT INTO pig_production (
     account_id,
     pig_farm_id,
     farm_prod_id,
+    
     flag,
     prod_status_id,
     
-    num_pigs_weaning_m,
-    num_pigs_weaning_f,
-    num_pigs_current,
+    date_actual_birth,
     date_weaning,
+    
+    num_pigs_current,
+    
     
     added_by_user_id
     
 ) VALUES (
-    cur_user_account_id,
-    cur_sow_boar_pig_farm_id,
+    cur_pig_farm_account_id,
+    in_pig_farm_id,
     cur_pig_farm_last_pig_production_id,
-    FLAG_BIT_PIGLETS_ARE_EXTERNAL,
+    
+    FLAG_BIT_EXTERNAL_PIGLETS,
     PRODUCTION_STATUS_ID_GROWING,
     
-    0,
-    0,
-    in_num_pigs,
+    in_date_birth,
     in_date_weaning,
+    
+    in_num_pigs,
+    
     
     in_user_id
 );
 
 SELECT LAST_INSERT_ID() INTO cur_pig_prod_id;
+
+
+
+/* Add comments*/
+IF in_notes IS NOT NULL THEN 
+    INSERT INTO pig_prod_notes (
+        account_id,
+        pig_farm_id,
+        
+        pig_prod_id,
+        
+        notes,
+        date_notes,
+        added_by_user_id
+        
+    ) VALUES (
+        cur_pig_farm_account_id,
+        in_pig_farm_id,
+    
+        cur_pig_prod_id,
+        
+        in_notes,
+        in_date_weaning,
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_prod_notes_id;
+    
+    /* pig_production.insem_notes_id*/
+    UPDATE pig_production SET
+        insem_notes_id = cur_pig_prod_notes_id
+    WHERE id = cur_pig_prod_id;
+
+END IF;
+
+
 
 
 /* Since the number of pigs at weaning is indeterminate as these are 
@@ -194,17 +243,19 @@ INSERT INTO pig_prod_pig_add (
     in_pig_farm_id,
     cur_pig_prod_id,
     
-    in_date_added,
-    in_num_pigs_added,
+    in_date_weaning,
+    in_num_pigs,
     in_user_id
 );
 
 
 
+
 /* Increment pig_farm.last_prod_id*/
 UPDATE pig_farm SET 
-    last_prod_id    = cur_pig_farm_last_pig_production_id
-WHERE id = cur_sow_boar_pig_farm_id;
+    last_pig_production_id  = cur_pig_farm_last_pig_production_id,
+    data_ver_num_pig_prod   = data_ver_num_pig_prod + 1 
+WHERE id = in_pig_farm_id;
 
 
 END process_user;

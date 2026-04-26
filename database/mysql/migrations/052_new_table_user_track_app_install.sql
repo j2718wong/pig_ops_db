@@ -10,7 +10,7 @@ CREATE PROCEDURE add_table_user_track_app_install()
 BEGIN
     DECLARE col_exists INT DEFAULT 0;
     
-    CREATE TABLE `user_track_app_install` (
+    CREATE TABLE IF NOT EXISTS `user_track_app_install` (
       `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `user_id` int(10) unsigned DEFAULT 0,
       `event` varchar(20) DEFAULT NULL,

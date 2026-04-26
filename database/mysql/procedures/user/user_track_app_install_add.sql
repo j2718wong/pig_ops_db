@@ -69,7 +69,7 @@ INSERT INTO user_track_app_install(
     user_id,
     
     event,
-    user_agent,
+ 
     screen_width,
     screen_height,
     date_event
@@ -77,7 +77,7 @@ INSERT INTO user_track_app_install(
     in_user_id,
     
     in_event,
-    in_user_agent,
+
     in_screen_width,
     in_screen_height,
     CURRENT_DATE
