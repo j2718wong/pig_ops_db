@@ -42,6 +42,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_sow_boar_account_id                 INT             DEFAULT 0;
+DECLARE cur_sow_boar_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_sow_boar_mate_notes_id              INT             DEFAULT 0;
 
 
@@ -60,9 +61,11 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  b.account_id,
+        b.pig_farm_id,
         a.notes_id
         
 INTO    cur_sow_boar_account_id,
+        cur_sow_boar_pig_farm_id,
         cur_sow_boar_mate_notes_id
         
 FROM    sow_boar_mate a
@@ -147,6 +150,11 @@ END IF;
 UPDATE sow_boar SET 
     data_ver_num_sow_boar   = data_ver_num_sow_boar + 1
 WHERE id = in_boar_id;
+
+
+UPDATE pig_farm SET 
+    data_ver_num_boar_ext_mate = data_ver_num_boar_ext_mate + 1
+WHERE id = cur_sow_boar_pig_farm_id;
 
 
 END process_user;
