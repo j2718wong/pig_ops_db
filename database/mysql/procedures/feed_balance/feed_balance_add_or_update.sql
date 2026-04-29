@@ -6,7 +6,6 @@ CREATE PROCEDURE feed_balance_add_or_update(
     
     in_pig_farm_id          INT,    /* IF this is filled up, this is for farm_balance */
     in_pig_prod_id          INT,    
-    in_prod_group_id        INT,
     
     in_date_balance         VARCHAR(10),
     
@@ -58,10 +57,9 @@ BEGIN
  * this was saved in sow_boar_balance table to simplify sow_balance report.
  *
  * Input matrix
- *                 in_pig_farm_id   in_pig_prod_id  in_prod_group_id
- * farm_balance         >0          NULL            NULL 
- * pig_prod_balance    NULL         >0              NULL
- * prod_group_balance  NULL         NULL            >0  
+ *                 in_pig_farm_id   in_pig_prod_id  
+ * farm_balance         >0          NULL             
+ * pig_prod_balance    NULL         >0              
  *
  * 
  * 2.) The feeds in sow_boar_balance will be discontinued later;
@@ -214,23 +212,6 @@ IF in_pig_prod_id > 0 THEN
 END IF;
 
 
-IF in_prod_group_id > 0 THEN 
-    /** TO FIX*/
-    SELECT 
-        account_id,
-        pig_prod_status_id
-
-    INTO
-        cur_pig_prod_account_id,
-        cur_pig_prod_status_id
-
-    FROM production_group 
-    WHERE id = in_prod_group_id;
-
-END IF;
-    
-
-
 CALL basic_user_check(
     in_user_id, 
     1, /* user must have an account*/
@@ -288,17 +269,6 @@ IF in_pig_prod_id > 0 THEN
 END IF;    
 
     
-IF in_prod_group_id > 0 THEN 
-    SELECT  id
-    INTO    cur_feed_balance_id
-    FROM    feed_balance
-    WHERE   pig_prod_group_id   = in_prod_group_id    AND
-            date_balance        = in_date_balance
-    LIMIT   1;
-END IF;
-    
-
-
 
 IF in_pig_prod_id > 0 THEN 
     
@@ -310,8 +280,6 @@ IF in_pig_prod_id > 0 THEN
             ELSE
                 CALL production_calculate_current_pigs(in_pig_prod_id, 0, in_num_pigs);
             END IF;
-        ELSE /*production_group*/
-            CALL production_calculate_current_pigs(0, in_prod_group_id, in_num_pigs);
         END IF;
 
     END IF;
@@ -393,7 +361,6 @@ IF cur_feed_balance_id = 0 THEN
     INSERT INTO feed_balance(
         pig_farm_id,
         pig_prod_id,
-        pig_prod_group_id,
         
         date_balance,
         
@@ -419,7 +386,6 @@ IF cur_feed_balance_id = 0 THEN
     ) VALUES (
         cur_pig_prod_pig_farm_id,
         in_pig_prod_id,
-        in_prod_group_id,
         
         in_date_balance,
         
@@ -536,11 +502,6 @@ IF in_pig_prod_id > 0 THEN
     WHERE id = cur_pig_prod_pig_farm_id;
 END IF;
 
-IF in_prod_group_id > 0 THEN 
-    UPDATE pig_production SET  
-        data_ver_num_feed_balance = data_ver_num_feed_balance + 1
-    WHERE id = in_prod_group_id;
-END IF;
 
 
 END process_user;
