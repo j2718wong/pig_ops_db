@@ -213,7 +213,6 @@ IF in_sow_boar_id > 0 THEN
     FROM    pig_medvac
     WHERE   sow_boar_id = in_sow_boar_id        AND
             date_medvac = in_date_medvac        AND 
-            medvac_brand_id = in_medvac_brand_id AND
             medvac_type_id = in_medvac_type_id  AND
             acc_medvac_id = in_acc_medvac_id
     LIMIT   1;
@@ -223,7 +222,6 @@ ELSE
     FROM    pig_medvac
     WHERE   pig_prod_id = in_pig_prod_id AND
             date_medvac = in_date_medvac AND 
-            medvac_brand_id = in_medvac_brand_id AND
             medvac_type_id = in_medvac_type_id  AND
             acc_medvac_id = in_acc_medvac_id
     LIMIT   1;
@@ -305,10 +303,12 @@ with same pig_farm.address_level_2_id, which is even has more data sets to searc
 
 */
 
-SELECT  name
-INTO    cur_u_brand_name 
-FROM    medvac_brand
-WHERE   id = in_medvac_brand_id;
+IF in_medvac_brand_id > 0 THEN 
+    SELECT  name
+    INTO    cur_u_brand_name 
+    FROM    medvac_brand
+    WHERE   id = in_medvac_brand_id;
+END IF;
 
 
 SELECT  name
@@ -406,24 +406,25 @@ END IF;
 
 
 /* Update medvac_brand counter. */
-SELECT  COUNT(*)
-INTO    cur_count
-FROM    account_selection
-WHERE   medvac_brand_id = in_medvac_brand_id;
+IF in_medvac_brand_id > 0 THEN 
+    SELECT  COUNT(*)
+    INTO    cur_count
+    FROM    account_selection
+    WHERE   medvac_brand_id = in_medvac_brand_id;
 
-UPDATE  medvac_brand SET
-    account_counter = cur_count
-WHERE id = in_medvac_brand_id;
-
-
-/* Update medvac_brand.flag.FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED*/
-IF cur_count >= MIN_COUNT_MEDVAC_BRAND_IS_VERIFIED THEN 
-    UPDATE medvac_brand SET
-        flag = flag | FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED
+    UPDATE  medvac_brand SET
+        account_counter = cur_count
     WHERE id = in_medvac_brand_id;
 
-END IF;
 
+    /* Update medvac_brand.flag.FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED*/
+    IF cur_count >= MIN_COUNT_MEDVAC_BRAND_IS_VERIFIED THEN 
+        UPDATE medvac_brand SET
+            flag = flag | FLAG_BIT_MEDVAC_BRAND_IS_VERIFIED
+        WHERE id = in_medvac_brand_id;
+
+    END IF;
+END IF;
 
 
 SELECT  COUNT(*) 
