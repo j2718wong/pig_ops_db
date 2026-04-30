@@ -40,7 +40,7 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 DECLARE FLAG_BIT_PIG_PROD_IS_DELETED            INT             DEFAULT 1;
 
 DECLARE FLAG_BIT_IS_A_GROUP                     INT             DEFAULT 2;
-DECLARE FLAG_BIT_EXTERNAL_PIGLETS               INT             DEFAULT 4;
+DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 4;
 
 
 
@@ -128,7 +128,7 @@ INTO    cur_pig_prod_id
 FROM    pig_production
 WHERE   pig_farm_id         = in_pig_farm_id    AND
         date_weaning        = in_date_weaning   AND
-        (flag & FLAG_BIT_PIGLETS_ARE_EXTERNAL) > 0
+        (flag & FLAG_BIT_EXTERNAL_PIGLETS) > 0
 LIMIT   1;
 
 

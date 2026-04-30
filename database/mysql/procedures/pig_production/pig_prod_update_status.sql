@@ -41,7 +41,7 @@ DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
 /* pig_production.flag bits*/
-DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 2;
+DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 4;
 
 
 DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
