@@ -128,7 +128,7 @@ INTO    cur_pig_prod_id
 FROM    pig_production
 WHERE   pig_farm_id         = in_pig_farm_id    AND
         date_weaning        = in_date_weaning   AND
-        (flag & FLAG_BIT_EXTERNAL_PIGLETS) > 0
+        (flag & FLAG_BIT_PIGLETS_ARE_EXTERNAL) > 0
 LIMIT   1;
 
 
@@ -170,7 +170,7 @@ INSERT INTO pig_production (
     in_pig_farm_id,
     cur_pig_farm_last_pig_production_id,
     
-    FLAG_BIT_EXTERNAL_PIGLETS,
+    FLAG_BIT_PIGLETS_ARE_EXTERNAL,
     PRODUCTION_STATUS_ID_GROWING,
     
     in_date_birth,

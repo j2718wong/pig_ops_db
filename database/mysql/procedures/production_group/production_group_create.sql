@@ -88,7 +88,7 @@ outside, and manually entered into the production list, the user can delete it.*
 DECLARE FLAG_BIT_PIG_PROD_IS_DELETED            INT             DEFAULT 1;
 
 DECLARE FLAG_BIT_IS_A_GROUP                     INT             DEFAULT 2;
-DECLARE FLAG_BIT_EXTERNAL_PIGLETS               INT             DEFAULT 4;
+DECLARE FLAG_BIT_PIGLETS_ARE_EXTERNAL           INT             DEFAULT 4;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
