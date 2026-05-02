@@ -78,6 +78,7 @@ DECLARE cur_pig_farm_last_pig_production_id     INT             DEFAULT 0;
 DECLARE cur_pig_prod_id                         INT             DEFAULT 0;
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
+DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -249,11 +250,17 @@ INSERT INTO pig_prod_pig_add (
 );
 
 
+/* Count production entries of the farm*/
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    pig_production
+WHERE   pig_farm_id = in_pig_farm_id;
 
 
 /* Increment pig_farm.last_prod_id*/
 UPDATE pig_farm SET 
     last_pig_production_id  = cur_pig_farm_last_pig_production_id,
+    count_pig_prod          = cur_count,
     data_ver_num_pig_prod   = data_ver_num_pig_prod + 1 
 WHERE id = in_pig_farm_id;
 

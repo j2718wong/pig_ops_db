@@ -574,9 +574,17 @@ IF in_comments IS NOT NULL THEN
 END IF;
     
 
+/* Count production entries of the farm*/
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    pig_production
+WHERE   pig_farm_id = cur_sow_boar_pig_farm_id;
+
+
 /* Increment pig_farm.last_pig_production_id*/
 UPDATE pig_farm SET 
     last_pig_production_id  = cur_pig_farm_last_pig_production_id,
+    count_pig_prod          = cur_count,
     data_ver_num_pig_prod   = data_ver_num_pig_prod + 1    
 WHERE id = cur_sow_boar_pig_farm_id;
 

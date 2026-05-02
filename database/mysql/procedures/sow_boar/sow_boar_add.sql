@@ -39,6 +39,12 @@ DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 
 DECLARE BUSINESS_OBJ_ID_SOW_BOAR                INT             DEFAULT 19;
 
+
+DECLARE LOV_ID_ACCOUNT_NUMDAYS_FREE_TRIAL       INT             DEFAULT 1;
+DECLARE LOV_ID_ACC_MAX_NUM_SOW_BOAR_FREE        INT             DEFAULT 2;
+DECLARE LOV_ID_ACC_MIN_NUM_SOW_BOAR_REFERRAL_ACTIVE INT         DEFAULT 3;
+
+
 DECLARE FLAG_BIT_OPERATION_ADD                  INT             DEFAULT 1;
 DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
@@ -67,7 +73,7 @@ DECLARE FLAG_BIT_FREE_TRIAL_STARTED             INT             DEFAULT 2;
 /* account_referral.flag bits
 bit 0: FLAG_BIT_REFERRED_ACCOUNT_ACTIVE
 */
-
+DECLARE FLAG_BIT_REFERRED_ACCOUNT_ACTIVE        INT             DEFAULT 1;
 
 
 DECLARE PIG_OPERATION_TYPE_GESTATING            INT             DEFAULT 1;
@@ -84,6 +90,7 @@ DECLARE SOW_STATUS_ID_GROWING                   INT             DEFAULT 1;
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
+DECLARE cur_account_flag                        INT             DEFAULT 0;
 DECLARE cur_account_referral_id                 INT             DEFAULT 0;
 
 DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
@@ -93,13 +100,18 @@ DECLARE cur_pig_farm_last_boar_id               INT             DEFAULT 0;
 DECLARE cur_temp                                INT             DEFAULT 0;
 
 DECLARE cur_sow_boar_id                         INT             DEFAULT 0;
-DECLARE cur_sow_boar_flag                       INT             DEFAULT 0;
+
+DECLARE cur_max_num_sow_boar_free               INT             DEFAULT 0;
+DECLARE cur_num_days_free_trial                 INT             DEFAULT 0;
+
+DECLARE cur_acc_referral_date_active            DATE            DEFAULT NULL;
 
 DECLARE cur_pig_prod_notes_id                   INT             DEFAULT 0;
 
 DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE cur_notes                               VARCHAR(200);
+
 
 
 DECLARE res_num                                 INT             DEFAULT 0;
@@ -181,60 +193,6 @@ IF cur_sow_boar_id > 0 THEN
 END IF;
 
 
-/*
-2026-04-12 Notes:
-1.) The account.date_trial_start is redefined when the account has first 
-     added its sow/boar/gilt.
-
-2.) This is not anymore on the date of registration to the give the user
-    more time to evaluate the application.  
-
-3.) The account.date_trial_end will also be recomputed.
-
-4.) Will also check if account used a account_referral; 
-    The account_referral.business_date_active will also be updated, as this will
-    be used for calculating rewards for the account who give the referral_code.
-*/
-
-SET cur_count = 0;
-
-SELECT  COUNT(*)
-INTO    cur_count
-FROM    sow_boar
-WHERE   account_id = cur_user_account_id;
-
-IF cur_count = 0 THEN 
-    SELECT  account_referral_id
-    INTO    cur_account_referral_id
-    FROM    account
-    WHERE   id = cur_user_account_id;
-    
-    
-    IF cur_account_referral_id > 0 THEN 
-        UPDATE account_referral SET 
-            flag = flag | FLAG_BIT_REFERRED_ACCOUNT_ACTIVE,
-            business_date_active = CURRENT_DATE
-        WHERE id = account_referral_id;
-    END IF;
-
-
-    /*ACCOUNT_NUMDAYS_FREE_TRIAL*/
-    SELECT  val_int
-    INTO    cur_temp
-    FROM    a01_list_of_values
-    WHERE   id = 1;  
-    
-    
-    UPDATE account SET 
-        date_trial_start    = CURRENT_DATE,
-        date_trial_end      = CURRENT_DATE + INTERVAL cur_temp DAY,
-        flag                = flag | FLAG_BIT_FREE_TRIAL_STARTED
-    WHERE id = cur_user_account_id;
-    
-END IF;
-
-SET cur_count = 0;
-
 
 IF in_sex = 'F' THEN 
     SET cur_pig_farm_last_sow_id = cur_pig_farm_last_sow_id + 1;
@@ -284,8 +242,16 @@ IF in_sex = 'F' THEN
         in_user_id
     );
     
-    UPDATE pig_farm SET 
-        data_ver_num_sow = data_ver_num_sow + 1
+    /* Count sow_boar entries of the farm. */
+    SELECT  COUNT(*) 
+    INTO    cur_count
+    FROM    sow_boar
+    WHERE   pig_farm_id = in_pig_farm_id;
+    
+    
+    UPDATE pig_farm SET
+        count_sow_boar      = cur_count,
+        data_ver_num_sow    = data_ver_num_sow + 1
     WHERE id = in_pig_farm_id;
 
 ELSE
@@ -327,13 +293,125 @@ ELSE
         in_user_id
     );
     
+    /* Count sow_boar entries of the farm. */
+    SELECT  COUNT(*) 
+    INTO    cur_count
+    FROM    sow_boar
+    WHERE   pig_farm_id = in_pig_farm_id;
+    
+    
     UPDATE pig_farm SET 
-        data_ver_num_boar = data_ver_num_boar + 1
+        count_sow_boar      = cur_count,
+        data_ver_num_boar   = data_ver_num_boar + 1
     WHERE id = in_pig_farm_id;
     
 END IF;
 
 SELECT LAST_INSERT_ID() INTO cur_sow_boar_id;
+
+
+
+
+/*
+2026-04-12 Notes:
+1.) The account.date_trial_start is redefined when the account has reached
+    the ACC_MIN_NUM_SOW_BOAR_FREE. This is to give flexibility to the 
+    application as well as for marketing.
+
+2.) This is not anymore the date of account registration to the give the user
+    more time to evaluate the application. Note, account.date_trial_start is
+    filled during account registration;  
+
+3.) The account.date_trial_end will also be recomputed.
+
+4.) Will also check if account used a account_referral; 
+    The account_referral.business_date_active will also be updated, as this will
+    be used for calculating rewards for the account who give the referral_code.
+*/
+
+
+
+/* Get account details */
+SELECT  flag,
+        account_referral_id
+
+INTO    cur_account_flag,
+        cur_account_referral_id
+        
+FROM    account
+WHERE   id = cur_pig_farm_account_id;
+
+
+
+/* Count sow_boar entries of the account. */
+SET cur_count = 0;
+
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    sow_boar
+WHERE   account_id = cur_pig_farm_account_id;
+
+UPDATE account SET 
+    count_sow_boar = cur_count
+WHERE id = cur_pig_farm_account_id;
+
+
+
+IF cur_account_flag & FLAG_BIT_FREE_TRIAL_STARTED = 0 THEN 
+    /* Get ACC_MAX_NUM_SOW_BOAR_FREE*/
+    SELECT  val_int
+    INTO    cur_max_num_sow_boar_free
+    FROM    a01_list_of_values
+    WHERE   id = LOV_ID_ACC_MAX_NUM_SOW_BOAR_FREE;  
+
+
+    IF cur_count >= cur_max_num_sow_boar_free THEN 
+        
+        /*Get ACCOUNT_NUMDAYS_FREE_TRIAL*/
+        SELECT  val_int
+        INTO    cur_num_days_free_trial
+        FROM    a01_list_of_values
+        WHERE   id = LOV_ID_ACCOUNT_NUMDAYS_FREE_TRIAL;  
+        
+        
+        UPDATE account SET 
+            date_trial_start    = CURRENT_DATE,
+            date_trial_end      = CURRENT_DATE + INTERVAL cur_num_days_free_trial DAY,
+            flag                = flag | FLAG_BIT_FREE_TRIAL_STARTED
+        WHERE id = cur_pig_farm_account_id;
+        
+    END IF;
+
+
+END IF;
+
+
+/* Activate account_referral if needed. */
+IF cur_account_referral_id > 0 THEN 
+    /*Get ACC_MIN_NUM_SOW_BOAR_REFERRAL_ACTIVE*/
+    SELECT  val_int
+    INTO    cur_temp
+    FROM    a01_list_of_values
+    WHERE   id = LOV_ID_ACC_MIN_NUM_SOW_BOAR_REFERRAL_ACTIVE;  
+
+
+    SELECT  business_date_active 
+    INTO    cur_acc_referral_date_active
+    FROM    account_referral
+    WHERE   id = cur_account_referral_id;
+    
+    IF cur_acc_referral_date_active IS NULL THEN 
+        
+        IF cur_count >= cur_temp THEN 
+        
+            UPDATE account_referral SET 
+                flag = flag | FLAG_BIT_REFERRED_ACCOUNT_ACTIVE,
+                business_date_active = CURRENT_DATE
+            WHERE id = cur_account_referral_id;
+        END IF;
+        
+    END IF;
+END IF;
 
 
 

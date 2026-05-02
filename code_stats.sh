@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Detailed Code Statistics Script - Relative Paths Version
+# Now includes Git commit counts for each repository
 
 # Colors
 RED='\033[0;31m'
@@ -20,11 +21,93 @@ PROJECT_BASE="$SCRIPT_DIR/.."
 
 OUTPUT_FILE="/tmp/code_stats_detailed.txt"
 
+# Function to get commit count for a Git repository
+get_commit_count() {
+    local repo_path="$1"
+    local repo_name="$2"
+    
+    if [ -d "$repo_path/.git" ]; then
+        cd "$repo_path" 2>/dev/null
+        local commit_count=$(git rev-list --count HEAD 2>/dev/null)
+        local last_commit_date=$(git log -1 --format=%cd --date=short 2>/dev/null)
+        local last_commit_hash=$(git log -1 --format=%h 2>/dev/null)
+        local branch=$(git branch --show-current 2>/dev/null)
+        
+        if [ -n "$commit_count" ]; then
+            echo "    Git: $commit_count commits, branch: $branch, last: $last_commit_date ($last_commit_hash)"
+        else
+            echo "    Git: Unable to count commits"
+        fi
+        cd - > /dev/null 2>&1
+    else
+        echo "    Git: Not a repository (no .git folder)"
+    fi
+}
+
+# Function to get detailed Git stats
+get_git_stats() {
+    local repo_path="$1"
+    
+    if [ -d "$repo_path/.git" ]; then
+        cd "$repo_path" 2>/dev/null
+        
+        local total_commits=$(git rev-list --count HEAD 2>/dev/null)
+        local contributors=$(git log --format='%aN' | sort -u | wc -l 2>/dev/null)
+        local first_commit=$(git log --reverse --format=%cd --date=short | head -1 2>/dev/null)
+        local last_commit=$(git log -1 --format=%cd --date=short 2>/dev/null)
+        local branches=$(git branch -r | wc -l 2>/dev/null)
+        local current_branch=$(git branch --show-current 2>/dev/null)
+        
+        # Count commits per author (top 3)
+        local top_authors=$(git shortlog -sn 2>/dev/null | head -3)
+        
+        echo "    Git Statistics:"
+        echo "      Total commits: $total_commits"
+        echo "      Contributors: $contributors"
+        echo "      Branches (remote): $branches"
+        echo "      Current branch: $current_branch"
+        echo "      First commit: $first_commit"
+        echo "      Last commit: $last_commit"
+        echo "      Top contributors:"
+        echo "$top_authors" | while read line; do
+            echo "        $line"
+        done
+        
+        cd - > /dev/null 2>&1
+    else
+        echo "    Git: Not a repository"
+    fi
+}
+
 echo "========================================" | tee "$OUTPUT_FILE"
 echo "    DETAILED CODE STATISTICS REPORT" | tee -a "$OUTPUT_FILE"
 echo "    Generated: $(date)" | tee -a "$OUTPUT_FILE"
 echo "    Project: $PROJECT_BASE" | tee -a "$OUTPUT_FILE"
 echo "========================================" | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+# 0. GIT REPOSITORY STATUS (NEW)
+echo "0. GIT REPOSITORY STATUS" | tee -a "$OUTPUT_FILE"
+echo "========================" | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+# Check each repository
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+    REPO_DIR="$PROJECT_BASE/$repo"
+    if [ -d "$REPO_DIR" ]; then
+        echo -e "${GREEN}Repository: $repo${NC}" | tee -a "$OUTPUT_FILE"
+        get_git_stats "$REPO_DIR"
+        echo "" | tee -a "$OUTPUT_FILE"
+    fi
+done
+
+# Also check the parent directory if it's a repo
+if [ -d "$PROJECT_BASE/.git" ]; then
+    echo -e "${GREEN}Repository: jsys (parent)${NC}" | tee -a "$OUTPUT_FILE"
+    get_git_stats "$PROJECT_BASE"
+    echo "" | tee -a "$OUTPUT_FILE"
+fi
+
 echo "" | tee -a "$OUTPUT_FILE"
 
 # 1. MySQL Procedures
@@ -276,6 +359,40 @@ else
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
+# 9. GIT COMMIT SUMMARY (NEW - Quick overview)
+echo "9. GIT COMMIT SUMMARY" | tee -a "$OUTPUT_FILE"
+echo "====================" | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+printf "%-20s %12s %12s %12s\n" "Repository" "Commits" "Contributors" "Last Commit" | tee -a "$OUTPUT_FILE"
+printf "%-20s %12s %12s %12s\n" "----------" "-------" "-----------" "-----------" | tee -a "$OUTPUT_FILE"
+
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+    REPO_DIR="$PROJECT_BASE/$repo"
+    if [ -d "$REPO_DIR/.git" ]; then
+        cd "$REPO_DIR"
+        commits=$(git rev-list --count HEAD 2>/dev/null)
+        contributors=$(git log --format='%aN' | sort -u | wc -l 2>/dev/null)
+        last_commit=$(git log -1 --format=%cd --date=short 2>/dev/null)
+        printf "%-20s %12s %12s %12s\n" "$repo" "$commits" "$contributors" "$last_commit" | tee -a "$OUTPUT_FILE"
+        cd - > /dev/null 2>&1
+    else
+        printf "%-20s %12s %12s %12s\n" "$repo" "N/A" "N/A" "N/A" | tee -a "$OUTPUT_FILE"
+    fi
+done
+
+# Check parent repo
+if [ -d "$PROJECT_BASE/.git" ]; then
+    cd "$PROJECT_BASE"
+    commits=$(git rev-list --count HEAD 2>/dev/null)
+    contributors=$(git log --format='%aN' | sort -u | wc -l 2>/dev/null)
+    last_commit=$(git log -1 --format=%cd --date=short 2>/dev/null)
+    printf "%-20s %12s %12s %12s\n" "jsys (parent)" "$commits" "$contributors" "$last_commit" | tee -a "$OUTPUT_FILE"
+    cd - > /dev/null 2>&1
+fi
+
+echo "" | tee -a "$OUTPUT_FILE"
+
 # GRAND TOTALS
 echo "========================================" | tee -a "$OUTPUT_FILE"
 echo "          GRAND TOTALS" | tee -a "$OUTPUT_FILE"
@@ -311,6 +428,24 @@ printf "%-24s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSO
 printf "%-24s %10d %12d %12d\n" "JavaScript Files" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 printf "%-24s %10d %12d %12s\n" "CSS (main.css)" "1" "$CSS_LINES" "$CSS_LINES" | tee -a "$OUTPUT_FILE"
 printf "%-24s %10d %12d %12d\n" "Shell Scripts" "$SH_COUNT" "$SH_LINES" "$((SH_LINES / SH_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+# Total Git Commits Across All Repos
+echo "Git Statistics Summary:" | tee -a "$OUTPUT_FILE"
+echo "-----------------------" | tee -a "$OUTPUT_FILE"
+TOTAL_COMMITS=0
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+    REPO_DIR="$PROJECT_BASE/$repo"
+    if [ -d "$REPO_DIR/.git" ]; then
+        cd "$REPO_DIR"
+        commits=$(git rev-list --count HEAD 2>/dev/null)
+        TOTAL_COMMITS=$((TOTAL_COMMITS + commits))
+        echo "  $repo: $commits commits" | tee -a "$OUTPUT_FILE"
+        cd - > /dev/null 2>&1
+    fi
+done
+echo "  -----------------" | tee -a "$OUTPUT_FILE"
+echo "  TOTAL: $TOTAL_COMMITS commits across all repositories" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 cat "$OUTPUT_FILE"
