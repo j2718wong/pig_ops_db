@@ -81,7 +81,7 @@ BEGIN
             name            = 'ACC_MIN_NUM_SOW_BOAR_REFERRAL_ACTIVE',
             description     = 'Minimum number of sow,boar that the referral becomes active',
             val_int         = 5
-        WHERE id = 2;
+        WHERE id = 3;
     END IF;
     
     

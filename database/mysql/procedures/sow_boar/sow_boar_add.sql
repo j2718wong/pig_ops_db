@@ -365,7 +365,7 @@ IF cur_account_flag & FLAG_BIT_FREE_TRIAL_STARTED = 0 THEN
     WHERE   id = LOV_ID_ACC_MAX_NUM_SOW_BOAR_FREE;  
 
 
-    IF cur_count >= cur_max_num_sow_boar_free THEN 
+    IF cur_count > cur_max_num_sow_boar_free THEN 
         
         /*Get ACCOUNT_NUMDAYS_FREE_TRIAL*/
         SELECT  val_int

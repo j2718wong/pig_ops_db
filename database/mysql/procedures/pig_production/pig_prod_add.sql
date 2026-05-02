@@ -598,6 +598,17 @@ WHERE id = in_sow_id;
 
 
 
+/* Count production entries of the account*/
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    pig_production
+WHERE   account_id = cur_user_account_id;
+
+UPDATE account SET 
+    count_pig_prod = cur_count
+WHERE id = cur_user_account_id;
+
+
 
 /* Create pig_prod_pig_ops entry*/
 CALL pig_prod_pig_ops_add(
