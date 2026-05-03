@@ -375,9 +375,10 @@ IF cur_account_flag & FLAG_BIT_FREE_TRIAL_STARTED = 0 THEN
         
         
         UPDATE account SET 
-            date_trial_start    = CURRENT_DATE,
-            date_trial_end      = CURRENT_DATE + INTERVAL cur_num_days_free_trial DAY,
-            flag                = flag | FLAG_BIT_FREE_TRIAL_STARTED
+            date_trial_start        = CURRENT_DATE,
+            date_trial_end          = CURRENT_DATE + INTERVAL cur_num_days_free_trial DAY,
+            date_next_sow_boar_count= CURRENT_DATE + INTERVAL cur_num_days_free_trial DAY,
+            flag                    = flag | FLAG_BIT_FREE_TRIAL_STARTED
         WHERE id = cur_pig_farm_account_id;
         
     END IF;

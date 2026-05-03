@@ -57,6 +57,9 @@ DECLARE cur_pig_farm_name                       VARCHAR(50)     DEFAULT '';
 DECLARE cur_count                               INT             DEFAULT 0;
 
 
+DECLARE cur_currency_code                       VARCHAR(5)      DEFAULT NULL;
+
+
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
 DECLARE res_desc                                VARCHAR(180)    DEFAULT '';
@@ -180,6 +183,14 @@ INSERT INTO user_pig_farm(
 
 
 
+/* Get country currency code.*/
+SELECT  currency_code 
+INTO    cur_currency_code
+FROM    app_country
+WHERE   id = in_country_id;
+
+
+
 /* Count the farms already in the account*/
 SELECT  COUNT(*)
 INTO    cur_count
@@ -187,11 +198,14 @@ FROM    pig_farm
 WHERE   account_id =  cur_user_account_id;
 
 
+
+
 /* Update the account country based on the first pig_farm country. */
 IF cur_count = 1 THEN 
     UPDATE account SET
         country_id      = in_country_id,
-        default_farm_id = cur_pig_farm_id
+        default_farm_id = cur_pig_farm_id,
+        currency        = cur_currency_code
     WHERE id = cur_user_account_id;
 
 END IF;

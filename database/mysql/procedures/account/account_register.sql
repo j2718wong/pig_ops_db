@@ -54,10 +54,11 @@ bit 1: FLAG_BIT_FREE_TRIAL_STARTED
 bit 2:
 bit 3:  
 
-bit 4:  FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED
+bit 4: FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED
 0 = not exempted has to pay bill
 1 = exempted, no need to compute bill
 
+bit 5: FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT
 
 
 bit 15: COMPANY_OWNED ACCOUNT
