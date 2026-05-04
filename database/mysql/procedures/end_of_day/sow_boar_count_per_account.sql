@@ -2,8 +2,9 @@
 
 DROP PROCEDURE IF EXISTS sow_boar_count_per_account $$
 CREATE PROCEDURE sow_boar_count_per_account(
-    in_account_id           INT,
-    OUT out_num_pigs        INT
+    in_account_id               INT,
+    OUT out_num_pigs            INT,
+    OUT out_sow_boar_count_id   INT 
 )  
 
 BEGIN
@@ -61,6 +62,8 @@ WHERE id = in_account_id;
 
 /* Return number of sow/boar pigs counted*/
 SET out_num_pigs = cur_count_sow + cur_count_boar;
+
+SET out_sow_boar_count_id = cur_sow_boar_head_count_id;
 
 END $$
 

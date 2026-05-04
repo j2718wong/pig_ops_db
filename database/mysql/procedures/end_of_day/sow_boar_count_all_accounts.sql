@@ -12,6 +12,9 @@ BEGIN
  *
  */
 
+DECLARE BG_PROCESS_ID_EOD_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS     INT   DEFAULT 3;
+
+DECLARE BG_PROCESS_COMPLETED                    INT             DEFAULT 100;   
 
 DECLARE LOV_ID_ACC_MAX_NUM_SOW_BOAR_FREE        INT             DEFAULT 2;
 DECLARE LOV_ID_BILLING_NUM_DAYS_DUE_DATE        INT             DEFAULT 4;
@@ -19,8 +22,13 @@ DECLARE LOV_ID_BILLING_NUM_DAYS_DUE_DATE        INT             DEFAULT 4;
 
 DECLARE NUM_DAYS_NEXT_SOW_BOAR_COUNT            INT             DEFAULT 30;
 
-DECLARE FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT        INT             DEFAULT 32;
 
+
+DECLARE t_init                                  BIGINT          DEFAULT 0;
+DECLARE t_final                                 BIGINT          DEFAULT 0;
+DECLARE t_delta                                 INT;
+
+DECLARE cur_business_date                       DATE;
 
 DECLARE cur_max_sow_boar_free                   INT             DEFAULT 0;
 DECLARE cur_billing_num_days_due_date           INT             DEFAULT 0;
@@ -28,10 +36,13 @@ DECLARE cur_billing_num_days_due_date           INT             DEFAULT 0;
 DECLARE cur_account_id                          INT             DEFAULT 0;
 DECLARE cur_account_current_bill_id             INT             DEFAULT 0;
 DECLARE cur_account_country_id                  INT             DEFAULT 0;
-DECLARE cur_account_currency                    VARCHAR(4)      DEFAULT NULL;
 
+DECLARE cur_country_flag                        INT             DEFAULT 0;
+DECLARE cur_country_currency                    VARCHAR(4)      DEFAULT NULL;
+DECLARE cur_country_tax_rate                    DECIMAL(4,2)    DEFAULT NULL;
 
 DECLARE cur_num_pig_count                       INT             DEFAULT 0;
+DECLARE cur_sow_boar_count_id                   INT             DEFAULT 0;    
 DECLARE cur_num_billable_pigs                   INT             DEFAULT 0;
 
 DECLARE cur_bill_count                          INT             DEFAULT 0;
@@ -48,9 +59,19 @@ DECLARE DEFAULT_CURRENCY_CODE                   VARCHAR(4)      DEFAULT NULL;
 DECLARE cur_country_price_per_head              DECIMAL(6,1)    DEFAULT NULL;
 DECLARE cur_country_currency_code               VARCHAR(4)      DEFAULT NULL;
 
+
 DECLARE cur_bill_charge                         DECIMAL(8,2)    DEFAULT NULL;
+DECLARE cur_deduction                           DECIMAL(8,2)    DEFAULT NULL;
+DECLARE cur_taxable_amount                      DECIMAL(8,2)    DEFAULT NULL;
+DECLARE cur_taxes                               DECIMAL(8,2)    DEFAULT NULL;
+
+DECLARE cur_total_amount_due                    DECIMAL(8,2)    DEFAULT NULL;
+
 
 DECLARE cur_account_bill_id                     INT             DEFAULT 0;
+
+
+
 
 
 
@@ -70,13 +91,36 @@ bit 5: FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT
 bit 15: COMPANY_OWNED ACCOUNT
 */
 
+DECLARE FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT        INT             DEFAULT 32;
+
+
+/* app_country.flag bits
+bit 0: FLAG_BIT_COUNTRY_ENABLED
+bit 1: 
+bit 2:
+bit 3:
+
+bit 4: FLAG_BIT_TAXES_ARE_EXCLUSIVE 
+0 = taxes are inclusive in sale amount
+1 = taxes are exclusive from sale amount
+
+
+*/
+
+DECLARE FLAG_BIT_TAXES_ARE_EXCLUSIVE            INT             DEFAULT 16;
+
+
+
 
 DECLARE l_last_row_fetched TINYINT;
 DECLARE c_account CURSOR FOR
     SELECT  a.id,
             a.current_bill_id,
             a.country_id,
-            b.currency_code
+            
+            b.flag,
+            b.currency_code,
+            b.tax_rate
     
     FROM    account a
     LEFT OUTER JOIN app_country b ON a.country_id = b.id
@@ -85,6 +129,11 @@ DECLARE c_account CURSOR FOR
             a.date_next_sow_boar_count = CURRENT_DATE;
 
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET l_last_row_fetched=1; 
+
+
+SET t_init = UNIX_TIMESTAMP();
+
+SET cur_business_date = CURRENT_DATE;
 
 
 
@@ -111,15 +160,16 @@ This is for accounts outside PH, future expansion
 SELECT  currency_code,
         price_per_head
         
-INTO    DEFAULT_PRICE_PER_HEAD,
-        DEFAULT_CURRENCY_CODE
+INTO    DEFAULT_CURRENCY_CODE,
+        DEFAULT_PRICE_PER_HEAD
+        
 
 FROM    biz_pricing
 WHERE   id = 1;   
 
 
 
-SET cur_date_prefix = DATE_FORMAT(CURRENT_DATE, '%y%m%d');
+SET cur_date_prefix = DATE_FORMAT(cur_business_date, '%y%m%d');
 
     
 SET l_last_row_fetched=0;
@@ -131,31 +181,36 @@ loop_here: LOOP
         cur_account_id,
         cur_account_current_bill_id,
         cur_account_country_id,
-        cur_account_currency;
+        
+        cur_country_flag,
+        cur_country_currency,
+        cur_country_tax_rate;
         
     IF l_last_row_fetched=1 THEN LEAVE loop_here; END IF;
 
 
-    SET cur_num_pig_count = 0;
+    SET cur_num_pig_count       = 0;
+    SET cur_sow_boar_count_id   = 0;
 
     /* Count sow, boar for each account; The account.last_sow_boar_count_id 
     should be updated after this procedure call.*/
-    CALL sow_boar_count_per_account(cur_account_id, cur_num_pig_count);
+    CALL sow_boar_count_per_account(cur_account_id, cur_num_pig_count, 
+            cur_sow_boar_count_id);
 
     
     UPDATE account SET 
-        date_next_sow_boar_count = CURRENT_DATE + INTERVAL NUM_DAYS_NEXT_SOW_BOAR_COUNT DAY
+        date_next_sow_boar_count = cur_business_date + INTERVAL NUM_DAYS_NEXT_SOW_BOAR_COUNT DAY
     WHERE id = cur_account_id;
 
 
     /* Get the price_per_head and currency code from account country;
-    This is a Full table scan, with vew few rows.
+    This is a Full table scan, with very few rows.
     */
     SELECT  currency_code,
             price_per_head
             
-    INTO    cur_country_price_per_head,
-            cur_country_currency_code
+    INTO    cur_country_currency_code,
+            cur_country_price_per_head
 
     FROM    biz_pricing
     WHERE   country_id = cur_account_country_id
@@ -193,7 +248,12 @@ loop_here: LOOP
 
     /* Check first the status of the old bill; When account is billed for the  
     first time, account.current_bill_id is 0; 
-    When the bill is paid, account.current_bill_id is 0;*/
+    When the bill is paid, account.current_bill_id is 0;
+    
+    
+    To simplify billing logic, if the account has still an not paid outstanding 
+    bill, no new bill will be created.
+    */
     IF cur_account_current_bill_id = 0 THEN 
         
         /* Compute number of billable sow_boar*/
@@ -209,6 +269,18 @@ loop_here: LOOP
         
         
         /* Subtract any discount, referral reward etc later*/
+        
+        
+        /* Compute taxes, taxable amount and total_amount_due. */
+        IF cur_country_flag & FLAG_BIT_TAXES_ARE_EXCLUSIVE = 0 THEN 
+            SET cur_taxes            = cur_bill_charge * cur_country_tax_rate / 100;
+            SET cur_taxable_amount   = cur_bill_charge - cur_taxes; 
+            SET cur_total_amount_due = cur_bill_charge;
+        ELSE
+            SET cur_taxes            = cur_bill_charge * cur_country_tax_rate / 100;
+            SET cur_taxable_amount   = cur_bill_charge; 
+            SET cur_total_amount_due = cur_bill_charge + cur_taxes;
+        END IF;
         
         
         SET cur_bill_count = cur_bill_count + 1; 
@@ -239,17 +311,37 @@ loop_here: LOOP
             date_issue,
             date_due,
             
+            country_id,
+            tax_rate,
+            
+            num_sow_boar_billed,
+            sow_boar_head_count_id,
+            
             currency_code,
-            amount
+            charge_per_pig,
+            amount,
+            taxable_amount,
+            taxes,
+            total_amount_due
         ) VALUES(
             cur_account_id,
             cur_bill_reference, 
-            CURRENT_DATE,
-            CURRENT_DATE,
-            CURRENT_DATE + INTERVAL cur_billing_num_days_due_date DAY,
+            cur_business_date,
+            cur_business_date,
+            cur_business_date + INTERVAL cur_billing_num_days_due_date DAY,
+            
+            cur_account_country_id,
+            cur_country_tax_rate,
+            
+            cur_num_billable_pigs,
+            cur_sow_boar_count_id,
             
             cur_country_currency_code,
-            cur_bill_charge
+            cur_country_price_per_head,
+            cur_bill_charge,
+            cur_taxable_amount,
+            cur_taxes,
+            cur_total_amount_due
         );
         SELECT LAST_INSERT_ID() INTO cur_account_bill_id;
         
@@ -267,6 +359,29 @@ END LOOP loop_here;
  
 CLOSE c_account;
 SET l_last_row_fetched=0;   
+
+
+SET t_final = UNIX_TIMESTAMP();
+
+SET t_delta = t_final - t_init;
+
+
+/** Insert bg_process_run record*/
+
+INSERT INTO bg_process_run(
+    bg_process_id,     
+    duration_secs,     
+    proc_status,       
+    records_processed, 
+    business_date   
+) VALUES (
+    BG_PROCESS_ID_EOD_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS,
+    t_delta,
+    BG_PROCESS_COMPLETED,
+    cur_bill_count,
+    cur_business_date
+);
+
 
 END $$
 
