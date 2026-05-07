@@ -71,6 +71,7 @@ DECLARE cur_total_amount_due                    DECIMAL(8,2)    DEFAULT NULL;
 DECLARE cur_account_bill_id                     INT             DEFAULT 0;
 
 
+DECLARE cur_bg_process_run_id                   INT             DEFAULT 0;
 
 
 
@@ -381,6 +382,10 @@ INSERT INTO bg_process_run(
     cur_bill_count,
     cur_business_date
 );
+SELECT LAST_INSERT_ID() INTO cur_bg_process_run_id;
+
+
+SELECT cur_bg_process_run_id    AS  bg_process_run_id;
 
 
 END $$
