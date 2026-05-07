@@ -1,7 +1,7 @@
 ﻿DELIMITER $$
 
-DROP PROCEDURE IF EXISTS user_push_susbcription_add $$
-CREATE PROCEDURE user_push_susbcription_add(
+DROP PROCEDURE IF EXISTS user_push_subscription_add $$
+CREATE PROCEDURE user_push_subscription_add(
     in_user_id              INT,
     
     in_subscription_endpoint        VARCHAR(500),
@@ -33,7 +33,8 @@ DECLARE RES_NUM_DUPLICATE_ENTRY                 INT             DEFAULT 20;
 
 
 /* user_push_subscription.flag bits*/
-DECLARE FLAG_BIT_PUSH_ENABLED                   INT             DEFAULT 1;
+DECLARE FLAG_BIT_PUSH_NOTIFICATION_ENABLED      INT             DEFAULT 1;
+DECLARE FLAG_BIT_PUSH_NOTIFICATION_DEACTIVATED  INT             DEFAULT 2;
 
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
@@ -106,7 +107,7 @@ INSERT INTO user_push_subscription(
 ) VALUES (
     in_user_id,
     
-    FLAG_BIT_PUSH_ENABLED,
+    FLAG_BIT_PUSH_NOTIFICATION_ENABLED,
     
     in_subscription_endpoint,   
     in_subscription_keys_p256dh,
