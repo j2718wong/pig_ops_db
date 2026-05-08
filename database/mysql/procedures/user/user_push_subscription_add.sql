@@ -92,6 +92,7 @@ END IF;
 
 /*Insert into user_push_subscription*/
 INSERT INTO user_push_subscription(
+    account_id,
     user_id,
     
     flag,
@@ -105,6 +106,7 @@ INSERT INTO user_push_subscription(
     os_name                 
     
 ) VALUES (
+    cur_user_account_id,
     in_user_id,
     
     FLAG_BIT_PUSH_NOTIFICATION_ENABLED,

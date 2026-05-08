@@ -70,6 +70,7 @@ DECLARE cur_total_amount_due                    DECIMAL(8,2)    DEFAULT NULL;
 
 DECLARE cur_account_bill_id                     INT             DEFAULT 0;
 
+DECLARE cur_record_processed                    INT             DEFAULT 0;
 
 DECLARE cur_bg_process_run_id                   INT             DEFAULT 0;
 
@@ -135,6 +136,19 @@ DECLARE CONTINUE HANDLER FOR NOT FOUND SET l_last_row_fetched=1;
 SET t_init = UNIX_TIMESTAMP();
 
 SET cur_business_date = CURRENT_DATE;
+
+
+
+/** Insert bg_process_run record*/
+
+INSERT INTO bg_process_run(
+    bg_process_id,     
+    business_date   
+) VALUES (
+    BG_PROCESS_ID_EOD_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS,
+    cur_business_date
+);
+SELECT LAST_INSERT_ID() INTO cur_bg_process_run_id;
 
 
 
@@ -306,6 +320,8 @@ loop_here: LOOP
         
         /* Create account_bill entry*/
         INSERT INTO account_bill (
+            bg_process_run_id,
+        
             account_id,
             bill_reference,
             date_bill_end,
@@ -325,6 +341,8 @@ loop_here: LOOP
             taxes,
             total_amount_due
         ) VALUES(
+            cur_bg_process_run_id,
+        
             cur_account_id,
             cur_bill_reference, 
             cur_business_date,
@@ -350,6 +368,7 @@ loop_here: LOOP
             current_bill_id = cur_account_bill_id
         WHERE id = cur_account_id;
         
+        SET cur_record_processed = cur_record_processed + 1;
         
     END IF;
     
@@ -369,23 +388,16 @@ SET t_delta = t_final - t_init;
 
 /** Insert bg_process_run record*/
 
-INSERT INTO bg_process_run(
-    bg_process_id,     
-    duration_secs,     
-    proc_status,       
-    records_processed, 
-    business_date   
-) VALUES (
-    BG_PROCESS_ID_EOD_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS,
-    t_delta,
-    BG_PROCESS_COMPLETED,
-    cur_bill_count,
-    cur_business_date
-);
-SELECT LAST_INSERT_ID() INTO cur_bg_process_run_id;
+UPDATE bg_process_run SET
+    duration_secs       = t_delta,     
+    proc_status         = BG_PROCESS_COMPLETED,       
+    records_processed   = cur_record_processed 
+WHERE id = cur_bg_process_run_id;
 
 
-SELECT cur_bg_process_run_id    AS  bg_process_run_id;
+SELECT  cur_bg_process_run_id   AS bg_process_run_id,
+        cur_business_date       AS business_date,
+        cur_record_processed    AS record_processed;
 
 
 END $$
