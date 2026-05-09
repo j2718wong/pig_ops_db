@@ -86,7 +86,7 @@ echo "    Project: $PROJECT_BASE" | tee -a "$OUTPUT_FILE"
 echo "========================================" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
-# 0. GIT REPOSITORY STATUS (NEW)
+# 0. GIT REPOSITORY STATUS
 echo "0. GIT REPOSITORY STATUS" | tee -a "$OUTPUT_FILE"
 echo "========================" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
@@ -332,34 +332,55 @@ else
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
-# 8. Shell Scripts
+# 8. Shell Scripts (All repositories)
 echo "8. SHELL SCRIPTS" | tee -a "$OUTPUT_FILE"
 echo "----------------" | tee -a "$OUTPUT_FILE"
-SH_DIR="$PROJECT_BASE"
-if [ -d "$SH_DIR" ]; then
-    # Remove -maxdepth 1 to search all subdirectories
-    SH_COUNT=$(find "$SH_DIR" -type f -name "*.sh" 2>/dev/null | wc -l)
-    SH_LINES=$(find "$SH_DIR" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)
-    echo "  Files: $SH_COUNT" | tee -a "$OUTPUT_FILE"
-    echo "  Lines: $SH_LINES" | tee -a "$OUTPUT_FILE"
-    if [ $SH_COUNT -gt 0 ]; then
-        echo "  Average: $((SH_LINES / SH_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
-    fi
-    echo "" | tee -a "$OUTPUT_FILE"
-    
-    echo "  All shell scripts:" | tee -a "$OUTPUT_FILE"
-    # Also remove -maxdepth 1 here
-    find "$SH_DIR" -type f -name "*.sh" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
-        # Get relative path from PROJECT_BASE
-        rel_path=$(echo "$file" | sed "s|$PROJECT_BASE/||")
-        printf "    - %-60s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
-    done
-else
-    echo "  Directory not found: $SH_DIR" | tee -a "$OUTPUT_FILE"
+
+# Count shell scripts from all repositories
+SH_COUNT=0
+SH_LINES=0
+
+# Check pig_ops for shell scripts
+if [ -d "$PROJECT_BASE/pig_ops" ]; then
+    SH_COUNT=$((SH_COUNT + $(find "$PROJECT_BASE/pig_ops" -type f -name "*.sh" 2>/dev/null | wc -l)))
+    SH_LINES=$((SH_LINES + $(find "$PROJECT_BASE/pig_ops" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)))
+fi
+
+# Check pig_ops_bkops for shell scripts (including scripts directory)
+if [ -d "$PROJECT_BASE/pig_ops_bkops" ]; then
+    SH_COUNT=$((SH_COUNT + $(find "$PROJECT_BASE/pig_ops_bkops" -type f -name "*.sh" 2>/dev/null | wc -l)))
+    SH_LINES=$((SH_LINES + $(find "$PROJECT_BASE/pig_ops_bkops" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)))
+fi
+
+# Check pig_ops_db for shell scripts (migrations, etc.)
+if [ -d "$PROJECT_BASE/pig_ops_db" ]; then
+    SH_COUNT=$((SH_COUNT + $(find "$PROJECT_BASE/pig_ops_db" -type f -name "*.sh" 2>/dev/null | wc -l)))
+    SH_LINES=$((SH_LINES + $(find "$PROJECT_BASE/pig_ops_db" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)))
+fi
+
+# Check pig_ops_ui_mob for shell scripts (build scripts, etc.)
+if [ -d "$PROJECT_BASE/pig_ops_ui_mob" ]; then
+    SH_COUNT=$((SH_COUNT + $(find "$PROJECT_BASE/pig_ops_ui_mob" -type f -name "*.sh" 2>/dev/null | wc -l)))
+    SH_LINES=$((SH_LINES + $(find "$PROJECT_BASE/pig_ops_ui_mob" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)))
+fi
+
+echo "  Files: $SH_COUNT" | tee -a "$OUTPUT_FILE"
+echo "  Lines: $SH_LINES" | tee -a "$OUTPUT_FILE"
+if [ $SH_COUNT -gt 0 ]; then
+    echo "  Average: $((SH_LINES / SH_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
-# 9. GIT COMMIT SUMMARY (NEW - Quick overview)
+echo "  All shell scripts:" | tee -a "$OUTPUT_FILE"
+find "$PROJECT_BASE" -type f -name "*.sh" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
+    # Get relative path from PROJECT_BASE
+    rel_path=$(echo "$file" | sed "s|$PROJECT_BASE/||")
+    printf "    - %-60s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
+done
+
+echo "" | tee -a "$OUTPUT_FILE"
+
+# 9. GIT COMMIT SUMMARY
 echo "9. GIT COMMIT SUMMARY" | tee -a "$OUTPUT_FILE"
 echo "====================" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
