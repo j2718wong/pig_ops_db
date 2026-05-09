@@ -18,7 +18,7 @@ DECLARE BG_PROCESS_COMPLETED                    INT             DEFAULT 100;
 
 DECLARE LOV_ID_ACC_MAX_NUM_SOW_BOAR_FREE        INT             DEFAULT 2;
 DECLARE LOV_ID_BILLING_NUM_DAYS_DUE_DATE        INT             DEFAULT 4;
-
+DECLARE LOV_ID_LAST_BG_PROCESS_RUN_ID_EOD_SOW_BOAR_COUNT INT    DEFAULT 5;
 
 DECLARE NUM_DAYS_NEXT_SOW_BOAR_COUNT            INT             DEFAULT 30;
 
@@ -386,7 +386,14 @@ SET t_final = UNIX_TIMESTAMP();
 SET t_delta = t_final - t_init;
 
 
-/** Insert bg_process_run record*/
+/** Record the last cur_bg_process_run_id in a01_list_of_values*/
+UPDATE a01_list_of_values SET
+    val_int     = cur_bg_process_run_id,
+    val_str     = DATE_FORMAT(cur_business_date, '%Y-%m-%d')
+WHERE id = LOV_ID_LAST_BG_PROCESS_RUN_ID_EOD_SOW_BOAR_COUNT;
+
+
+/** UPDATE bg_process_run record*/
 
 UPDATE bg_process_run SET
     duration_secs       = t_delta,     

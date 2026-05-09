@@ -28,7 +28,7 @@ UPDATE bg_process_run SET
     records_processed   = in_records_processed
 WHERE id = in_bg_process_run_id;
 
-SELECT 1;
+SELECT in_bg_process_run_id AS  bg_process_run_id;
 
 END $$
 

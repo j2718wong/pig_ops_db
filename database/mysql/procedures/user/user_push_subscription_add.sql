@@ -79,48 +79,58 @@ END IF;
 SELECT  id
 INTO    cur_user_push_subscription_id 
 FROM    user_push_subscription
-WHERE   user_id = in_user_id AND subscription_endpoint = in_subscription_endpoint
+WHERE   subscription_endpoint = in_subscription_endpoint
 LIMIT   1;
 
+/* 
 IF cur_user_push_subscription_id > 0 THEN 
     SET res_num     = RES_NUM_DUPLICATE_ENTRY;
     SET res_code    = "RES_NUM_DUPLICATE_ENTRY";
     
     LEAVE process_user;
 END IF;
+*/
 
+IF cur_user_push_subscription_id = 0 THEN 
+    /*Insert into user_push_subscription*/
+    INSERT INTO user_push_subscription(
+        account_id,
+        user_id,
+        
+        flag,
+        
+        subscription_endpoint,   
+        subscription_keys_p256dh,
+        subscription_keys_auth,  
+        
+        device_name,             
+        browser_name,            
+        os_name                 
+        
+    ) VALUES (
+        cur_user_account_id,
+        in_user_id,
+        
+        FLAG_BIT_PUSH_NOTIFICATION_ENABLED,
+        
+        in_subscription_endpoint,   
+        in_subscription_keys_p256dh,
+        in_subscription_keys_auth,  
+        
+        in_device_name,             
+        in_browser_name,            
+        in_os_name                 
+    );
+    SELECT LAST_INSERT_ID() INTO cur_user_push_subscription_id;
 
-/*Insert into user_push_subscription*/
-INSERT INTO user_push_subscription(
-    account_id,
-    user_id,
-    
-    flag,
-    
-    subscription_endpoint,   
-    subscription_keys_p256dh,
-    subscription_keys_auth,  
-    
-    device_name,             
-    browser_name,            
-    os_name                 
-    
-) VALUES (
-    cur_user_account_id,
-    in_user_id,
-    
-    FLAG_BIT_PUSH_NOTIFICATION_ENABLED,
-    
-    in_subscription_endpoint,   
-    in_subscription_keys_p256dh,
-    in_subscription_keys_auth,  
-    
-    in_device_name,             
-    in_browser_name,            
-    in_os_name                 
-);
-SELECT LAST_INSERT_ID() INTO cur_user_push_subscription_id;
+ELSE
+    /* Change user same device end point*/
+    UPDATE user_push_subscription SET 
+        user_id     = in_user_id,
+        account_id  = cur_user_account_id
+    WHERE id = cur_user_push_subscription_id;
 
+END IF;
 
 END process_user;
 
