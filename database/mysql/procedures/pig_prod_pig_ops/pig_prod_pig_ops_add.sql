@@ -74,7 +74,7 @@ loop_here: LOOP
     /* Default*/
     SET num_days_to_add = cur_account_pig_ops_num_days;
     
-	/* Need to adjust Day 1 counting.*/
+    /* Need to adjust Day 1 counting.*/
     IF  in_operation_type = PIG_OPERATION_TYPE_LACTATING_PIGLETS OR 
         in_operation_type = PIG_OPERATION_TYPE_LACTATING_SOW THEN 
         
@@ -96,11 +96,13 @@ loop_here: LOOP
     
 
     INSERT INTO pig_prod_pig_ops(
+        account_id,
         pig_prod_id,
         account_pig_ops_id,
         operation_type,
         date_target
     ) VALUES (
+        in_account_id,
         in_pig_prod_id,
         cur_account_pig_ops_id,
         in_operation_type,
