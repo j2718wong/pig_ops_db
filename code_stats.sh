@@ -1,7 +1,8 @@
 #!/bin/bash
+# code_stats.sh
 
 # Detailed Code Statistics Script - Relative Paths Version
-# Now includes Git commit counts for each repository
+# Now includes Git commit counts and earliest commit dates for each repository
 
 # Colors
 RED='\033[0;31m'
@@ -20,6 +21,45 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_BASE="$SCRIPT_DIR/.."
 
 OUTPUT_FILE="/tmp/code_stats_detailed.txt"
+
+# Array to store earliest commit info for each repo
+declare -A REPO_EARLIEST_COMMIT
+declare -A REPO_EARLIEST_DATE
+declare -A REPO_EARLIEST_AUTHOR
+
+# Function to get earliest commit for a Git repository
+get_earliest_commit() {
+    local repo_path="$1"
+    local repo_name="$2"
+    
+    if [ -d "$repo_path/.git" ]; then
+        cd "$repo_path" 2>/dev/null
+        # Get the first commit (oldest) - using rev-list with --reverse
+        local earliest_hash=$(git rev-list --max-parents=0 HEAD 2>/dev/null)
+        
+        if [ -n "$earliest_hash" ]; then
+            local earliest_date=$(git log -1 --format=%cd --date=short "$earliest_hash" 2>/dev/null)
+            local earliest_author=$(git log -1 --format='%an' "$earliest_hash" 2>/dev/null)
+            local earliest_subject=$(git log -1 --format='%s' "$earliest_hash" 2>/dev/null)
+            
+            REPO_EARLIEST_COMMIT[$repo_name]="$earliest_hash"
+            REPO_EARLIEST_DATE[$repo_name]="$earliest_date"
+            REPO_EARLIEST_AUTHOR[$repo_name]="$earliest_author"
+            
+            # Also store subject for display
+            REPO_EARLIEST_SUBJECT[$repo_name]="$earliest_subject"
+        else
+            REPO_EARLIEST_COMMIT[$repo_name]="N/A"
+            REPO_EARLIEST_DATE[$repo_name]="N/A"
+            REPO_EARLIEST_AUTHOR[$repo_name]="N/A"
+        fi
+        cd - > /dev/null 2>&1
+    else
+        REPO_EARLIEST_COMMIT[$repo_name]="Not a repo"
+        REPO_EARLIEST_DATE[$repo_name]="N/A"
+        REPO_EARLIEST_AUTHOR[$repo_name]="N/A"
+    fi
+}
 
 # Function to get commit count for a Git repository
 get_commit_count() {
@@ -84,6 +124,27 @@ echo "    DETAILED CODE STATISTICS REPORT" | tee -a "$OUTPUT_FILE"
 echo "    Generated: $(date)" | tee -a "$OUTPUT_FILE"
 echo "    Project: $PROJECT_BASE" | tee -a "$OUTPUT_FILE"
 echo "========================================" | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+# FIRST, collect earliest commit info for each repository (before displaying)
+echo "Collecting Git earliest commit information..." | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+# Collect earliest commit for each repository
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+    REPO_DIR="$PROJECT_BASE/$repo"
+    if [ -d "$REPO_DIR" ]; then
+        get_earliest_commit "$REPO_DIR" "$repo"
+        echo "  $repo: earliest commit = ${REPO_EARLIEST_DATE[$repo]} (${REPO_EARLIEST_COMMIT[$repo]:0:8})" | tee -a "$OUTPUT_FILE"
+    fi
+done
+
+# Also check parent directory
+if [ -d "$PROJECT_BASE/.git" ]; then
+    get_earliest_commit "$PROJECT_BASE" "jsys (parent)"
+    echo "  jsys (parent): earliest commit = ${REPO_EARLIEST_DATE[jsys (parent)]} (${REPO_EARLIEST_COMMIT[jsys (parent)]:0:8})" | tee -a "$OUTPUT_FILE"
+fi
+
 echo "" | tee -a "$OUTPUT_FILE"
 
 # 0. GIT REPOSITORY STATUS
@@ -385,8 +446,8 @@ echo "9. GIT COMMIT SUMMARY" | tee -a "$OUTPUT_FILE"
 echo "====================" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
-printf "%-20s %12s %12s %12s\n" "Repository" "Commits" "Contributors" "Last Commit" | tee -a "$OUTPUT_FILE"
-printf "%-20s %12s %12s %12s\n" "----------" "-------" "-----------" "-----------" | tee -a "$OUTPUT_FILE"
+printf "%-20s %12s %12s %12s %15s\n" "Repository" "Commits" "Contributors" "Last Commit" "First Commit" | tee -a "$OUTPUT_FILE"
+printf "%-20s %12s %12s %12s %15s\n" "----------" "-------" "-----------" "-----------" "------------" | tee -a "$OUTPUT_FILE"
 
 for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
     REPO_DIR="$PROJECT_BASE/$repo"
@@ -395,10 +456,11 @@ for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
         commits=$(git rev-list --count HEAD 2>/dev/null)
         contributors=$(git log --format='%aN' | sort -u | wc -l 2>/dev/null)
         last_commit=$(git log -1 --format=%cd --date=short 2>/dev/null)
-        printf "%-20s %12s %12s %12s\n" "$repo" "$commits" "$contributors" "$last_commit" | tee -a "$OUTPUT_FILE"
+        first_commit=${REPO_EARLIEST_DATE[$repo]}
+        printf "%-20s %12s %12s %12s %15s\n" "$repo" "$commits" "$contributors" "$last_commit" "$first_commit" | tee -a "$OUTPUT_FILE"
         cd - > /dev/null 2>&1
     else
-        printf "%-20s %12s %12s %12s\n" "$repo" "N/A" "N/A" "N/A" | tee -a "$OUTPUT_FILE"
+        printf "%-20s %12s %12s %12s %15s\n" "$repo" "N/A" "N/A" "N/A" "N/A" | tee -a "$OUTPUT_FILE"
     fi
 done
 
@@ -408,10 +470,64 @@ if [ -d "$PROJECT_BASE/.git" ]; then
     commits=$(git rev-list --count HEAD 2>/dev/null)
     contributors=$(git log --format='%aN' | sort -u | wc -l 2>/dev/null)
     last_commit=$(git log -1 --format=%cd --date=short 2>/dev/null)
-    printf "%-20s %12s %12s %12s\n" "jsys (parent)" "$commits" "$contributors" "$last_commit" | tee -a "$OUTPUT_FILE"
+    first_commit=${REPO_EARLIEST_DATE[jsys (parent)]}
+    printf "%-20s %12s %12s %12s %15s\n" "jsys (parent)" "$commits" "$contributors" "$last_commit" "$first_commit" | tee -a "$OUTPUT_FILE"
     cd - > /dev/null 2>&1
 fi
 
+echo "" | tee -a "$OUTPUT_FILE"
+
+# EARLIEST COMMITS SECTION (Before Grand Totals)
+echo "========================================" | tee -a "$OUTPUT_FILE"
+echo "       EARLIEST COMMITS BY REPOSITORY" | tee -a "$OUTPUT_FILE"
+echo "========================================" | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+printf "%-20s %12s %-20s %s\n" "Repository" "Date" "Commit Hash" "Author" | tee -a "$OUTPUT_FILE"
+printf "%-20s %12s %-20s %s\n" "----------" "----" "-----------" "------" | tee -a "$OUTPUT_FILE"
+
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob jsys\ \(parent\); do
+    if [ -n "${REPO_EARLIEST_DATE[$repo]}" ] && [ "${REPO_EARLIEST_DATE[$repo]}" != "N/A" ]; then
+        printf "%-20s %12s %-20s %s\n" "$repo" "${REPO_EARLIEST_DATE[$repo]}" "${REPO_EARLIEST_COMMIT[$repo]:0:8}" "${REPO_EARLIEST_AUTHOR[$repo]}" | tee -a "$OUTPUT_FILE"
+    elif [ "$repo" != "jsys (parent)" ]; then
+        # Check if repo directory exists but no git info
+        REPO_DIR="$PROJECT_BASE/$repo"
+        if [ -d "$REPO_DIR" ]; then
+            printf "%-20s %12s %-20s %s\n" "$repo" "No commits" "N/A" "N/A" | tee -a "$OUTPUT_FILE"
+        fi
+    fi
+done
+
+echo "" | tee -a "$OUTPUT_FILE"
+
+# Find the absolute earliest commit across all repositories
+echo "Overall Project Statistics:" | tee -a "$OUTPUT_FILE"
+echo "---------------------------" | tee -a "$OUTPUT_FILE"
+
+# Find the oldest date among all repos
+OLDEST_DATE=""
+OLDEST_REPO=""
+OLDEST_HASH=""
+OLDEST_AUTHOR=""
+
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob jsys\ \(parent\); do
+    if [ -n "${REPO_EARLIEST_DATE[$repo]}" ] && [ "${REPO_EARLIEST_DATE[$repo]}" != "N/A" ] && [ "${REPO_EARLIEST_DATE[$repo]}" != "No commits" ]; then
+        if [ -z "$OLDEST_DATE" ] || [ "${REPO_EARLIEST_DATE[$repo]}" \< "$OLDEST_DATE" ]; then
+            OLDEST_DATE="${REPO_EARLIEST_DATE[$repo]}"
+            OLDEST_REPO="$repo"
+            OLDEST_HASH="${REPO_EARLIEST_COMMIT[$repo]}"
+            OLDEST_AUTHOR="${REPO_EARLIEST_AUTHOR[$repo]}"
+        fi
+    fi
+done
+
+if [ -n "$OLDEST_DATE" ]; then
+    echo "  Oldest commit across all repositories:" | tee -a "$OUTPUT_FILE"
+    echo "    Repository: $OLDEST_REPO" | tee -a "$OUTPUT_FILE"
+    echo "    Date: $OLDEST_DATE" | tee -a "$OUTPUT_FILE"
+    echo "    Commit: $OLDEST_HASH" | tee -a "$OUTPUT_FILE"
+    echo "    Author: $OLDEST_AUTHOR" | tee -a "$OUTPUT_FILE"
+fi
 echo "" | tee -a "$OUTPUT_FILE"
 
 # GRAND TOTALS
@@ -461,12 +577,15 @@ for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
         cd "$REPO_DIR"
         commits=$(git rev-list --count HEAD 2>/dev/null)
         TOTAL_COMMITS=$((TOTAL_COMMITS + commits))
-        echo "  $repo: $commits commits" | tee -a "$OUTPUT_FILE"
+        echo "  $repo: $commits commits (earliest: ${REPO_EARLIEST_DATE[$repo]})" | tee -a "$OUTPUT_FILE"
         cd - > /dev/null 2>&1
     fi
 done
 echo "  -----------------" | tee -a "$OUTPUT_FILE"
 echo "  TOTAL: $TOTAL_COMMITS commits across all repositories" | tee -a "$OUTPUT_FILE"
+if [ -n "$OLDEST_DATE" ]; then
+    echo "  Project lifespan: $OLDEST_DATE to $(date +%Y-%m-%d)" | tee -a "$OUTPUT_FILE"
+fi
 echo "" | tee -a "$OUTPUT_FILE"
 
 cat "$OUTPUT_FILE"

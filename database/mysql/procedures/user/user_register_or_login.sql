@@ -109,7 +109,8 @@ DECLARE FLAG_BIT_USER_MOBILE_NUM_VERIFIED       INT             DEFAULT 4;
 DECLARE FLAG_BIT_USER_IS_DELETED                INT             DEFAULT 8;
 
 DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
-
+DECLARE FLAG_BIT_USER_IS_INTERNAL_DATA_ENTRY    INT             DEFAULT 32;
+DECLARE FLAG_BIT_USER_IS_INTERNAL_FINANCE       INT             DEFAULT 64;
 DECLARE FLAG_BIT_USER_IS_TEST_USER              INT             DEFAULT 128;
 
 DECLARE FLAG_BIT_USER_IS_SYS_ADMIN              INT             DEFAULT 256;
@@ -202,7 +203,7 @@ IF in_login_country_code IS NOT NULL THEN
             FROM    user_login_ip_loc_trace
             WHERE   app_country_id      = cur_country_id AND
                     ip_loc_trace_city   = in_login_city AND 
-                    ip_loc_trace_region = NULL
+                    ip_loc_trace_region IS NULL
             LIMIT   1;
         END IF;
         
@@ -212,7 +213,7 @@ IF in_login_country_code IS NOT NULL THEN
             FROM    user_login_ip_loc_trace
             WHERE   app_country_id      = cur_country_id AND
                     ip_loc_trace_region = in_login_region AND 
-                    ip_loc_trace_city   = NULL
+                    ip_loc_trace_city   IS NULL
             LIMIT   1;
         END IF;
             
@@ -575,7 +576,7 @@ user name_first and name_last
 
 IF in_login_social_media_id IS NULL THEN 
     /* Create verification code to be sent to user email.*/
-    SET cur_user_verify_code = ROUND(100000 + RAND() * (999000 - 100000));
+    SET cur_user_verify_code = FLOOR(100000 + RAND() * 900000);
         
         
     /* Add NUM_MINUTES_CODE_EXPIRY from NOW*/ 
