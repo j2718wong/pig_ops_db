@@ -29,7 +29,7 @@ DECLARE cur_count_user                          INT             DEFAULT 0;
 DECLARE cur_user_no_account                     INT             DEFAULT 0;
 DECLARE cur_count_account                       INT             DEFAULT 0;
 DECLARE cur_count_not_started_trial             INT             DEFAULT 0;
-
+DECLARE cur_count_no_sow_boar                   INT             DEFAULT 0;
 
 /* Count total users excluding test user. */
 SELECT  COUNT(*) 
@@ -51,11 +51,19 @@ INTO    cur_count_account
 FROM    account;
 
 
-/* Count accounts not started adding sow/boar stocks.*/
+/* Count accounts not_started_trial.*/
 SELECT  COUNT(*) 
 INTO    cur_count_not_started_trial
 FROM    account
 WHERE   flag &2 = 0;
+
+
+/* Count accounts not started adding sow/boar stocks.*/
+SELECT  COUNT(*) 
+INTO    cur_count_no_sow_boar
+FROM    account
+WHERE   count_sow_boar = 0;
+
 
 
 /* Count billable stocks*/
@@ -66,7 +74,8 @@ SELECT
     cur_count_user              AS count_user,
     cur_user_no_account         AS user_no_account,
     cur_count_account           AS count_account,
-    cur_count_not_started_trial AS account_not_started;
+    cur_count_not_started_trial AS account_not_started,
+    cur_count_no_sow_boar       AS account_no_sow_boar;
 
 END $$
 
