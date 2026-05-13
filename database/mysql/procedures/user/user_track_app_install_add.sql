@@ -7,7 +7,20 @@ CREATE PROCEDURE user_track_app_install_add(
     in_event                VARCHAR(30),
     
     in_screen_width         INT,
-    in_screen_height        INT
+    in_screen_height        INT,
+    
+    in_is_webview           INT,
+    
+    in_browser              VARCHAR(50),
+    in_browser_version      VARCHAR(20),
+    in_webview_platform     VARCHAR(30),
+    
+    in_os                   VARCHAR(50),
+    in_os_version           VARCHAR(20),
+    
+    in_device_type          VARCHAR(20)
+    
+    
 )  
 
 BEGIN
@@ -72,6 +85,18 @@ INSERT INTO user_track_app_install(
  
     screen_width,
     screen_height,
+
+    is_webview,      
+    
+    browser,         
+    browser_version, 
+    webview_platform,
+    
+    os,              
+    os_version,      
+    
+    device_type,
+    
     date_event
 ) VALUES (
     in_user_id,
@@ -80,6 +105,18 @@ INSERT INTO user_track_app_install(
 
     in_screen_width,
     in_screen_height,
+    
+    in_is_webview,      
+    
+    in_browser,         
+    in_browser_version, 
+    in_webview_platform,
+    
+    in_os,              
+    in_os_version,      
+    
+    in_device_type,     
+    
     CURRENT_DATE
 );
 
