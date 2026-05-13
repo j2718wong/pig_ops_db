@@ -30,6 +30,8 @@ DECLARE cur_user_no_account                     INT             DEFAULT 0;
 DECLARE cur_count_account                       INT             DEFAULT 0;
 DECLARE cur_count_not_started_trial             INT             DEFAULT 0;
 DECLARE cur_count_no_sow_boar                   INT             DEFAULT 0;
+DECLARE cur_count_pwa_install                   INT             DEFAULT 0;
+
 
 /* Count total users excluding test user. */
 SELECT  COUNT(*) 
@@ -65,6 +67,14 @@ FROM    account
 WHERE   count_sow_boar = 0;
 
 
+/** Count distinct PWA install*/
+SELECT  COUNT(DISTINCT user_id) 
+INTO    cur_count_pwa_install
+FROM    user_track_app_install 
+WHERE   event = 'PWA_INSTALL_ACCEPTED';
+
+
+
 
 /* Count billable stocks*/
 
@@ -75,7 +85,9 @@ SELECT
     cur_user_no_account         AS user_no_account,
     cur_count_account           AS count_account,
     cur_count_not_started_trial AS account_not_started,
-    cur_count_no_sow_boar       AS account_no_sow_boar;
+    cur_count_no_sow_boar       AS account_no_sow_boar,
+    
+    cur_count_pwa_install       AS count_pwa_install;
 
 END $$
 
