@@ -58,7 +58,8 @@ END IF;
 
 IF in_notify_type_id = BG_PROCESS_NOTIFY_USER_INCOMPLETE_ACCOUNT THEN 
     UPDATE user SET
-        last_notify_inc_account = cur_email_notification_id
+        count_email_notify_inc_account = count_email_notify_inc_account + 1,
+        last_notify_inc_account_id = cur_email_notification_id
     WHERE id = in_user_id;
 END IF;
 

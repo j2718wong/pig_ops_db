@@ -37,6 +37,23 @@ BEGIN
 DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 
+/* user.flag bits*/
+DECLARE FLAG_BIT_USER_IS_ACTIVE                 INT             DEFAULT 1;
+DECLARE FLAG_BIT_USER_EMAIL_VERIFIED            INT             DEFAULT 2;
+DECLARE FLAG_BIT_USER_MOBILE_NUM_VERIFIED       INT             DEFAULT 4;
+DECLARE FLAG_BIT_USER_IS_DELETED                INT             DEFAULT 8;
+
+DECLARE FLAG_BIT_USER_IS_ACCOUNT_ADMIN          INT             DEFAULT 16;
+DECLARE FLAG_BIT_USER_IS_INTERNAL_DATA_ENTRY    INT             DEFAULT 32;
+DECLARE FLAG_BIT_USER_IS_INTERNAL_FINANCE       INT             DEFAULT 64;
+DECLARE FLAG_BIT_USER_IS_TEST_USER              INT             DEFAULT 128;
+
+DECLARE FLAG_BIT_USER_IS_SYS_ADMIN              INT             DEFAULT 256;
+DECLARE FLAG_BIT_USER_PWA_APP_INSTALLED         INT             DEFAULT 512;
+
+
+
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
@@ -121,6 +138,13 @@ INSERT INTO user_track_app_install(
 );
 
 SELECT LAST_INSERT_ID() INTO cur_user_track_app_install_id;
+
+
+IF in_event = 'PWA_INSTALLED' THEN 
+    UPDATE user SET 
+        flag = flag | FLAG_BIT_USER_PWA_APP_INSTALLED
+    WHERE id = in_user_id;
+END IF;
 
 
 END process_user;
