@@ -22,9 +22,9 @@ BEGIN
  */
 
 
-DECLARE BG_PROCESS_NOTIFY_ACCOUNT_NOT_STARTED_TRIAL INT             DEFAULT 1;
-DECLARE BG_PROCESS_NOTIFY_USER_INCOMPLETE_ACCOUNT   INT             DEFAULT 2;
-
+DECLARE BG_PROCESS_EMAIL_NOTIFY_ACCOUNT_NO_SOW_BOAR     INT             DEFAULT 1;
+DECLARE BG_PROCESS_EMAIL_NOTIFY_USER_INCOMPLETE_ACCOUNT INT             DEFAULT 2;
+DECLARE BG_PROCESS_EMAIL_NOTIFY_USER_INSTALL_PWA_APP    INT             DEFAULT 3;
 
 DECLARE cur_email_notification_id                   INT             DEFAULT 0;
 
@@ -49,17 +49,25 @@ INSERT INTO email_notification(
 SELECT LAST_INSERT_ID() INTO cur_email_notification_id;
 
 
-IF in_notify_type_id = BG_PROCESS_NOTIFY_ACCOUNT_NOT_STARTED_TRIAL THEN 
+IF in_notify_type_id = BG_PROCESS_EMAIL_NOTIFY_ACCOUNT_NO_SOW_BOAR THEN 
     UPDATE account SET
         last_notify_inactive_id = cur_email_notification_id
     WHERE id = in_account_id;
 END IF;
 
 
-IF in_notify_type_id = BG_PROCESS_NOTIFY_USER_INCOMPLETE_ACCOUNT THEN 
+IF in_notify_type_id = BG_PROCESS_EMAIL_NOTIFY_USER_INCOMPLETE_ACCOUNT THEN 
     UPDATE user SET
         count_email_notify_inc_account = count_email_notify_inc_account + 1,
         last_notify_inc_account_id = cur_email_notification_id
+    WHERE id = in_user_id;
+END IF;
+
+
+IF in_notify_type_id = BG_PROCESS_EMAIL_NOTIFY_USER_INSTALL_PWA_APP THEN 
+    UPDATE user SET
+        count_email_notify_no_pwa_app = count_email_notify_no_pwa_app + 1,
+        last_notify_no_pwa_app_id = cur_email_notification_id
     WHERE id = in_user_id;
 END IF;
 
