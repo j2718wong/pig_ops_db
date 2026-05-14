@@ -34,6 +34,7 @@ DECLARE cur_max_sow_boar_free                   INT             DEFAULT 0;
 DECLARE cur_billing_num_days_due_date           INT             DEFAULT 0;
 
 DECLARE cur_account_id                          INT             DEFAULT 0;
+DECLARE cur_account_previous_bill_id            INT             DEFAULT 0;
 DECLARE cur_account_current_bill_id             INT             DEFAULT 0;
 DECLARE cur_account_country_id                  INT             DEFAULT 0;
 
@@ -65,7 +66,10 @@ DECLARE cur_deduction                           DECIMAL(8,2)    DEFAULT NULL;
 DECLARE cur_taxable_amount                      DECIMAL(8,2)    DEFAULT NULL;
 DECLARE cur_taxes                               DECIMAL(8,2)    DEFAULT NULL;
 
+DECLARE cur_prev_amount_balance                 DECIMAL(8,2)    DEFAULT NULL;
+
 DECLARE cur_total_amount_due                    DECIMAL(8,2)    DEFAULT NULL;
+
 
 
 DECLARE cur_account_bill_id                     INT             DEFAULT 0;
@@ -88,12 +92,15 @@ bit 4: FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED
 1 = exempted, no need to compute bill
 
 bit 5: FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT
+bit 6: COMPANY_OWNED ACCOUNT
 
-
-bit 15: COMPANY_OWNED ACCOUNT
 */
 
+DECLARE FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED       INT             DEFAULT 16;
 DECLARE FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT        INT             DEFAULT 32;
+DECLARE FLAG_BIT_ACCOUNT_IS_COMPANY_OWNED       INT             DEFAULT 64;
+
+
 
 
 /* app_country.flag bits
@@ -117,6 +124,7 @@ DECLARE FLAG_BIT_TAXES_ARE_EXCLUSIVE            INT             DEFAULT 16;
 DECLARE l_last_row_fetched TINYINT;
 DECLARE c_account CURSOR FOR
     SELECT  a.id,
+            a.previous_bill_id,
             a.current_bill_id,
             a.country_id,
             
@@ -127,7 +135,7 @@ DECLARE c_account CURSOR FOR
     FROM    account a
     LEFT OUTER JOIN app_country b ON a.country_id = b.id
             
-    WHERE   (a.flag & FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT) = 0 AND 
+    WHERE   (a.flag & 112) = 0 AND 
             a.date_next_sow_boar_count = CURRENT_DATE;
 
 DECLARE CONTINUE HANDLER FOR NOT FOUND SET l_last_row_fetched=1; 
@@ -194,6 +202,7 @@ OPEN c_account;
 loop_here: LOOP
     FETCH c_account INTO 
         cur_account_id,
+        cur_account_previous_bill_id,
         cur_account_current_bill_id,
         cur_account_country_id,
         
@@ -318,6 +327,25 @@ loop_here: LOOP
         
         SET cur_bill_reference = CONCAT(cur_date_prefix, '-', cur_obfuscated, '-', cur_checksum);
         
+        SET cur_prev_amount_balance = 0;
+        
+        /* Check if there was a previous bill balance.*/
+        IF cur_account_previous_bill_id > 0 THEN 
+            SELECT  amount_balance 
+            INTO    cur_prev_amount_balance
+            FROM    account_bill
+            WHERE   id = cur_account_previous_bill_id;
+            
+            
+            /** If there  is any previous balance, it should be added to total amount*/
+            IF cur_prev_amount_balance >  0 THEN
+                SET cur_total_amount_due = cur_total_amount_due + cur_prev_amount_balance;
+            END IF;
+            
+        END IF;
+        
+        
+        
         /* Create account_bill entry*/
         INSERT INTO account_bill (
             bg_process_run_id,
@@ -333,6 +361,8 @@ loop_here: LOOP
             
             num_sow_boar_billed,
             sow_boar_head_count_id,
+            
+            prev_amount_balance,
             
             currency_code,
             charge_per_pig,
@@ -354,6 +384,8 @@ loop_here: LOOP
             
             cur_num_billable_pigs,
             cur_sow_boar_count_id,
+            
+            cur_prev_amount_balance,
             
             cur_country_currency_code,
             cur_country_price_per_head,
