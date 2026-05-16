@@ -204,7 +204,12 @@ INSERT INTO user_verify(
     DATE_ADD(NOW(), INTERVAL NUM_MINUTES_CODE_EXPIRY MINUTE)                   /* Datetime expiry */
 );
 SELECT LAST_INSERT_ID() INTO cur_user_verify_id;
+
     
+UPDATE user SET 
+    last_user_verify_id = cur_user_verify_id
+WHERE id = cur_user_id;
+
 
 SELECT  ts_expiry,
         dt_expiry

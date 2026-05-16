@@ -131,7 +131,7 @@ echo "Collecting Git earliest commit information..." | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 # Collect earliest commit for each repository
-for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob pig_ops_admin; do
     REPO_DIR="$PROJECT_BASE/$repo"
     if [ -d "$REPO_DIR" ]; then
         get_earliest_commit "$REPO_DIR" "$repo"
@@ -153,7 +153,7 @@ echo "========================" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 # Check each repository
-for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob pig_ops_admin; do
     REPO_DIR="$PROJECT_BASE/$repo"
     if [ -d "$REPO_DIR" ]; then
         echo -e "${GREEN}Repository: $repo${NC}" | tee -a "$OUTPUT_FILE"
@@ -322,6 +322,54 @@ else
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
+# 3d. Python Files (Admin App - pig_ops_admin)
+echo "3d. PYTHON FILES (Admin App - pig_ops_admin)" | tee -a "$OUTPUT_FILE"
+echo "--------------------------------------------" | tee -a "$OUTPUT_FILE"
+PYTHON_ADMIN_DIR="$PROJECT_BASE/pig_ops_admin"
+if [ -d "$PYTHON_ADMIN_DIR" ]; then
+    PYTHON_ADMIN_COUNT=$(find "$PYTHON_ADMIN_DIR" -type f -name "*.py" 2>/dev/null | wc -l)
+    PYTHON_ADMIN_LINES=$(find "$PYTHON_ADMIN_DIR" -type f -name "*.py" -exec cat {} \; 2>/dev/null | wc -l)
+    echo "  Files: $PYTHON_ADMIN_COUNT" | tee -a "$OUTPUT_FILE"
+    echo "  Lines: $PYTHON_ADMIN_LINES" | tee -a "$OUTPUT_FILE"
+    if [ $PYTHON_ADMIN_COUNT -gt 0 ]; then
+        echo "  Average: $((PYTHON_ADMIN_LINES / PYTHON_ADMIN_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
+    fi
+    echo "" | tee -a "$OUTPUT_FILE"
+    
+    echo "  All admin Python files:" | tee -a "$OUTPUT_FILE"
+    find "$PYTHON_ADMIN_DIR" -type f -name "*.py" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
+        rel_path=$(echo "$file" | sed "s|$PYTHON_ADMIN_DIR/||")
+        printf "    - %-50s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
+    done
+else
+    echo "  Directory not found: $PYTHON_ADMIN_DIR" | tee -a "$OUTPUT_FILE"
+fi
+echo "" | tee -a "$OUTPUT_FILE"
+
+# 3e. JavaScript Files (Admin App - pig_ops_admin/src/js)
+echo "3e. JAVASCRIPT FILES (Admin App)" | tee -a "$OUTPUT_FILE"
+echo "--------------------------------" | tee -a "$OUTPUT_FILE"
+JS_ADMIN_DIR="$PROJECT_BASE/pig_ops_admin/src/js"
+if [ -d "$JS_ADMIN_DIR" ]; then
+    JS_ADMIN_COUNT=$(find "$JS_ADMIN_DIR" -type f -name "*.js" 2>/dev/null | wc -l)
+    JS_ADMIN_LINES=$(find "$JS_ADMIN_DIR" -type f -name "*.js" -exec cat {} \; 2>/dev/null | wc -l)
+    echo "  Files: $JS_ADMIN_COUNT" | tee -a "$OUTPUT_FILE"
+    echo "  Lines: $JS_ADMIN_LINES" | tee -a "$OUTPUT_FILE"
+    if [ $JS_ADMIN_COUNT -gt 0 ]; then
+        echo "  Average: $((JS_ADMIN_LINES / JS_ADMIN_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
+    fi
+    echo "" | tee -a "$OUTPUT_FILE"
+    
+    echo "  All admin JavaScript files:" | tee -a "$OUTPUT_FILE"
+    find "$JS_ADMIN_DIR" -type f -name "*.js" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
+        rel_path=$(echo "$file" | sed "s|$JS_ADMIN_DIR/||")
+        printf "    - %-50s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
+    done
+else
+    echo "  Directory not found: $JS_ADMIN_DIR" | tee -a "$OUTPUT_FILE"
+fi
+echo "" | tee -a "$OUTPUT_FILE"
+
 # 4. HTML Files
 echo "4. HTML FILES" | tee -a "$OUTPUT_FILE"
 echo "-------------" | tee -a "$OUTPUT_FILE"
@@ -356,9 +404,9 @@ else
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
-# 6. JavaScript Files (excluding library and jquery)
-echo "6. JAVASCRIPT FILES (excluding library & jquery)" | tee -a "$OUTPUT_FILE"
-echo "-------------------------------------------------" | tee -a "$OUTPUT_FILE"
+# 6. JavaScript Files (Farmer SPA - excluding library and jquery)
+echo "6. JAVASCRIPT FILES (Farmer SPA - excluding library & jquery)" | tee -a "$OUTPUT_FILE"
+echo "-------------------------------------------------------------" | tee -a "$OUTPUT_FILE"
 JS_DIR="$PROJECT_BASE/pig_ops_ui_mob/src/static/js"
 if [ -d "$JS_DIR" ]; then
     JS_COUNT=$(find "$JS_DIR" -type f -name "*.js" ! -path "*/library/*" ! -path "*/jquery/*" 2>/dev/null | wc -l)
@@ -380,9 +428,9 @@ else
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
-# 7. CSS File
-echo "7. CSS FILE (main.css)" | tee -a "$OUTPUT_FILE"
-echo "----------------------" | tee -a "$OUTPUT_FILE"
+# 7. CSS File (Farmer SPA)
+echo "7. CSS FILE (Farmer SPA - main.css)" | tee -a "$OUTPUT_FILE"
+echo "-----------------------------------" | tee -a "$OUTPUT_FILE"
 CSS_FILE="$PROJECT_BASE/pig_ops_ui_mob/src/static/css/main.css"
 if [ -f "$CSS_FILE" ]; then
     CSS_LINES=$(wc -l < "$CSS_FILE")
@@ -425,6 +473,12 @@ if [ -d "$PROJECT_BASE/pig_ops_ui_mob" ]; then
     SH_LINES=$((SH_LINES + $(find "$PROJECT_BASE/pig_ops_ui_mob" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)))
 fi
 
+# Check pig_ops_admin for shell scripts
+if [ -d "$PROJECT_BASE/pig_ops_admin" ]; then
+    SH_COUNT=$((SH_COUNT + $(find "$PROJECT_BASE/pig_ops_admin" -type f -name "*.sh" 2>/dev/null | wc -l)))
+    SH_LINES=$((SH_LINES + $(find "$PROJECT_BASE/pig_ops_admin" -type f -name "*.sh" -exec cat {} \; 2>/dev/null | wc -l)))
+fi
+
 echo "  Files: $SH_COUNT" | tee -a "$OUTPUT_FILE"
 echo "  Lines: $SH_LINES" | tee -a "$OUTPUT_FILE"
 if [ $SH_COUNT -gt 0 ]; then
@@ -449,7 +503,7 @@ echo "" | tee -a "$OUTPUT_FILE"
 printf "%-20s %12s %12s %12s %15s\n" "Repository" "Commits" "Contributors" "Last Commit" "First Commit" | tee -a "$OUTPUT_FILE"
 printf "%-20s %12s %12s %12s %15s\n" "----------" "-------" "-----------" "-----------" "------------" | tee -a "$OUTPUT_FILE"
 
-for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob pig_ops_admin; do
     REPO_DIR="$PROJECT_BASE/$repo"
     if [ -d "$REPO_DIR/.git" ]; then
         cd "$REPO_DIR"
@@ -486,7 +540,7 @@ echo "" | tee -a "$OUTPUT_FILE"
 printf "%-20s %12s %-20s %s\n" "Repository" "Date" "Commit Hash" "Author" | tee -a "$OUTPUT_FILE"
 printf "%-20s %12s %-20s %s\n" "----------" "----" "-----------" "------" | tee -a "$OUTPUT_FILE"
 
-for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob jsys\ \(parent\); do
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob pig_ops_admin jsys\ \(parent\); do
     if [ -n "${REPO_EARLIEST_DATE[$repo]}" ] && [ "${REPO_EARLIEST_DATE[$repo]}" != "N/A" ]; then
         printf "%-20s %12s %-20s %s\n" "$repo" "${REPO_EARLIEST_DATE[$repo]}" "${REPO_EARLIEST_COMMIT[$repo]:0:8}" "${REPO_EARLIEST_AUTHOR[$repo]}" | tee -a "$OUTPUT_FILE"
     elif [ "$repo" != "jsys (parent)" ]; then
@@ -510,7 +564,7 @@ OLDEST_REPO=""
 OLDEST_HASH=""
 OLDEST_AUTHOR=""
 
-for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob jsys\ \(parent\); do
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob pig_ops_admin jsys\ \(parent\); do
     if [ -n "${REPO_EARLIEST_DATE[$repo]}" ] && [ "${REPO_EARLIEST_DATE[$repo]}" != "N/A" ] && [ "${REPO_EARLIEST_DATE[$repo]}" != "No commits" ]; then
         if [ -z "$OLDEST_DATE" ] || [ "${REPO_EARLIEST_DATE[$repo]}" \< "$OLDEST_DATE" ]; then
             OLDEST_DATE="${REPO_EARLIEST_DATE[$repo]}"
@@ -542,8 +596,12 @@ if [ -d "$MIGRATIONS_DIR" ]; then
     MIGRATIONS_SYMLINK_COUNT=$(find "$MIGRATIONS_DIR" -maxdepth 1 -type l 2>/dev/null | wc -l)
 fi
 
-TOTAL_FILES=$((PROC_COUNT + MIGRATIONS_REGULAR_COUNT + PYTHON_COUNT + PYTHON_UI_COUNT + PYTHON_BKOPS_COUNT + HTML_COUNT + JSON_COUNT + JS_COUNT + SH_COUNT + 1))
-TOTAL_LINES=$((PROC_LINES + MIGRATIONS_LINES + PYTHON_LINES + PYTHON_UI_LINES + PYTHON_BKOPS_LINES + HTML_LINES + JSON_LINES + JS_LINES + SH_LINES + CSS_LINES))
+# Count CSS file (already have CSS_LINES)
+CSS_COUNT=1
+
+# Calculate totals including admin
+TOTAL_FILES=$((PROC_COUNT + MIGRATIONS_REGULAR_COUNT + PYTHON_COUNT + PYTHON_UI_COUNT + PYTHON_BKOPS_COUNT + PYTHON_ADMIN_COUNT + HTML_COUNT + JSON_COUNT + JS_COUNT + JS_ADMIN_COUNT + CSS_COUNT + SH_COUNT))
+TOTAL_LINES=$((PROC_LINES + MIGRATIONS_LINES + PYTHON_LINES + PYTHON_UI_LINES + PYTHON_BKOPS_LINES + PYTHON_ADMIN_LINES + HTML_LINES + JSON_LINES + JS_LINES + JS_ADMIN_LINES + CSS_LINES + SH_LINES))
 
 echo -e "${CYAN}Total Files:${NC} $TOTAL_FILES" | tee -a "$OUTPUT_FILE"
 echo -e "${CYAN}Total Lines:${NC} $TOTAL_LINES" | tee -a "$OUTPUT_FILE"
@@ -552,26 +610,28 @@ echo "" | tee -a "$OUTPUT_FILE"
 # Summary by type
 echo "Summary by Type:" | tee -a "$OUTPUT_FILE"
 echo "---------------" | tee -a "$OUTPUT_FILE"
-printf "%-24s %10s %12s %12s\n" "Type" "Files" "Lines" "Avg/File" | tee -a "$OUTPUT_FILE"
-printf "%-24s %10s %12s %12s\n" "-----" "-----" "-----" "--------" | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "MySQL Procedures" "$PROC_COUNT" "$PROC_LINES" "$((PROC_LINES / PROC_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "DB Migrations" "$MIGRATIONS_REGULAR_COUNT" "$MIGRATIONS_LINES" "$((MIGRATIONS_LINES / MIGRATIONS_REGULAR_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12s %12s\n" "DB Update Procedures" "$MIGRATIONS_SYMLINK_COUNT" "(symlinks)" "(see MySQL Procedures)" | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "Python (Backend)" "$PYTHON_COUNT" "$PYTHON_LINES" "$((PYTHON_LINES / PYTHON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "Python (Frontend Build)" "$PYTHON_UI_COUNT" "$PYTHON_UI_LINES" "$((PYTHON_UI_LINES / PYTHON_UI_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "Python (Background Ops)" "$PYTHON_BKOPS_COUNT" "$PYTHON_BKOPS_LINES" "$((PYTHON_BKOPS_LINES / PYTHON_BKOPS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "HTML Files" "$HTML_COUNT" "$HTML_LINES" "$((HTML_LINES / HTML_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSON_LINES / JSON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "JavaScript Files" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12s\n" "CSS (main.css)" "1" "$CSS_LINES" "$CSS_LINES" | tee -a "$OUTPUT_FILE"
-printf "%-24s %10d %12d %12d\n" "Shell Scripts" "$SH_COUNT" "$SH_LINES" "$((SH_LINES / SH_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10s %12s %12s\n" "Type" "Files" "Lines" "Avg/File" | tee -a "$OUTPUT_FILE"
+printf "%-28s %10s %12s %12s\n" "-----" "-----" "-----" "--------" | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "MySQL Procedures" "$PROC_COUNT" "$PROC_LINES" "$((PROC_LINES / PROC_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "DB Migrations" "$MIGRATIONS_REGULAR_COUNT" "$MIGRATIONS_LINES" "$((MIGRATIONS_LINES / MIGRATIONS_REGULAR_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12s %12s\n" "DB Update Procedures" "$MIGRATIONS_SYMLINK_COUNT" "(symlinks)" "(see MySQL Procedures)" | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "Python (Backend)" "$PYTHON_COUNT" "$PYTHON_LINES" "$((PYTHON_LINES / PYTHON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "Python (Frontend Build)" "$PYTHON_UI_COUNT" "$PYTHON_UI_LINES" "$((PYTHON_UI_LINES / PYTHON_UI_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "Python (Background Ops)" "$PYTHON_BKOPS_COUNT" "$PYTHON_BKOPS_LINES" "$((PYTHON_BKOPS_LINES / PYTHON_BKOPS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "Python (Admin App)" "$PYTHON_ADMIN_COUNT" "$PYTHON_ADMIN_LINES" "$((PYTHON_ADMIN_LINES / PYTHON_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "JavaScript (Farmer SPA)" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "JavaScript (Admin App)" "$JS_ADMIN_COUNT" "$JS_ADMIN_LINES" "$((JS_ADMIN_LINES / JS_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "HTML Files" "$HTML_COUNT" "$HTML_LINES" "$((HTML_LINES / HTML_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSON_LINES / JSON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12s\n" "CSS (main.css)" "$CSS_COUNT" "$CSS_LINES" "$CSS_LINES" | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "Shell Scripts" "$SH_COUNT" "$SH_LINES" "$((SH_LINES / SH_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 # Total Git Commits Across All Repos
 echo "Git Statistics Summary:" | tee -a "$OUTPUT_FILE"
 echo "-----------------------" | tee -a "$OUTPUT_FILE"
 TOTAL_COMMITS=0
-for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob; do
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob pig_ops_admin; do
     REPO_DIR="$PROJECT_BASE/$repo"
     if [ -d "$REPO_DIR/.git" ]; then
         cd "$REPO_DIR"
