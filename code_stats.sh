@@ -349,7 +349,7 @@ echo "" | tee -a "$OUTPUT_FILE"
 # 3e. JavaScript Files (Admin App - pig_ops_admin/src/js)
 echo "3e. JAVASCRIPT FILES (Admin App)" | tee -a "$OUTPUT_FILE"
 echo "--------------------------------" | tee -a "$OUTPUT_FILE"
-JS_ADMIN_DIR="$PROJECT_BASE/pig_ops_admin/src/js"
+JS_ADMIN_DIR="$PROJECT_BASE/pig_ops_admin/src/static/js"
 if [ -d "$JS_ADMIN_DIR" ]; then
     JS_ADMIN_COUNT=$(find "$JS_ADMIN_DIR" -type f -name "*.js" 2>/dev/null | wc -l)
     JS_ADMIN_LINES=$(find "$JS_ADMIN_DIR" -type f -name "*.js" -exec cat {} \; 2>/dev/null | wc -l)
@@ -619,7 +619,7 @@ printf "%-28s %10d %12d %12d\n" "Python (Backend)" "$PYTHON_COUNT" "$PYTHON_LINE
 printf "%-28s %10d %12d %12d\n" "Python (Frontend Build)" "$PYTHON_UI_COUNT" "$PYTHON_UI_LINES" "$((PYTHON_UI_LINES / PYTHON_UI_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 printf "%-28s %10d %12d %12d\n" "Python (Background Ops)" "$PYTHON_BKOPS_COUNT" "$PYTHON_BKOPS_LINES" "$((PYTHON_BKOPS_LINES / PYTHON_BKOPS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 printf "%-28s %10d %12d %12d\n" "Python (Admin App)" "$PYTHON_ADMIN_COUNT" "$PYTHON_ADMIN_LINES" "$((PYTHON_ADMIN_LINES / PYTHON_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "JavaScript (Farmer SPA)" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-28s %10d %12d %12d\n" "JavaScript (SuperPig SPA)" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 printf "%-28s %10d %12d %12d\n" "JavaScript (Admin App)" "$JS_ADMIN_COUNT" "$JS_ADMIN_LINES" "$((JS_ADMIN_LINES / JS_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 printf "%-28s %10d %12d %12d\n" "HTML Files" "$HTML_COUNT" "$HTML_LINES" "$((HTML_LINES / HTML_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 printf "%-28s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSON_LINES / JSON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
