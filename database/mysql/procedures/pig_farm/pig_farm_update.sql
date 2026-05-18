@@ -7,7 +7,6 @@ CREATE PROCEDURE pig_farm_update(
 
     in_name                 VARCHAR(50),
     
-    in_country_id           INT, 
     in_address_level_1_id   INT,
     in_address_level_2_id   INT,
     in_address_level_3_id   INT,
@@ -38,11 +37,20 @@ DECLARE FLAG_BIT_OPERATION_UPDATE               INT             DEFAULT 2;
 DECLARE FLAG_BIT_OPERATION_DELETE               INT             DEFAULT 4;
 
 
+/** app_country.flag bits*/
+DECLARE FLAG_BIT_COUNTRY_ENABLE                 INT             DEFAULT 1;
+DECLARE FLAG_BIT_COUNTRY_HAS_ADDRESS_LEVELS     INT             DEFAULT 2;
+
+
+
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
 DECLARE cur_farm_account_id                     INT             DEFAULT 0;
+
+DECLARE cur_country_id                          INT             DEFAULT 0;
+DECLARE cur_country_flag                        INT             DEFAULT 0;
 
 
 DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
@@ -88,25 +96,51 @@ IF res_num != RES_NUM_SUCCESS THEN
 END IF;
 
 
+/* This logic is created for easier testing for countries with address or without address levels*/
 
-UPDATE pig_farm SET
-    name                = in_name,
-    
-    country_id          = in_country_id,
-    address_level_1_id  = in_address_level_1_id,
-    address_level_2_id  = in_address_level_2_id,
-    address_level_3_id  = in_address_level_3_id,
-    latitude            = in_latitude,
-    longitude           = in_longitude,
-    
-    num_farrowing_crates= in_num_farrowing_crates,
-    
-    last_update_user_id = in_user_id,
-    dt_last_update      = CURRENT_TIMESTAMP,
-    
-    data_ver_num_farm   = data_ver_num_farm + 1
-WHERE id =  in_pig_farm_id;
+SELECT  a.country_id, 
+        b.flag
+        
+INTO    cur_country_id,
+        cur_country_flag
+        
+FROM pig_farm a
+LEFT OUTER JOIN app_country b ON a.country_id = b.id
+WHERE a.id =  in_pig_farm_id;
 
+IF cur_country_flag & FLAG_BIT_COUNTRY_HAS_ADDRESS_LEVELS > 0 THEN 
+    UPDATE pig_farm SET
+        name                = in_name,
+        
+        address_level_1_id  = in_address_level_1_id,
+        address_level_2_id  = in_address_level_2_id,
+        address_level_3_id  = in_address_level_3_id,
+        latitude            = in_latitude,
+        longitude           = in_longitude,
+        
+        num_farrowing_crates= in_num_farrowing_crates,
+        
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP,
+        
+        data_ver_num_farm   = data_ver_num_farm + 1
+    WHERE id =  in_pig_farm_id;
+ELSE
+    UPDATE pig_farm SET
+        name                = in_name,
+        
+        latitude            = in_latitude,
+        longitude           = in_longitude,
+        
+        num_farrowing_crates= in_num_farrowing_crates,
+        
+        last_update_user_id = in_user_id,
+        dt_last_update      = CURRENT_TIMESTAMP,
+        
+        data_ver_num_farm   = data_ver_num_farm + 1
+    WHERE id =  in_pig_farm_id;
+
+END IF;
 
 END process_user;
 
