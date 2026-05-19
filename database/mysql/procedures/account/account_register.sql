@@ -8,7 +8,7 @@ CREATE PROCEDURE account_register(
     
     in_referred_by_account_id INT, 
     
-    in_name                 VARCHAR(100)
+    in_name                 VARCHAR(50)
 )  
 
 BEGIN
@@ -115,16 +115,14 @@ DECLARE cur_account_referral_id                 INT             DEFAULT 0;
 DECLARE cur_account_id                          INT             DEFAULT 0;
 DECLARE cur_account_flag                        INT             DEFAULT 0;
 DECLARE cur_account_status_id                   INT             DEFAULT 0;
-DECLARE cur_account_status_name                 VARCHAR(50);
 DECLARE cur_account_name                        VARCHAR(100); 
-DECLARE cur_account_date_trial_start            DATE;
-DECLARE cur_account_date_trial_end              DATE;
+
 
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 
-DECLARE s_desc                                  VARCHAR(200)    DEFAULT '';
-
+DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
+DECLARE cur_currency_code                       VARCHAR(3)      DEFAULT '';
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -161,11 +159,6 @@ IF cur_user_account_id > 0 THEN
 END IF;
 
 
-SELECT  val_int 
-INTO    cur_num_days_trial
-FROM    a01_list_of_values
-WHERE   id = LOV_ID_ACCOUNT_NUMDAYS_FREE_TRIAL;
-
 
 INSERT INTO account(
     name,
@@ -174,22 +167,14 @@ INSERT INTO account(
     
     flag_settings,
     
-    status_id,
-    date_trial_start,
-    date_trial_end,
-    
     added_by_user_id
     
 ) VALUES (
     in_name,
     in_country_id,
-    1,
+    FLAG_BIT_ACCOUNT_ENABLE,
     
     FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH,
-    
-    ACCOUNT_STATUS_ID_ON_TRIAL,
-    CURRENT_DATE,
-    DATE_ADD(CURRENT_DATE, INTERVAL cur_num_days_trial DAY),
     
     in_user_id
 );
@@ -232,66 +217,117 @@ UPDATE user SET
 WHERE id = in_user_id;
 
 
+/* Create default gestating pig_ops list template; 
+This is copied in every pig_production entry. */
 CALL account_gestating_ops_create(cur_account_id);
 
+
+/* Create default lactating pig_ops list template; 
+This is copied in every pig_production entry when status is updated to LACTATING. */
 CALL account_lactating_ops_create(cur_account_id);
 
+
+/* Create default gilt pig_ops list template; 
+This is copied in every new gilt added to the pig_farm. */
 CALL account_gilt_ops_create(cur_account_id);
 
 
-/* Insert app_audit_log. */
-SET s_desc = CONCAT("Account registered; acc_name = ", in_name);
-INSERT INTO app_audit_log(
-    user_id,
-    account_id,
-    action,
-    description,
-    date
-) VALUES (
-    in_user_id,
-    cur_account_id,
-    AUDIT_ACTION_ADD,
-    s_desc,
-    CURRENT_DATE
-); 
+/* Create default sow_due_chklst template; 
+This is copied when there is an expecting sow giving birth in next 7 days.
+This is a minimum checklist, users can add to this list.
+*/
+CALL account_sow_due_chklst_create(cur_account_id);
 
 
-SET s_desc = "User set to ACCOUNT ADMIN";
-INSERT INTO app_audit_log(
-    user_id,
-    account_id,
-    action,
-    description,
-    date
-) VALUES (
-    in_user_id,
-    cur_account_id,
-    AUDIT_ACTION_ADD,
-    s_desc,
-    CURRENT_DATE
-); 
+
+/** 2026-05-19 Notes
+1.) Up until to this date, the account and pig_farm creation are separate
+user tasks.
+
+2.) As of this writing, all accounts are single farms. The original design was
+one account, multiple farms.
+
+3.) To simplify new user registration process, the pig_farm entry will also be 
+created together with the account with 
+ - the pig_farm.name will be same with account.name
+ - the input in_country_id must not be null or zero;    
+
+4.) The UI needs to be adjusted and must be backward compatible with the original
+design with just a flag switch.
+
+*/
+
+
+IF in_country_id > 0 THEN 
+
+    INSERT INTO pig_farm(
+        account_id,
+        flag,
+        name,
+        
+        country_id,
+        
+        added_by_user_id
+    ) VALUES (
+        cur_account_id,
+        1,    
+        in_name,
+        
+        in_country_id,
+        
+        in_user_id
+    );
+
+    SELECT LAST_INSERT_ID() INTO cur_pig_farm_id;
+
+
+    /*Insert into user_pig_farm*/
+    INSERT INTO user_pig_farm(
+        pig_farm_id,
+        user_id,
+        added_by_user_id
+    ) VALUES (
+        cur_pig_farm_id,
+        in_user_id,
+        in_user_id
+    );
+
+
+
+    /* Get country currency code.*/
+    SELECT  currency_code 
+    INTO    cur_currency_code
+    FROM    app_country
+    WHERE   id = in_country_id;
+
+
+
+    /* Update the account . */
+
+    UPDATE account SET
+        default_farm_id = cur_pig_farm_id,
+        currency        = cur_currency_code
+    WHERE id = cur_account_id;
+
+
+END IF;
+
+
 
 
 END process_user;
 
 
 SELECT
-    a.name,
-    a.flag,
-    a.status_id,
-    b.name,
-    a.date_trial_start,
-    a.date_trial_end
+    name,
+    flag,
+    status_id
 INTO
     cur_account_name,
     cur_account_flag,
-    cur_account_status_id,
-    cur_account_status_name,
-    cur_account_date_trial_start,
-    cur_account_date_trial_end
-FROM account a
-LEFT OUTER JOIN account_status b ON a.status_id = b.id
-WHERE a.id = cur_account_id;
+    cur_account_status_id
+FROM account 
+WHERE id = cur_account_id;
 
 SELECT 
     res_num                             AS result_number,
@@ -301,10 +337,7 @@ SELECT
     cur_account_id                      AS acc_id,
     cur_account_name                    AS acc_name,
     cur_account_flag                    AS acc_flag,
-    cur_account_status_id               AS acc_status_id,
-    cur_account_status_name             AS acc_status_name,
-    cur_account_date_trial_start        AS date_trial_start,
-    cur_account_date_trial_end          AS date_trial_end;
+    cur_account_status_id               AS acc_status_id;
 
 END $$
 
