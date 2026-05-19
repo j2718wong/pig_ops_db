@@ -23,6 +23,7 @@ DECLARE RES_NUM_SUCCESS                         INT             DEFAULT 0;
 
 DECLARE cur_pf_sow_due_chklst_id                INT             DEFAULT 0;
 
+DECLARE cur_pig_farm_id                         INT             DEFAULT 0;                         
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -58,6 +59,16 @@ UPDATE pig_farm_sow_due_chklst SET
     data_ver_num_chklst = data_ver_num_chklst + 1
 WHERE id = cur_pf_sow_due_chklst_id;
 
+
+SELECT  pig_farm
+INTO    cur_pig_farm_id
+FROM    pig_farm_sow_due_chklst
+WHERE   id = cur_pf_sow_due_chklst_id;
+
+
+UPDATE pig_farm SET 
+    data_ver_num_sd_chklst = data_ver_num_sd_chklst + 1
+WHERE id = cur_pig_farm_id;
 
 
 SELECT 

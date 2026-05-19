@@ -73,7 +73,8 @@ IF cur_count = 0 THEN
         WHERE id = cur_pig_farm_sow_due_chklst_id;
         
         UPDATE pig_farm SET 
-            last_sow_due_chklst_id = 0 
+            last_sow_due_chklst_id  = 0, 
+            data_ver_num_sd_chklst  = data_ver_num_sd_chklst + 1
         WHERE id = in_pig_farm_id;
         
     END IF;
@@ -102,7 +103,8 @@ IF cur_count = 0 THEN
         WHERE id = cur_pig_farm_sow_due_chklst_id;
         
         UPDATE pig_farm SET 
-            last_sow_due_chklst_id = 0 
+            last_sow_due_chklst_id  = 0,
+            data_ver_num_sd_chklst  = data_ver_num_sd_chklst + 1 
         WHERE id = in_pig_farm_id;
         
     END IF;
@@ -137,7 +139,8 @@ ELSE
 
         /** Update pig_farm. */
         UPDATE pig_farm SET 
-            last_sow_due_chklst_id = cur_pig_farm_new_chklst_id
+            last_sow_due_chklst_id  = cur_pig_farm_new_chklst_id,
+            data_ver_num_sd_chklst  = data_ver_num_sd_chklst + 1
         WHERE id = in_pig_farm_id;
 
 
