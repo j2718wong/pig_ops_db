@@ -10,7 +10,7 @@ CREATE PROCEDURE add_table_account_sow_due_chklst()
 BEGIN
     DECLARE col_exists INT DEFAULT 0;
     
-    CREATE TABLE IF NOT EXISTS `account_sow_due_chklist` (
+    CREATE TABLE IF NOT EXISTS `account_sow_due_chklst` (
       `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
       `account_id` int(10) unsigned DEFAULT NULL,
       `flag` int(10) unsigned DEFAULT 0,

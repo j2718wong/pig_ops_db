@@ -3,7 +3,6 @@
 DROP PROCEDURE IF EXISTS account_sow_due_chklst_add $$
 CREATE PROCEDURE account_sow_due_chklst_add(
     in_user_id              INT,
-    in_order_num            INT,
     in_name                 VARCHAR(50)
 )  
 
