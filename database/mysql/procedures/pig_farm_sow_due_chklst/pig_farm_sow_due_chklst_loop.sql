@@ -16,6 +16,7 @@ BEGIN
 
 DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
 
+DECLARE cur_count                               INT             DEFAULT 0;
 
 
 DECLARE l_last_row_fetched TINYINT;
@@ -46,6 +47,13 @@ CLOSE c_pig_farm;
 SET l_last_row_fetched=0;   
 
 
+SELECT  COUNT(*) 
+INTO    cur_count
+FROM    pig_farm
+WHERE   last_sow_due_chklst_id > 0;
+
+
+SELECT  cur_count  AS num_farms_sow_due_chklst;
 
 END $$
 
