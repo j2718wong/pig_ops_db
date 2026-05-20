@@ -60,7 +60,7 @@ UPDATE pig_farm_sow_due_chklst SET
 WHERE id = cur_pf_sow_due_chklst_id;
 
 
-SELECT  pig_farm
+SELECT  pig_farm_id
 INTO    cur_pig_farm_id
 FROM    pig_farm_sow_due_chklst
 WHERE   id = cur_pf_sow_due_chklst_id;
