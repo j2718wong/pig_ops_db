@@ -85,7 +85,7 @@ UPDATE account_sow_due_chklst SET
 
 WHERE id = in_acc_chklst_id;
 
-CALL account_sow_due_chklst_update_loop(cur_user_account_id, in_acc_chklst_id)
+CALL account_sow_due_chklst_update_loop(cur_user_account_id, in_acc_chklst_id);
 
 END process_user;
 
