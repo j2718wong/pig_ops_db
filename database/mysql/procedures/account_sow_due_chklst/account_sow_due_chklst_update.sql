@@ -5,7 +5,6 @@ CREATE PROCEDURE account_sow_due_chklst_update(
     in_user_id              INT,
     
     in_acc_chklst_id        INT,
-    in_order_num            INT,
     in_name                 VARCHAR(50)
 )  
 
@@ -79,7 +78,6 @@ END IF;
 
 
 UPDATE account_sow_due_chklst SET
-    order_num               = in_order_num,
     name                    = in_name,
     
     last_update_user_id     = in_user_id,
@@ -87,6 +85,7 @@ UPDATE account_sow_due_chklst SET
 
 WHERE id = in_acc_chklst_id;
 
+CALL account_sow_due_chklst_update_loop(cur_user_account_id, in_acc_chklst_id)
 
 END process_user;
 

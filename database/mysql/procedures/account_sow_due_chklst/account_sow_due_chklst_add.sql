@@ -89,6 +89,8 @@ INSERT INTO account_sow_due_chklst(
 
 SELECT LAST_INSERT_ID() INTO cur_account_chklst_id;
 
+CALL account_sow_due_chklst_add_loop(cur_user_account_id, cur_account_chklst_id);
+
 
 END process_user;
 

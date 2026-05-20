@@ -13,7 +13,7 @@ BEGIN
  * Will delete account_sow_due_chklst entry.
  * 
  * @author Jack Wong (j2718wong@gmail.com) 
- * @since August 23, 2025
+ * @since May 20, 2026
  *
  */
 
@@ -88,6 +88,8 @@ UPDATE account_sow_due_chklst SET
     dt_last_update      = CURRENT_TIMESTAMP
 WHERE id =  in_acc_chklst_id;
 
+
+CALL account_sow_due_chklst_delete_loop(cur_user_account_id, in_acc_chklst_id);
 
 END process_user;
 

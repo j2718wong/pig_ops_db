@@ -154,7 +154,8 @@ ELSE
             cur_pig_farm_new_chklst_id, 
             id
         FROM account_sow_due_chklst
-        WHERE account_id = cur_pig_farm_account_id
+        WHERE account_id = cur_pig_farm_account_id 
+            AND flag & 1 = 0
         ORDER BY name;
     
     END IF;

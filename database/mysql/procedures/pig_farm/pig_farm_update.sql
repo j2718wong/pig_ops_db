@@ -58,6 +58,7 @@ DECLARE cur_pig_farm_flag                       INT             DEFAULT 0;
 DECLARE cur_pig_farm_name                       VARCHAR(50)     DEFAULT '';
 
 
+DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -141,6 +142,22 @@ ELSE
     WHERE id =  in_pig_farm_id;
 
 END IF;
+
+
+SELECT  COUNT(*)
+INTO    cur_count
+FROM    pig_farm
+WHERE   account_id = cur_farm_account_id;
+
+IF cur_count = 1 THEN 
+    UPDATE account SET
+        name = in_name
+    WHERE id = cur_farm_account_id;
+
+END IF;
+
+
+
 
 END process_user;
 
