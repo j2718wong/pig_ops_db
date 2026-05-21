@@ -40,6 +40,9 @@ INSERT INTO account_sow_due_chklst (
 );
 
 
+UPDATE account SET 
+    data_ver_num_sd_chklst = 1
+WHERE id = in_account_id;
 
 END $$
 
