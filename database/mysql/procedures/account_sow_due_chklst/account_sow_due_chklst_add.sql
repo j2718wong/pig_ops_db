@@ -92,6 +92,11 @@ SELECT LAST_INSERT_ID() INTO cur_account_chklst_id;
 CALL account_sow_due_chklst_add_loop(cur_user_account_id, cur_account_chklst_id);
 
 
+UPDATE account SET 
+    data_ver_num_sd_chklst = data_ver_num_sd_chklst + 1
+WHERE id = cur_user_account_id;
+
+
 END process_user;
 
 

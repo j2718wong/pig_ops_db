@@ -251,6 +251,11 @@ UPDATE  pig_production SET
 WHERE id = in_pig_prod_id;
 
 
+UPDATE pig_farm SET 
+    data_ver_num_pig_dead   = data_ver_num_pig_dead + 1
+WHERE id = cur_pig_prod_pig_farm_id;
+
+
 END process_user;
 
 SELECT 
