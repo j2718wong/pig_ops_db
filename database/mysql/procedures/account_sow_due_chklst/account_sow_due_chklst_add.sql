@@ -75,14 +75,12 @@ END IF;
 INSERT INTO account_sow_due_chklst(
     account_id,
     
-    order_num,
     name,
     added_by_user_id
 
 ) VALUES (
     cur_user_account_id,
     
-    in_order_num,
     in_name,
     in_user_id
 );
