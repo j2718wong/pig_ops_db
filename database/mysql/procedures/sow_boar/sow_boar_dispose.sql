@@ -148,7 +148,8 @@ WHERE
 
 IF cur_sow_boar_sex = 'M' THEN 
     UPDATE pig_farm SET
-        data_ver_num_boar = data_ver_num_boar + 1
+        data_ver_num_boar           = data_ver_num_boar + 1,
+        data_ver_num_sb_disposed    = data_ver_num_sb_disposed + 1
     WHERE id = cur_sow_boar_pig_farm_id; 
 ELSE
     /* Update production status if gestating*/
@@ -158,14 +159,16 @@ ELSE
         WHERE id = cur_pig_prod_id;
         
         UPDATE pig_farm SET
-            data_ver_num_sow      = data_ver_num_sow + 1,
-            data_ver_num_pig_prod = data_ver_num_pig_prod + 1
+            data_ver_num_sow            = data_ver_num_sow + 1,
+            data_ver_num_pig_prod       = data_ver_num_pig_prod + 1,
+            data_ver_num_sb_disposed    = data_ver_num_sb_disposed + 1
         WHERE id = cur_sow_boar_pig_farm_id; 
     
     ELSE
     
         UPDATE pig_farm SET
-            data_ver_num_sow      = data_ver_num_sow + 1
+            data_ver_num_sow            = data_ver_num_sow + 1,
+            data_ver_num_sb_disposed    = data_ver_num_sb_disposed + 1
         WHERE id = cur_sow_boar_pig_farm_id; 
 
     END IF;
