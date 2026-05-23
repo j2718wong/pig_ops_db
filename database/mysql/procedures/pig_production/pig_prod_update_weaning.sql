@@ -53,6 +53,8 @@ DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
 DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
 DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
 DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
+DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
+DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
 DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
 DECLARE PRODUCTION_STATUS_ID_CLOSED             INT             DEFAULT 9;
 
@@ -223,7 +225,8 @@ The second update is update pig_production.num_pigs_current;
 
 6.) There is a future plan to freeze the update_weaning_info after
 MAX_DAYS_ALLOWED_CHANGE_WEAN_INFO so that people cannot play around
-with updating. 
+with updating. 2025-05-23 Update: this is already implemented in UI;
+The weaning info becomes read only page after MAX_DAYS_ALLOWED_CHANGE_WEAN_INFO. 
 
 */
 
@@ -372,7 +375,7 @@ IF cur_sow_status_id = SOW_STATUS_ID_LACTATING THEN
         ELSE
             IF detected_date_weaning_change > 0 THEN
                 
-                /* Need to adjust Day 1 counting.*/
+                /* Need to adjust Day 1 counting. */
                 /*
                 IF cur_account_flag_settings & FLAG_BIT_DAY_1_ON_DATE_OF_BIRTH = 0 THEN 
                     UPDATE pig_prod_pig_ops a, account_pig_ops b SET 
@@ -417,6 +420,31 @@ ELSE
 END IF;
 
 
+/** Update pig_farm.data_ver_num_pig_prod
+Note: This is different from pig_production.data_ver_num_pig_prod;
+The update of prod_status from gestating to lactating needs to propagated 
+to users of the account.
+
+See pig_prod_add.sql 2026-05-23 notes
+*/
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_LACTATING AND 
+    detected_date_weaning_change > 0 THEN 
+    
+    UPDATE pig_farm SET 
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1,
+        data_ver_num_prod_lacta     = data_ver_num_prod_lacta + 1,
+        data_ver_num_prod_fatten    = data_ver_num_prod_fatten + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
+    
+END IF;
+    
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_WEANING THEN 
+    UPDATE pig_farm SET 
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1,
+        data_ver_num_prod_fatten    = data_ver_num_prod_fatten + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
+
+END IF; 
 
 
 END process_user;

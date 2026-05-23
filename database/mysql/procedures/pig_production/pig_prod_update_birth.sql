@@ -427,17 +427,25 @@ Note: This is different from pig_production.data_ver_num_pig_prod;
 The update of prod_status from gestating to lactating needs to propagated 
 to users of the account.
 
+See pig_prod_add.sql 2026-05-23 notes
 */
 IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_GESTATING AND 
     detected_actual_date_birth_change > 0 THEN 
     
     UPDATE pig_farm SET 
-        data_ver_num_pig_prod = data_ver_num_pig_prod + 1
+        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1,
+        data_ver_num_prod_gesta = data_ver_num_prod_gesta + 1,
+        data_ver_num_prod_lacta = data_ver_num_prod_lacta + 1
     WHERE id = cur_pig_prod_pig_farm_id;
     
 END IF;
     
-
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_LACTATING THEN  
+    UPDATE pig_farm SET 
+        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1,
+        data_ver_num_prod_lacta = data_ver_num_prod_lacta + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
+END IF;
 
 
 END process_user;

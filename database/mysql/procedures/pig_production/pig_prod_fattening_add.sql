@@ -259,9 +259,10 @@ WHERE   pig_farm_id = in_pig_farm_id;
 
 /* Increment pig_farm.last_prod_id*/
 UPDATE pig_farm SET 
-    last_pig_production_id  = cur_pig_farm_last_pig_production_id,
-    count_pig_prod          = cur_count,
-    data_ver_num_pig_prod   = data_ver_num_pig_prod + 1 
+    last_pig_production_id      = cur_pig_farm_last_pig_production_id,
+    count_pig_prod              = cur_count,
+    data_ver_num_pig_prod       = data_ver_num_pig_prod + 1,
+    data_ver_num_prod_fatten    = data_ver_num_prod_fatten + 1 
 WHERE id = in_pig_farm_id;
 
 

@@ -534,6 +534,13 @@ UPDATE pig_production SET
 WHERE id = in_production_group_id;
 
 
+/* Update pig_farm; The pig_prod entry becomes a prod_history after added into a group.*/
+UPDATE pig_farm SET
+    data_ver_num_pig_prod       = data_ver_num_pig_prod + 1,
+    data_ver_num_prod_fatten    = data_ver_num_prod_fatten + 1,
+    data_ver_num_prod_history   = data_ver_num_prod_history+ 1
+WHERE id = cur_pig_prod_pig_farm_id;
+
 
 END process_user;
 

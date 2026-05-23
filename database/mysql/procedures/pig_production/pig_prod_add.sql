@@ -248,7 +248,7 @@ UPDATE pig_production SET
 WHERE sow_id = in_sow_id AND prod_status_id = PRODUCTION_STATUS_ID_GESTATING;
 
 
-/* Update pig_farm*/
+/* Update pig_farm.data_ver_num_not_pregnant*/
 IF cur_sow_boar_last_prod_status_id = PRODUCTION_STATUS_ID_GESTATING THEN 
     UPDATE pig_farm SET 
         data_ver_num_not_pregnant =  data_ver_num_not_pregnant + 1
@@ -581,11 +581,64 @@ FROM    pig_production
 WHERE   pig_farm_id = cur_sow_boar_pig_farm_id;
 
 
+/*
+2026-05-23:
+1.) Previously, when 
+- a new Gesta entry is added
+- a gesta entry is updated to lacta status
+- a lacta entry is updated to weaning(fattening) status
+- a fattening entry is fully harvested
+- a fattening entry is joined to form a production group 
+
+pig_farm.data_ver_num_pig_prod is incremented;
+
+2.) Up until to this date, all production entries are queried in every app startup.
+Each production entry is a large data.
+
+3.) After this date, the new change is there is a system option to cache 
+production data into client device. To have a granular control of the cache data,
+these version numbers are added in pig_farm
+
+- data_ver_num_prod_gesta
+- data_ver_num_prod_lacta
+- data_ver_num_prod_fatten
+
+4.) So there are now 5 version numbers in pig_farm object that track the changes 
+of production entry. Old version tracking
+- data_ver_num_pig_prod
+- data_ver_num_prod_history
+
+
+Production Data Version Numbers (pig_farm table):
+
+1. data_ver_num_pig_prod     - Overall production (any change in gesta, lacta, fattening)
+2. data_ver_num_prod_history - Production history list
+3. data_ver_num_prod_gesta   - Gestating list only
+4. data_ver_num_prod_lacta   - Lactating list only
+5. data_ver_num_prod_fatten  - Fattening list only
+
+Increment rules:
+- Add/update/delete gestating entry     → gesta + overall
+- Add/update/delete lactating entry     → lacta + overall
+- Add/update/delete fattening entry     → fatten + overall
+- Status change (gesta → lacta)         → gesta + lacta + overall
+- Status change (lacta → weaning)       → lacta + fatten + overall
+- Status change (fattening → harvested) → fatten + history + overall
+- Status change (fattening → prod_group) → fatten + history + overall
+
+Client caching:
+- Client stores each list separately
+- Compares version numbers to know which list to refresh
+- Reduces network transfer by ~75%
+*/
+
+
 /* Increment pig_farm.last_pig_production_id*/
 UPDATE pig_farm SET 
     last_pig_production_id  = cur_pig_farm_last_pig_production_id,
     count_pig_prod          = cur_count,
-    data_ver_num_pig_prod   = data_ver_num_pig_prod + 1    
+    data_ver_num_pig_prod   = data_ver_num_pig_prod + 1,
+    data_ver_num_prod_gesta = data_ver_num_prod_gesta + 1
 WHERE id = cur_sow_boar_pig_farm_id;
 
 

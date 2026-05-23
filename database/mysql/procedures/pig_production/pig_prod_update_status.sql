@@ -216,11 +216,13 @@ Note: This is different from pig_production.data_ver_num_pig_prod;
 The update of prod_status from gestating to being removed needs to propagated 
 to users of the account.
 
+See pig_prod_add.sql 2026-05-23 notes
 */
  
     
 UPDATE pig_farm SET 
-    data_ver_num_pig_prod = data_ver_num_pig_prod + 1
+    data_ver_num_pig_prod   = data_ver_num_pig_prod + 1,
+    data_ver_num_prod_gesta = data_ver_num_prod_gesta + 1
 WHERE id = cur_pig_prod_pig_farm_id;
     
 

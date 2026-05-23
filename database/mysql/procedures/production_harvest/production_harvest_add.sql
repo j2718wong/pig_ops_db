@@ -269,9 +269,14 @@ END IF;
 IF cur_num_pigs_current > 0 THEN 
     /* This only updates pig_production because of the change of number of pigs. */
     UPDATE  pig_production SET
-        num_pigs_current        = cur_num_pigs_current,
-        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
+        num_pigs_current            = cur_num_pigs_current,
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1
     WHERE id = in_pig_prod_id;
+    
+    UPDATE pig_farm SET 
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1,
+        data_ver_num_prod_fatten    = data_ver_num_prod_fatten + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
 ELSE
     /* This updates not only for the pig_production but also pig_farm;
        This is because the production_entry becomes history; must be remove
@@ -280,13 +285,14 @@ ELSE
     UPDATE  pig_production SET
         num_pigs_current = 0,
         prod_status_id = PRODUCTION_STATUS_ID_HARVESTED,
-        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1
     WHERE id = in_pig_prod_id;
 
 
     UPDATE pig_farm SET
-        data_ver_num_pig_prod   = data_ver_num_pig_prod + 1,
-        data_ver_num_prod_history = data_ver_num_prod_history + 1 
+        data_ver_num_pig_prod       = data_ver_num_pig_prod + 1,
+        data_ver_num_prod_fatten    = data_ver_num_prod_fatten + 1,
+        data_ver_num_prod_history   = data_ver_num_prod_history + 1 
     WHERE id = cur_pig_prod_pig_farm_id;
 
 END IF;

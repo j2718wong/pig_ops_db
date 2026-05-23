@@ -266,6 +266,11 @@ IF cur_pig_prod_date_insemination != in_date_insemination THEN
 END IF;
 
 
+UPDATE pig_farm SET
+    data_ver_num_pig_prod   = data_ver_num_pig_prod + 1,
+    data_ver_num_prod_gesta = data_ver_num_prod_gesta + 1
+WHERE id = cur_pig_prod_pig_farm_id;
+
 END process_user;
 
 
