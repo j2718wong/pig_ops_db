@@ -94,8 +94,8 @@ SELECT LAST_INSERT_ID() INTO cur_bg_process_run_id;
 SELECT  COUNT(*) 
 INTO    cur_overdue_before
 FROM    account a
-LEFT OUTER JOIN account_bill b ON a.cur_bill_id = b.id
-WHERE   a.cur_bill_id > 0 AND b.status_id = ACC_BILL_STATUS_OVERDUE;
+LEFT OUTER JOIN account_bill b ON a.current_bill_id = b.id
+WHERE   a.current_bill_id > 0 AND b.status_id = ACC_BILL_STATUS_OVERDUE;
 
 
 
@@ -123,8 +123,8 @@ AND (b.flag & 3)= 1;
 SELECT  COUNT(*) 
 INTO    cur_overdue_after
 FROM    account a
-LEFT OUTER JOIN account_bill b ON a.cur_bill_id = b.id
-WHERE   a.cur_bill_id > 0 AND b.status_id = ACC_BILL_STATUS_OVERDUE;
+LEFT OUTER JOIN account_bill b ON a.current_bill_id = b.id
+WHERE   a.current_bill_id > 0 AND b.status_id = ACC_BILL_STATUS_OVERDUE;
 
 
 
