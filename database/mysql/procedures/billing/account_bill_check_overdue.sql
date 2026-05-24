@@ -12,7 +12,7 @@ BEGIN
  *
  */
 
-DECLARE BG_PROCESS_ID_CHECK_OVERDUE_BILLS       INT             DEFAULT 4;
+DECLARE BG_PROCESS_ACCOUNT_BILL_CHECK_OVERDUE   INT             DEFAULT 28;
 
 DECLARE BG_PROCESS_COMPLETED                    INT             DEFAULT 100;   
 
@@ -84,7 +84,7 @@ INSERT INTO bg_process_run(
     bg_process_id,     
     business_date   
 ) VALUES (
-    BG_PROCESS_ID_CHECK_OVERDUE_BILLS,
+    BG_PROCESS_ACCOUNT_BILL_CHECK_OVERDUE,
     cur_business_date
 );
 SELECT LAST_INSERT_ID() INTO cur_bg_process_run_id;
