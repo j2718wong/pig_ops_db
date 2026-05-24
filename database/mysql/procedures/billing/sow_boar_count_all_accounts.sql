@@ -12,13 +12,139 @@ BEGIN
  *
  */
 
-DECLARE BG_PROCESS_ID_EOD_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS     INT   DEFAULT 3;
+DECLARE BG_PROCESS_ID_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS     INT   DEFAULT 3;
 
 DECLARE BG_PROCESS_COMPLETED                    INT             DEFAULT 100;   
 
 DECLARE LOV_ID_ACC_MAX_NUM_SOW_BOAR_FREE        INT             DEFAULT 2;
 DECLARE LOV_ID_BILLING_NUM_DAYS_DUE_DATE        INT             DEFAULT 4;
 DECLARE LOV_ID_LAST_BG_PROCESS_RUN_ID_EOD_SOW_BOAR_COUNT INT    DEFAULT 5;
+
+
+
+/* account_bill.status id possible values;
+Note: When account_bill.status id = ACC_BILL_STATUS_OVERDUE,
+account users cannot access their data.
+*/
+DECLARE ACC_BILL_STATUS_NEW                     INT             DEFAULT 0;
+DECLARE ACC_BILL_STATUS_OVERDUE                 INT             DEFAULT 1;
+DECLARE ACC_BILL_STATUS_PAID                    INT             DEFAULT 2;
+
+
+/* account.flag bits
+bit 0: FLAG_BIT_ACCOUNT_ENABLE
+bit 1: FLAG_BIT_FREE_TRIAL_STARTED
+bit 2:
+bit 3:  
+
+bit 4: FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED
+0 = not exempted has to pay bill
+1 = exempted, no need to compute bill
+
+bit 5: FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT
+bit 6: COMPANY_OWNED ACCOUNT
+
+*/
+
+DECLARE FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED       INT             DEFAULT 16;
+DECLARE FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT        INT             DEFAULT 32;
+DECLARE FLAG_BIT_ACCOUNT_IS_COMPANY_OWNED       INT             DEFAULT 64;
+
+
+
+
+/* app_country.flag bits
+bit 0: FLAG_BIT_COUNTRY_ENABLED
+bit 1: 
+bit 2:
+bit 3:
+
+bit 4: FLAG_BIT_TAXES_ARE_EXCLUSIVE 
+0 = taxes are inclusive in sale amount
+1 = taxes are exclusive from sale amount
+
+
+*/
+
+DECLARE FLAG_BIT_TAXES_ARE_EXCLUSIVE                INT             DEFAULT 16;
+
+
+/*
+2026-05-24 Notes:
+1.) There is no way to control how much the account will pay on a bill since
+the actual payment is only known after payment verification in payment channels
+such as bank account or digital wallets. Credit card payments are not yet supported
+and impractical(for Philippine market) as of this writing.
+
+2.) So it is assumed that the account can underpay or overpay the bill amount.
+
+3.) If the bill is partially paid, there is a certain threshold, in proportion 
+to the billed amount that the partial payment is OK and the remainder will be 
+carried over the next billing cycle.
+
+This should SET
+
+account_bill.flag.FLAG_BIT_ACC_MADE_A_PARTIAL_PAYMENT = 1
+
+and if payment is OK
+
+account_bill.flag.FLAG_BIT_ACC_PARTIAL_PAYMENT_OK = 1
+
+(Note: This partial payment system is also used by many electric distribution
+companies in PH, where accounts can pay minimum payment; these companies
+can charge surcharges too on the balance).
+
+
+4.) When a new bill is issued:
+
+- the account.cur_bill_id should be filled;
+- The "New Bill Available" indicator should shown in APP UI;
+- email should be sent to account admins
+
+5.) If the bill is fully paid, the account.cur_bill_id should be SET zero 
+and the paid bill should be referenced in account.previous_bill_id; 
+There is a bill history anyway for the account.
+The "New Bill Available" indicator should be hidden in APP UI;
+
+6.) If the bill is partially paid,
+
+if account_bill.flag.FLAG_BIT_ACC_PARTIAL_PAYMENT_OK = 0, 
+- The "New Bill Available" indicator should still be visible in the APP UI
+- email the account admins for the partial payment
+
+if account_bill.flag.FLAG_BIT_ACC_PARTIAL_PAYMENT_OK = 1, 
+    the account.cur_bill_id should be SET zero 
+    and the paid bill should be referenced in account.previous_bill_id; 
+    There is a bill history anyway for the account.
+    The "New Bill Available" indicator should be hidden in APP UI;
+
+    - should email the admins that the balance will be carried over next 
+    billing cycle. 
+
+
+
+*/
+
+
+
+/* account_bill flag bits
+
+bit 0: FLAG_BIT_ACC_MADE_A_PARTIAL_PAYMENT          INT             DEFAULT 1;
+0 = 
+1 = account has made a partial payment
+
+
+
+bit 1: FLAG_BIT_ACC_PARTIAL_PAYMENT_OK              INT             DEFAULT 2;
+0 = the partial payment is not enough to not to flag ACC_BILL_STATUS_OVERDUE;
+    In this case the account will still be locked;
+
+1 = the partial payment is enough, the remaining balance will be carried over
+    the next billing cycle.
+
+
+
+*/
 
 DECLARE NUM_DAYS_NEXT_SOW_BOAR_COUNT            INT             DEFAULT 30;
 
@@ -81,43 +207,6 @@ DECLARE cur_bg_process_run_id                   INT             DEFAULT 0;
 
 
 
-/* account.flag bits
-bit 0: FLAG_BIT_ACCOUNT_ENABLE
-bit 1: FLAG_BIT_FREE_TRIAL_STARTED
-bit 2:
-bit 3:  
-
-bit 4: FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED
-0 = not exempted has to pay bill
-1 = exempted, no need to compute bill
-
-bit 5: FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT
-bit 6: COMPANY_OWNED ACCOUNT
-
-*/
-
-DECLARE FLAG_BIT_ACCOUNT_IS_BILL_EXEMPTED       INT             DEFAULT 16;
-DECLARE FLAG_BIT_ACCOUNT_IS_TEST_ACCOUNT        INT             DEFAULT 32;
-DECLARE FLAG_BIT_ACCOUNT_IS_COMPANY_OWNED       INT             DEFAULT 64;
-
-
-
-
-/* app_country.flag bits
-bit 0: FLAG_BIT_COUNTRY_ENABLED
-bit 1: 
-bit 2:
-bit 3:
-
-bit 4: FLAG_BIT_TAXES_ARE_EXCLUSIVE 
-0 = taxes are inclusive in sale amount
-1 = taxes are exclusive from sale amount
-
-
-*/
-
-DECLARE FLAG_BIT_TAXES_ARE_EXCLUSIVE            INT             DEFAULT 16;
-
 
 
 
@@ -153,7 +242,7 @@ INSERT INTO bg_process_run(
     bg_process_id,     
     business_date   
 ) VALUES (
-    BG_PROCESS_ID_EOD_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS,
+    BG_PROCESS_ID_COUNT_BILLABLE_PIGS_ALL_ACCOUNTS,
     cur_business_date
 );
 SELECT LAST_INSERT_ID() INTO cur_bg_process_run_id;
@@ -346,7 +435,7 @@ loop_here: LOOP
         
         
         
-        /* Create account_bill entry*/
+        /* Create account_bill entry; the account_bill.status_id is default 0;*/
         INSERT INTO account_bill (
             bg_process_run_id,
         
