@@ -428,6 +428,54 @@ else
 fi
 echo "" | tee -a "$OUTPUT_FILE"
 
+# 6b. JAVASCRIPT FILES (Webroot - pig_ops/webroot static files)
+echo "6b. JAVASCRIPT FILES (Webroot - pig_ops/webroot/static)" | tee -a "$OUTPUT_FILE"
+echo "-------------------------------------------------------" | tee -a "$OUTPUT_FILE"
+JS_WEBROOT_DIR="$PROJECT_BASE/pig_ops/webroot/static_m/js"
+if [ -d "$JS_WEBROOT_DIR" ]; then
+    JS_WEBROOT_COUNT=$(find "$JS_WEBROOT_DIR" -type f -name "*.js" 2>/dev/null | wc -l)
+    JS_WEBROOT_LINES=$(find "$JS_WEBROOT_DIR" -type f -name "*.js" -exec cat {} \; 2>/dev/null | wc -l)
+    echo "  Files: $JS_WEBROOT_COUNT" | tee -a "$OUTPUT_FILE"
+    echo "  Lines: $JS_WEBROOT_LINES" | tee -a "$OUTPUT_FILE"
+    if [ $JS_WEBROOT_COUNT -gt 0 ]; then
+        echo "  Average: $((JS_WEBROOT_LINES / JS_WEBROOT_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
+    fi
+    echo "" | tee -a "$OUTPUT_FILE"
+    
+    echo "  All webroot JavaScript files (top 20 largest):" | tee -a "$OUTPUT_FILE"
+    find "$JS_WEBROOT_DIR" -type f -name "*.js" -exec wc -l {} \; 2>/dev/null | sort -rn | head -20 | while read lines file; do
+        rel_path=$(echo "$file" | sed "s|$JS_WEBROOT_DIR/||")
+        printf "    - %-60s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
+    done
+else
+    echo "  Directory not found: $JS_WEBROOT_DIR" | tee -a "$OUTPUT_FILE"
+fi
+echo "" | tee -a "$OUTPUT_FILE"
+
+# 6c. JAVASCRIPT FILES (Webroot - pig_ops/webroot - additional JS)
+echo "6c. JAVASCRIPT FILES (Webroot Pages - pig_ops/webroot)" | tee -a "$OUTPUT_FILE"
+echo "-----------------------------------------------------------------------" | tee -a "$OUTPUT_FILE"
+JS_PAGES_DIR="$PROJECT_BASE/pig_ops/webroot"
+if [ -d "$JS_PAGES_DIR" ]; then
+    JS_PAGES_COUNT=$(find "$JS_PAGES_DIR" -type f -name "*.js" 2>/dev/null | wc -l)
+    JS_PAGES_LINES=$(find "$JS_PAGES_DIR" -type f -name "*.js" -exec cat {} \; 2>/dev/null | wc -l)
+    echo "  Files: $JS_PAGES_COUNT" | tee -a "$OUTPUT_FILE"
+    echo "  Lines: $JS_PAGES_LINES" | tee -a "$OUTPUT_FILE"
+    if [ $JS_PAGES_COUNT -gt 0 ]; then
+        echo "  Average: $((JS_PAGES_LINES / JS_PAGES_COUNT)) lines/file" | tee -a "$OUTPUT_FILE"
+    fi
+    echo "" | tee -a "$OUTPUT_FILE"
+    
+    echo "  All page JavaScript files:" | tee -a "$OUTPUT_FILE"
+    find "$JS_PAGES_DIR" -type f -name "*.js" -exec wc -l {} \; 2>/dev/null | sort -rn | while read lines file; do
+        rel_path=$(echo "$file" | sed "s|$JS_PAGES_DIR/||")
+        printf "    - %-60s %6s lines\n" "$rel_path" "$lines" | tee -a "$OUTPUT_FILE"
+    done
+else
+    echo "  Directory not found: $JS_PAGES_DIR" | tee -a "$OUTPUT_FILE"
+fi
+echo "" | tee -a "$OUTPUT_FILE"
+
 # 7. CSS File (Farmer SPA)
 echo "7. CSS FILE (Farmer SPA - main.css)" | tee -a "$OUTPUT_FILE"
 echo "-----------------------------------" | tee -a "$OUTPUT_FILE"
@@ -599,9 +647,9 @@ fi
 # Count CSS file (already have CSS_LINES)
 CSS_COUNT=1
 
-# Calculate totals including admin
-TOTAL_FILES=$((PROC_COUNT + MIGRATIONS_REGULAR_COUNT + PYTHON_COUNT + PYTHON_UI_COUNT + PYTHON_BKOPS_COUNT + PYTHON_ADMIN_COUNT + HTML_COUNT + JSON_COUNT + JS_COUNT + JS_ADMIN_COUNT + CSS_COUNT + SH_COUNT))
-TOTAL_LINES=$((PROC_LINES + MIGRATIONS_LINES + PYTHON_LINES + PYTHON_UI_LINES + PYTHON_BKOPS_LINES + PYTHON_ADMIN_LINES + HTML_LINES + JSON_LINES + JS_LINES + JS_ADMIN_LINES + CSS_LINES + SH_LINES))
+# Calculate totals including admin and webroot JS
+TOTAL_FILES=$((PROC_COUNT + MIGRATIONS_REGULAR_COUNT + PYTHON_COUNT + PYTHON_UI_COUNT + PYTHON_BKOPS_COUNT + PYTHON_ADMIN_COUNT + HTML_COUNT + JSON_COUNT + JS_COUNT + JS_ADMIN_COUNT + JS_WEBROOT_COUNT + JS_PAGES_COUNT + CSS_COUNT + SH_COUNT))
+TOTAL_LINES=$((PROC_LINES + MIGRATIONS_LINES + PYTHON_LINES + PYTHON_UI_LINES + PYTHON_BKOPS_LINES + PYTHON_ADMIN_LINES + HTML_LINES + JSON_LINES + JS_LINES + JS_ADMIN_LINES + JS_WEBROOT_LINES + JS_PAGES_LINES + CSS_LINES + SH_LINES))
 
 echo -e "${CYAN}Total Files:${NC} $TOTAL_FILES" | tee -a "$OUTPUT_FILE"
 echo -e "${CYAN}Total Lines:${NC} $TOTAL_LINES" | tee -a "$OUTPUT_FILE"
@@ -610,21 +658,23 @@ echo "" | tee -a "$OUTPUT_FILE"
 # Summary by type
 echo "Summary by Type:" | tee -a "$OUTPUT_FILE"
 echo "---------------" | tee -a "$OUTPUT_FILE"
-printf "%-28s %10s %12s %12s\n" "Type" "Files" "Lines" "Avg/File" | tee -a "$OUTPUT_FILE"
-printf "%-28s %10s %12s %12s\n" "-----" "-----" "-----" "--------" | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "MySQL Procedures" "$PROC_COUNT" "$PROC_LINES" "$((PROC_LINES / PROC_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "DB Migrations" "$MIGRATIONS_REGULAR_COUNT" "$MIGRATIONS_LINES" "$((MIGRATIONS_LINES / MIGRATIONS_REGULAR_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12s %12s\n" "DB Update Procedures" "$MIGRATIONS_SYMLINK_COUNT" "(symlinks)" "(see MySQL Procedures)" | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "Python (Backend)" "$PYTHON_COUNT" "$PYTHON_LINES" "$((PYTHON_LINES / PYTHON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "Python (Frontend Build)" "$PYTHON_UI_COUNT" "$PYTHON_UI_LINES" "$((PYTHON_UI_LINES / PYTHON_UI_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "Python (Background Ops)" "$PYTHON_BKOPS_COUNT" "$PYTHON_BKOPS_LINES" "$((PYTHON_BKOPS_LINES / PYTHON_BKOPS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "Python (Admin App)" "$PYTHON_ADMIN_COUNT" "$PYTHON_ADMIN_LINES" "$((PYTHON_ADMIN_LINES / PYTHON_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "JavaScript (SuperPig SPA)" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "JavaScript (Admin App)" "$JS_ADMIN_COUNT" "$JS_ADMIN_LINES" "$((JS_ADMIN_LINES / JS_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "HTML Files" "$HTML_COUNT" "$HTML_LINES" "$((HTML_LINES / HTML_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSON_LINES / JSON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12s\n" "CSS (main.css)" "$CSS_COUNT" "$CSS_LINES" "$CSS_LINES" | tee -a "$OUTPUT_FILE"
-printf "%-28s %10d %12d %12d\n" "Shell Scripts" "$SH_COUNT" "$SH_LINES" "$((SH_LINES / SH_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10s %12s %12s\n" "Type" "Files" "Lines" "Avg/File" | tee -a "$OUTPUT_FILE"
+printf "%-32s %10s %12s %12s\n" "-----" "-----" "-----" "--------" | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "MySQL Procedures" "$PROC_COUNT" "$PROC_LINES" "$((PROC_LINES / PROC_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "DB Migrations" "$MIGRATIONS_REGULAR_COUNT" "$MIGRATIONS_LINES" "$((MIGRATIONS_LINES / MIGRATIONS_REGULAR_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12s %12s\n" "DB Update Procedures" "$MIGRATIONS_SYMLINK_COUNT" "(symlinks)" "(see MySQL Procedures)" | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "Python (Backend)" "$PYTHON_COUNT" "$PYTHON_LINES" "$((PYTHON_LINES / PYTHON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "Python (Frontend Build)" "$PYTHON_UI_COUNT" "$PYTHON_UI_LINES" "$((PYTHON_UI_LINES / PYTHON_UI_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "Python (Background Ops)" "$PYTHON_BKOPS_COUNT" "$PYTHON_BKOPS_LINES" "$((PYTHON_BKOPS_LINES / PYTHON_BKOPS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "Python (Admin App)" "$PYTHON_ADMIN_COUNT" "$PYTHON_ADMIN_LINES" "$((PYTHON_ADMIN_LINES / PYTHON_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "JavaScript (SuperPig SPA)" "$JS_COUNT" "$JS_LINES" "$((JS_LINES / JS_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "JavaScript (Admin App)" "$JS_ADMIN_COUNT" "$JS_ADMIN_LINES" "$((JS_ADMIN_LINES / JS_ADMIN_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "JavaScript (Webroot)" "$JS_WEBROOT_COUNT" "$JS_WEBROOT_LINES" "$((JS_WEBROOT_LINES / JS_WEBROOT_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "JavaScript (Webroot Pages)" "$JS_PAGES_COUNT" "$JS_PAGES_LINES" "$((JS_PAGES_LINES / JS_PAGES_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "HTML Files" "$HTML_COUNT" "$HTML_LINES" "$((HTML_LINES / HTML_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "JSON Files" "$JSON_COUNT" "$JSON_LINES" "$((JSON_LINES / JSON_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12s\n" "CSS (main.css)" "$CSS_COUNT" "$CSS_LINES" "$CSS_LINES" | tee -a "$OUTPUT_FILE"
+printf "%-32s %10d %12d %12d\n" "Shell Scripts" "$SH_COUNT" "$SH_LINES" "$((SH_LINES / SH_COUNT))" 2>/dev/null | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 # Total Git Commits Across All Repos
