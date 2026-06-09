@@ -2,7 +2,7 @@
 # code_stats.sh
 
 # Detailed Code Statistics Script - Relative Paths Version
-# Now includes Git commit counts and earliest commit dates for each repository
+# Now includes Git commit counts, earliest commit dates, and per-month commit counts for each repository
 
 # Colors
 RED='\033[0;31m'
@@ -26,6 +26,9 @@ OUTPUT_FILE="/tmp/code_stats_detailed.txt"
 declare -A REPO_EARLIEST_COMMIT
 declare -A REPO_EARLIEST_DATE
 declare -A REPO_EARLIEST_AUTHOR
+
+# Array to store per-month commit counts
+declare -A REPO_MONTHLY_COMMITS
 
 # Function to get earliest commit for a Git repository
 get_earliest_commit() {
@@ -59,6 +62,66 @@ get_earliest_commit() {
         REPO_EARLIEST_DATE[$repo_name]="N/A"
         REPO_EARLIEST_AUTHOR[$repo_name]="N/A"
     fi
+}
+
+# Function to get per-month commit counts for a Git repository
+get_monthly_commits() {
+    local repo_path="$1"
+    local repo_name="$2"
+    
+    if [ -d "$repo_path/.git" ]; then
+        cd "$repo_path" 2>/dev/null
+        
+        # Get commit counts per month (format: YYYY-MM)
+        # Using git log with --date=format to extract year-month
+        while IFS= read -r month; do
+            if [ -n "$month" ]; then
+                local count=$(git log --since="$month-01" --until="$month-01 +1 month" --oneline 2>/dev/null | wc -l)
+                REPO_MONTHLY_COMMITS["$repo_name|$month"]=$count
+            fi
+        done < <(git log --format=%cd --date=format:'%Y-%m' 2>/dev/null | sort -u)
+        
+        cd - > /dev/null 2>&1
+    fi
+}
+
+
+# Function to display monthly commits for a repository
+display_monthly_commits() {
+    local repo_name="$1"
+    local repo_path="$2"
+    
+    if [ ! -d "$repo_path/.git" ]; then
+        return
+    fi
+    
+    echo "    Monthly commit breakdown for $repo_name:" | tee -a "$OUTPUT_FILE"
+    echo "    ----------------------------------------" | tee -a "$OUTPUT_FILE"
+    
+    cd "$repo_path" 2>/dev/null
+    
+    # Get all unique year-month combinations from commits with their counts
+    # Using git log with format to get year-month, then sort and count
+    local monthly_data=$(git log --format=%cd --date=format:'%Y-%m' 2>/dev/null | sort | uniq -c | awk '{print $2 "," $1}')
+    
+    if [ -z "$monthly_data" ]; then
+        echo "      No commits found" | tee -a "$OUTPUT_FILE"
+    else
+        # Print header
+        printf "      %-10s %10s %8s\n" "Year-Month" "Commits" "Cumulative" | tee -a "$OUTPUT_FILE"
+        printf "      %-10s %10s %8s\n" "----------" "-------" "----------" | tee -a "$OUTPUT_FILE"
+        
+        local cumulative=0
+        while IFS=',' read -r month count; do
+            if [ -n "$month" ] && [ -n "$count" ]; then
+                cumulative=$((cumulative + count))
+                printf "      %-10s %10d %8d\n" "$month" "$count" "$cumulative" | tee -a "$OUTPUT_FILE"
+            fi
+        done <<< "$monthly_data"
+    fi
+    
+    cd - > /dev/null 2>&1
+    echo "" | tee -a "$OUTPUT_FILE"
 }
 
 # Function to get commit count for a Git repository
@@ -631,6 +694,25 @@ if [ -n "$OLDEST_DATE" ]; then
     echo "    Author: $OLDEST_AUTHOR" | tee -a "$OUTPUT_FILE"
 fi
 echo "" | tee -a "$OUTPUT_FILE"
+
+# PER-MONTH COMMIT BREAKDOWN (Moved here before Grand Totals)
+echo "========================================" | tee -a "$OUTPUT_FILE"
+echo "    PER-MONTH COMMIT BREAKDOWN BY REPOSITORY" | tee -a "$OUTPUT_FILE"
+echo "========================================" | tee -a "$OUTPUT_FILE"
+echo "" | tee -a "$OUTPUT_FILE"
+
+# Display monthly commits for each repository
+for repo in pig_ops_db pig_ops pig_ops_bkops pig_ops_ui_mob pig_ops_admin; do
+    REPO_DIR="$PROJECT_BASE/$repo"
+    if [ -d "$REPO_DIR/.git" ]; then
+        display_monthly_commits "$repo" "$REPO_DIR"
+    fi
+done
+
+# Also show for parent repo if it exists
+if [ -d "$PROJECT_BASE/.git" ]; then
+    display_monthly_commits "jsys (parent)" "$PROJECT_BASE"
+fi
 
 # GRAND TOTALS
 echo "========================================" | tee -a "$OUTPUT_FILE"

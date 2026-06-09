@@ -4,6 +4,10 @@ DROP PROCEDURE IF EXISTS account_upload_receipt_read $$
 CREATE PROCEDURE account_upload_receipt_read(
     in_user_id              INT,
     
+    in_account_receipt_id   INT,
+    
+    is_read_status_id       INT,
+    
     in_payment_channel_id   INT,
     in_amount_receipt       DECIMAL(8,2),    
     in_payment_reference    VARCHAR(32), 
@@ -81,7 +85,7 @@ END IF;
 
 
 UPDATE account_upload_receipt SET 
-    status_id           = RECEIPT_STATUS_ID_READ,
+    status_id           = is_read_status_id,
 
     payment_channel_id  = in_payment_channel_id,
     amount_receipt      = in_amount_receipt,    
