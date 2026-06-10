@@ -251,9 +251,21 @@ UPDATE  pig_production SET
 WHERE id = in_pig_prod_id;
 
 
-UPDATE pig_farm SET 
-    data_ver_num_pig_dead   = data_ver_num_pig_dead + 1
-WHERE id = cur_pig_prod_pig_farm_id;
+/* Need to be specific which production stage the pig is dead; This assumed that
+the pig can be dead in either be in lactating stage or fattening stage.
+*/
+
+IF cur_pig_prod_date_weaning IS NULL THEN 
+    UPDATE pig_farm SET 
+        data_ver_num_prod_lacta = data_ver_num_prod_lacta + 1,
+        data_ver_num_pig_dead   = data_ver_num_pig_dead + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
+ELSE
+    UPDATE pig_farm SET 
+        data_ver_num_prod_fatten= data_ver_num_prod_fatten + 1,
+        data_ver_num_pig_dead   = data_ver_num_pig_dead + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
+END IF;
 
 
 END process_user;
