@@ -53,10 +53,21 @@ DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
 DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
 
 
+DECLARE PRODUCTION_STATUS_ID_GESTATING          INT             DEFAULT 1;
+DECLARE PRODUCTION_STATUS_ID_TERMINATED         INT             DEFAULT 2;
+DECLARE PRODUCTION_STATUS_ID_NOT_PREGNANT       INT             DEFAULT 3;
+DECLARE PRODUCTION_STATUS_ID_LACTATING          INT             DEFAULT 4;
+DECLARE PRODUCTION_STATUS_ID_WEANING            INT             DEFAULT 5;
+DECLARE PRODUCTION_STATUS_ID_GROWING            INT             DEFAULT 6;
+DECLARE PRODUCTION_STATUS_ID_COMBINED           INT             DEFAULT 7;
+DECLARE PRODUCTION_STATUS_ID_HARVESTED          INT             DEFAULT 8;
+
 
 DECLARE cur_user_account_id                     INT             DEFAULT 0;
 DECLARE cur_user_group_id                       INT             DEFAULT 0;
+
 DECLARE cur_pig_prod_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_prod_pig_farm_id                INT             DEFAULT 0;
 DECLARE cur_pig_prod_status_id                  INT             DEFAULT 0;
 
 DECLARE cur_is_active_status                    INT             DEFAULT 0;
@@ -97,9 +108,11 @@ SET res_code    = "SUCCESS";
 
 
 SELECT  account_id,
+        pig_farm_id,
         prod_status_id
         
 INTO    cur_pig_prod_account_id,
+        cur_pig_prod_pig_farm_id,
         cur_pig_prod_status_id
         
 FROM    pig_production 
@@ -788,6 +801,24 @@ IF in_num_finisher > 0 THEN
     
 END IF;  
 
+
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_LACTATING THEN 
+    UPDATE pig_farm SET 
+        data_ver_num_prod_lacta = data_ver_num_prod_lacta + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
+END IF;
+
+
+IF cur_pig_prod_status_id = PRODUCTION_STATUS_ID_WEANING OR 
+   cur_pig_prod_status_id = PRODUCTION_STATUS_ID_GROWING  THEN 
+    
+    UPDATE pig_farm SET 
+        data_ver_num_prod_fatten = data_ver_num_prod_fatten + 1
+    WHERE id = cur_pig_prod_pig_farm_id;
+END IF;
+
+
+    
 
 
 END process_user;
