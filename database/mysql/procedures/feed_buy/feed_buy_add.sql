@@ -6,7 +6,6 @@ CREATE PROCEDURE feed_buy_add(
     
     in_pig_farm_id          INT,
     in_pig_prod_id          INT,
-    in_prod_group_id        INT,
     
     in_date_buy             VARCHAR(10),
     in_feed_type_id         INT,
@@ -227,12 +226,6 @@ DECLARE cur_feed_weight_kg                      INT             DEFAULT 0;
 DECLARE cur_total_cost                          DECIMAL(8,2)    DEFAULT 0;
 
 
-DECLARE cur_feed_quantity_b4                    INT             DEFAULT 0;
-DECLARE cur_feed_weight_kg_b4                   INT             DEFAULT 0;
-DECLARE cur_total_cost_b4                       DECIMAL(8,2)    DEFAULT 0;
-
-
-
 
 DECLARE cur_feed_buy_id                         INT             DEFAULT 0;
 
@@ -262,19 +255,7 @@ IF in_pig_prod_id > 0 THEN
     WHERE id = in_pig_prod_id;
 
 ELSE 
-    IF in_prod_group_id > 0 THEN 
-        SELECT 
-            account_id,
-            prod_status_id
-
-        INTO
-            cur_pig_prod_account_id,
-            cur_pig_prod_status_id
-
-        FROM production_group 
-        WHERE id = in_prod_group_id;
-        
-    ELSE
+    IF in_pig_farm_id > 0 THEN 
         SELECT 
             account_id,
             1
@@ -339,17 +320,7 @@ IF in_pig_prod_id > 0 THEN
     
 ELSE 
 
-    IF in_prod_group_id > 0 THEN 
-        SELECT  id
-        INTO    cur_feed_buy_id
-        FROM    feed_buy
-        WHERE   pig_prod_group_id   = in_prod_group_id  AND
-                date_buy            = in_date_buy       AND
-                feed_type_id        = in_feed_type_id   AND 
-                feed_supplier_id    = in_feed_supplier_id
-        LIMIT   1;
-
-    ELSE
+    IF in_pig_farm_id > 0 THEN 
         SELECT  id
         INTO    cur_feed_buy_id
         FROM    feed_buy
@@ -374,7 +345,6 @@ END IF;
 INSERT INTO feed_buy(
     pig_farm_id,
     pig_prod_id,
-    pig_prod_group_id,
     
     date_buy,
     
@@ -394,7 +364,6 @@ INSERT INTO feed_buy(
 ) VALUES (
     in_pig_farm_id,
     in_pig_prod_id,
-    in_prod_group_id,
     
     in_date_buy,
     
@@ -493,102 +462,6 @@ END IF;
 
 
 
-IF in_prod_group_id > 0 THEN 
-
-    /* Sum for the group.*/   
-    SELECT  SUM(quantity),
-            SUM(kg_total),
-            SUM(total_cost)
-            
-    INTO    cur_feed_quantity,
-            cur_feed_weight_kg,
-            cur_total_cost
-    FROM    feed_buy
-    WHERE   pig_prod_group_id = in_prod_group_id AND feed_type_id = in_feed_type_id;
-        
-    
-    /* Sum for for each pig prod when not yet in group.*/
-    SELECT  SUM(quantity),
-            SUM(kg_total),
-            SUM(total_cost)
-            
-    INTO    cur_feed_quantity_b4,
-            cur_feed_weight_kg_b4,
-            cur_total_cost_b4
-    FROM    feed_buy
-    WHERE   pig_prod_id IN (SELECT pig_prod_id 
-                            FROM production_group_pig_prod 
-                            WHERE production_group_id = in_prod_group_id) AND feed_type_id = in_feed_type_id;
-    
-        
-    IF in_feed_type_id = FEED_TYPE_ID_LACTATING THEN
-        UPDATE pig_production SET 
-            num_b_lactating     = cur_feed_quantity,
-            num_b_kg_lactating  = cur_feed_weight_kg,
-            cost_lactating      = cur_total_cost
-        WHERE id = in_prod_group_id;        
-    END IF;
-
-    
-    IF in_feed_type_id = FEED_TYPE_ID_BOOSTER THEN
-        UPDATE pig_production SET 
-            num_b_booster       = cur_feed_quantity,
-            num_b_kg_booster    = cur_feed_weight_kg,
-            cost_booster        = cur_total_cost
-        WHERE id = in_prod_group_id;
-    END IF;
-
-    
-    IF in_feed_type_id = FEED_TYPE_ID_PRESTARTER THEN 
-        UPDATE pig_production SET 
-            num_b_prestarter    = cur_feed_quantity,
-            num_b_kg_prestarter = cur_feed_weight_kg,
-            cost_prestarter     = cur_total_cost
-        WHERE id = in_prod_group_id;
-    END IF;
-    
-    
-    IF in_feed_type_id = FEED_TYPE_ID_STARTER THEN 
-        UPDATE production_group SET 
-            num_b_starter       = cur_feed_quantity,
-            num_b_kg_starter    = cur_feed_weight_kg,
-            cost_starter        = cur_total_cost
-        WHERE id = in_prod_group_id;
-    END IF;
-    
-    
-    IF in_feed_type_id = FEED_TYPE_ID_GROWER THEN 
-         UPDATE pig_production SET 
-            num_b_grower        = cur_feed_quantity,
-            num_b_kg_grower     = cur_feed_weight_kg,
-            cost_grower         = cur_total_cost
-        WHERE id = in_prod_group_id;
-    END IF;
-    
-    
-    IF in_feed_type_id = FEED_TYPE_ID_GROWER THEN 
-         UPDATE pig_production SET 
-            num_b_grower        = cur_feed_quantity,
-            num_b_kg_grower     = cur_feed_weight_kg,
-            cost_grower         = cur_total_cost
-        WHERE id = in_prod_group_id;
-    END IF;
-    
-    
-    IF in_feed_type_id = FEED_TYPE_ID_FINISHER THEN 
-        UPDATE pig_production SET 
-            num_b_finisher      = cur_feed_quantity,
-            num_b_kg_finisher   = cur_feed_weight_kg,
-            cost_finisher       = cur_total_cost
-        WHERE id = in_prod_group_id;
-    END IF;
-    
-
-END IF;
-
-
-
-
 /* Nothing to do yet if added by pig_farm_id*/
 
 /* Insert INTO account_selection*/
@@ -684,13 +557,6 @@ IF in_pig_prod_id > 0 THEN
 END IF;
 
  
-IF in_prod_group_id > 0 THEN 
-    UPDATE pig_production SET
-        data_ver_num_prod_feed = data_ver_num_prod_feed + 1
-    WHERE id = in_pig_prod_id;
-END IF;
-
-
 
 
 
