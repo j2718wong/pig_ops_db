@@ -46,6 +46,16 @@ DECLARE FLAG_BIT_FEED_BRAND_IS_VERIFIED         INT             DEFAULT 2;
 DECLARE FLAG_BIT_FEED_BUY_IS_DELETED            INT             DEFAULT 1;
 
 
+DECLARE FEED_TYPE_ID_GESTATING                  INT             DEFAULT 1;
+DECLARE FEED_TYPE_ID_LACTATING                  INT             DEFAULT 2;
+DECLARE FEED_TYPE_ID_BOOSTER                    INT             DEFAULT 3;
+DECLARE FEED_TYPE_ID_PRESTARTER                 INT             DEFAULT 4;
+DECLARE FEED_TYPE_ID_STARTER                    INT             DEFAULT 5;
+DECLARE FEED_TYPE_ID_GROWER                     INT             DEFAULT 6;
+DECLARE FEED_TYPE_ID_FINISHER                   INT             DEFAULT 7;
+
+
+
 DECLARE MIN_COUNT_ACCOUNT_FEED_BRAND_IS_VERIFIED    INT         DEFAULT 3;
 DECLARE MIN_COUNT_ACCOUNT_FEED_SUPPLIER_IS_VERIFIED INT         DEFAULT 3;
 
@@ -58,6 +68,7 @@ DECLARE cur_user_group_id                       INT             DEFAULT 0;
 
 DECLARE cur_pig_farm_id                         INT             DEFAULT 0;
 DECLARE cur_pig_farm_account_id                 INT             DEFAULT 0;
+DECLARE cur_pig_farm_country_id                 INT             DEFAULT 0;
 
 DECLARE cur_pf_feed_buy_date_buy                DATE            DEFAULT NULL;
 DECLARE cur_pf_feed_buy_feed_supplier_id        INT             DEFAULT 0;
@@ -71,6 +82,10 @@ DECLARE cur_count                               INT             DEFAULT 0;
 
 DECLARE cur_feed_buy_total_cost                 DECIMAL(10,2)   DEFAULT 0;
 
+
+DECLARE cur_account_last_feed_price_id          INT             DEFAULT 0;
+
+DECLARE cur_ave_price_per_unit_weight           DECIMAL(6,2)    DEFAULT NULL;
 
 DECLARE res_num                                 INT             DEFAULT 0;
 DECLARE res_code                                VARCHAR(80)     DEFAULT '';
@@ -241,6 +256,180 @@ WHERE   pig_farm_feed_buy_id = in_pig_farm_feed_buy_id;
 UPDATE pig_farm_feed_buy SET 
     total_feed_cost =  cur_feed_buy_total_cost
 WHERE id = in_pig_farm_feed_buy_id;
+
+
+/* Get the pig_farm.country_id*/
+SELECT  country_id
+INTO    cur_pig_farm_country_id
+FROM    pig_farm
+WHERE   id = cur_pig_farm_id;
+
+
+/* Compute 5 data point moving average of price per unit weight. 
+
+2026-06-15 Notes:
+1.) Obviously feed prices can vary widely within a country for a specific feed
+type. It maybe possible to have a granular pricing since a farm has address levels
+
+pig_farm
+    - country_id
+    - address_level_1_id (bigger geographic division, a province for example)
+    - address_level_2_id
+    - address_level_3_id (smallest geographic division, a baranggay for example IN PH)
+
+2.) But as of this date, the default feed pricing per unit weight is country wide.
+
+*/
+SELECT AVG(unit_cost / kg_per_unit) AS moving_avg_5
+INTO cur_ave_price_per_unit_weight
+FROM (
+    SELECT unit_cost, kg_per_unit
+    FROM feed_buy a
+    LEFT OUTER JOIN pig_farm_feed_buy b ON a.pig_farm_feed_buy_id = b.id
+    LEFT OUTER JOIN pig_farm c          ON b.pig_farm_id = c.id
+    WHERE a.pig_farm_feed_buy_id IS NOT NULL 
+        AND a.feed_type_id  = in_feed_type_id
+        AND c.country_id    = cur_pig_farm_country_id
+        AND a.unit_cost     > 0
+        AND a.kg_per_unit   > 0
+    ORDER BY a.date_buy DESC
+    LIMIT 5
+) AS last_5;
+    
+
+
+
+/* Update account_last_feed_price*/
+SELECT  id 
+INTO    cur_account_last_feed_price_id
+FROM    account_last_feed_price
+WHERE   account_id = cur_pig_farm_account_id
+LIMIT   1;
+
+
+IF cur_account_last_feed_price_id = 0 THEN 
+    INSERT INTO account_last_feed_price(
+        account_id
+    )
+    VALUES (
+        cur_pig_farm_account_id
+    );
+    SELECT LAST_INSERT_ID() INTO cur_account_last_feed_price_id;
+END IF;
+
+
+IF in_feed_type_id = FEED_TYPE_ID_GESTATING THEN 
+    IF in_kg_per_unit > 0 THEN 
+        UPDATE account_last_feed_price SET
+            last_feed_buy_id        = in_pig_farm_feed_buy_id,
+            price_puwt_gestating    = in_unit_cost / in_kg_per_unit,
+            dt_last_update          = CURRENT_TIMESTAMP
+        WHERE id = cur_account_last_feed_price_id;
+    END IF;
+    
+    /* Update app_country feed average price.*/
+    UPDATE app_country SET
+        ave_price_puwt_gestating = cur_ave_price_per_unit_weight
+    WHERE id = cur_pig_farm_country_id;
+    
+END IF;
+
+IF in_feed_type_id = FEED_TYPE_ID_LACTATING THEN 
+    IF in_kg_per_unit > 0 THEN 
+        UPDATE account_last_feed_price SET
+            last_feed_buy_id        = in_pig_farm_feed_buy_id,
+            price_puwt_lactating    = in_unit_cost / in_kg_per_unit,
+            dt_last_update          = CURRENT_TIMESTAMP
+        WHERE id = cur_account_last_feed_price_id;
+    END IF;
+    
+    /* Update app_country feed average price.*/
+    UPDATE app_country SET
+        ave_price_puwt_lactating = cur_ave_price_per_unit_weight
+    WHERE id = cur_pig_farm_country_id;
+    
+END IF;
+
+IF in_feed_type_id = FEED_TYPE_ID_BOOSTER THEN 
+    IF in_kg_per_unit > 0 THEN 
+        UPDATE account_last_feed_price SET
+            last_feed_buy_id        = in_pig_farm_feed_buy_id,
+            price_puwt_booster      = in_unit_cost / in_kg_per_unit,
+            dt_last_update          = CURRENT_TIMESTAMP
+        WHERE id = cur_account_last_feed_price_id;
+    END IF;
+    
+    /* Update app_country feed average price.*/
+    UPDATE app_country SET
+        ave_price_puwt_booster = cur_ave_price_per_unit_weight
+    WHERE id = cur_pig_farm_country_id;
+    
+END IF;
+
+IF in_feed_type_id = FEED_TYPE_ID_PRESTARTER THEN 
+    IF in_kg_per_unit > 0 THEN 
+        UPDATE account_last_feed_price SET
+            last_feed_buy_id        = in_pig_farm_feed_buy_id,
+            price_puwt_prestarter   = in_unit_cost / in_kg_per_unit,
+            dt_last_update          = CURRENT_TIMESTAMP
+        WHERE id = cur_account_last_feed_price_id;
+    END IF;
+    
+    /* Update app_country feed average price.*/
+    UPDATE app_country SET
+        ave_price_puwt_prestarter = cur_ave_price_per_unit_weight
+    WHERE id = cur_pig_farm_country_id;
+    
+END IF;
+
+IF in_feed_type_id = FEED_TYPE_ID_STARTER THEN 
+    IF in_kg_per_unit > 0 THEN 
+        UPDATE account_last_feed_price SET
+            last_feed_buy_id        = in_pig_farm_feed_buy_id,
+            price_puwt_starter      = in_unit_cost / in_kg_per_unit,
+            dt_last_update          = CURRENT_TIMESTAMP
+        WHERE id = cur_account_last_feed_price_id;
+    END IF;
+    
+    /* Update app_country feed average price.*/
+    UPDATE app_country SET
+        ave_price_puwt_starter = cur_ave_price_per_unit_weight
+    WHERE id = cur_pig_farm_country_id;
+    
+END IF;
+
+IF in_feed_type_id = FEED_TYPE_ID_GROWER THEN 
+    IF in_kg_per_unit > 0 THEN 
+        UPDATE account_last_feed_price SET
+            last_feed_buy_id        = in_pig_farm_feed_buy_id,
+            price_puwt_grower       = in_unit_cost / in_kg_per_unit,
+            dt_last_update          = CURRENT_TIMESTAMP
+        WHERE id = cur_account_last_feed_price_id;
+    END IF;
+    
+    /* Update app_country feed average price.*/
+    UPDATE app_country SET
+        ave_price_puwt_grower = cur_ave_price_per_unit_weight
+    WHERE id = cur_pig_farm_country_id;
+    
+END IF;
+
+IF in_feed_type_id = FEED_TYPE_ID_FINISHER THEN 
+    IF in_kg_per_unit > 0 THEN 
+        UPDATE account_last_feed_price SET
+            last_feed_buy_id        = in_pig_farm_feed_buy_id,
+            price_puwt_finisher     = in_unit_cost / in_kg_per_unit,
+            dt_last_update          = CURRENT_TIMESTAMP
+        WHERE id = cur_account_last_feed_price_id;
+    END IF;
+
+    /* Update app_country feed average price.*/
+    UPDATE app_country SET
+        ave_price_puwt_finisher = cur_ave_price_per_unit_weight
+    WHERE id = cur_pig_farm_country_id;
+    
+END IF;
+
 
 
 

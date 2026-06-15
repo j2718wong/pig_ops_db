@@ -37,7 +37,6 @@ CREATE TABLE `feed_buy` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `pig_farm_id` int(11) DEFAULT NULL,
   `pig_prod_id` int(11) DEFAULT NULL,
-  `pig_prod_group_id` int(11) DEFAULT NULL,
   `date_buy` date DEFAULT NULL,
   `feed_type_id` int(11) DEFAULT NULL,
   `feed_brand_id` int(11) DEFAULT NULL,
@@ -53,8 +52,7 @@ CREATE TABLE `feed_buy` (
   `dt_entry` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `INDEX_PIG_FARM_ID` (`pig_farm_id`),
-  KEY `INDEX_PIG_PROD_ID` (`pig_prod_id`),
-  KEY `INDEX_PIG_PROD_GROUP_ID` (`pig_prod_group_id`)
+  KEY `INDEX_PIG_PROD_ID` (`pig_prod_id`)
 ) ENGINE=InnoDB
 
 
@@ -95,11 +93,11 @@ And the feed_buy table will add two additional keys
 
 
 ALTER TABLE feed_buy ADD COLUMN pig_prod_feed_id  INT UNSIGNED 
-AFTER pig_prod_group_id;
+AFTER pig_prod_id;
 
 
 ALTER TABLE feed_buy ADD COLUMN pig_farm_feed_buy_id  INT UNSIGNED 
-AFTER pig_prod_group_id;
+AFTER pig_prod_feed_id;
 
 
 The feed_buy will look like this now:
@@ -108,7 +106,6 @@ CREATE TABLE `feed_buy` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `pig_farm_id` int(11) DEFAULT NULL,
   `pig_prod_id` int(11) DEFAULT NULL,
-  `pig_prod_group_id` int(11) DEFAULT NULL,
   `pig_prod_feed_id` int(10) unsigned DEFAULT NULL,
   `pig_farm_feed_buy_id` int(10) unsigned DEFAULT NULL,
   `flag` int(10) unsigned DEFAULT NULL,
@@ -128,7 +125,6 @@ CREATE TABLE `feed_buy` (
   PRIMARY KEY (`id`),
   KEY `INDEX_PIG_FARM_ID` (`pig_farm_id`),
   KEY `INDEX_PIG_PROD_ID` (`pig_prod_id`),
-  KEY `INDEX_PIG_PROD_GROUP_ID` (`pig_prod_group_id`),
   KEY `INDEX_PIG_PROD_FEED_ID` (`pig_prod_feed_id`),
   KEY `INDEX_PIG_FARM_FEED_BUY_ID` (`pig_farm_feed_buy_id`)
 ) ENGINE=InnoDB
@@ -160,7 +156,10 @@ buy using key pig_prod_feed_id;
 In this way there is little change in the feed_buy table and still recycled.
 
 
+20260615 Notes:
+1.) 
 
+2.) 
 
 */
 
