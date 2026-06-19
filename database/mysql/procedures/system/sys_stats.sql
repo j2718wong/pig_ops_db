@@ -68,11 +68,14 @@ WHERE   count_sow_boar = 0;
 
 
 /** Count distinct PWA install*/
-SELECT  COUNT(DISTINCT user_id) 
-INTO    cur_count_pwa_install
-FROM    user_track_app_install 
-WHERE   event = 'PWA_INSTALL_ACCEPTED';
-
+SELECT COUNT(*) 
+INTO cur_count_pwa_install
+FROM (
+    SELECT DISTINCT i.user_id 
+    FROM user_track_app_install i
+    INNER JOIN user u ON i.user_id = u.id
+    WHERE i.event = 'PWA_INSTALLED'
+) AS distinct_users;
 
 
 
