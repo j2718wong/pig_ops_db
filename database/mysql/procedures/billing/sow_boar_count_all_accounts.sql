@@ -19,7 +19,7 @@ DECLARE BG_PROCESS_COMPLETED                    INT             DEFAULT 100;
 DECLARE LOV_ID_ACC_MAX_NUM_SOW_BOAR_FREE        INT             DEFAULT 2;
 DECLARE LOV_ID_BILLING_NUM_DAYS_DUE_DATE        INT             DEFAULT 4;
 DECLARE LOV_ID_LAST_BG_PROCESS_RUN_ID_EOD_SOW_BOAR_COUNT INT    DEFAULT 5;
-
+DECLARE LOV_ID_GLOBAL_CHARGING_METHOD           INT             DEFAULT 6;
 
 
 /* account_bill.status id possible values;
@@ -122,6 +122,16 @@ if account_bill.flag.FLAG_BIT_ACC_PARTIAL_PAYMENT_OK = 1,
     billing cycle. 
 
 
+2026-06-27 Notes:
+1.) There is now a system wide option to charge accounts flat rate on per farm
+basis instead of per head breeding pigs;
+
+2.) This is controlled by a database flag 
+a01_list_of_values.id = 6; GLOBAL_CHARGING_METHOD
+
+0 or None = per head of breeding pigs (sow boar gilt)
+1 = per farm charging
+
 
 */
 
@@ -144,7 +154,16 @@ bit 1: FLAG_BIT_ACC_PARTIAL_PAYMENT_OK              INT             DEFAULT 2;
 
 
 
+bit 1: FLAG_BIT_ACC_CHARGING_METHOD                 INT             DEFAULT 16;
+0 = per head charging method
+
+1 = per farm charging method
+
 */
+
+DECLARE FLAG_BIT_ACC_CHARGING_METHOD            INT             DEFAULT 16;
+
+
 
 DECLARE NUM_DAYS_NEXT_SOW_BOAR_COUNT            INT             DEFAULT 30;
 
@@ -164,6 +183,10 @@ DECLARE cur_account_previous_bill_id            INT             DEFAULT 0;
 DECLARE cur_account_current_bill_id             INT             DEFAULT 0;
 DECLARE cur_account_country_id                  INT             DEFAULT 0;
 
+DECLARE cur_charging_method                     INT             DEFAULT 0;
+
+DECLARE cur_num_pig_farm                        INT             DEFAULT 0;
+
 DECLARE cur_country_flag                        INT             DEFAULT 0;
 DECLARE cur_country_currency                    VARCHAR(4)      DEFAULT NULL;
 DECLARE cur_country_tax_rate                    DECIMAL(4,2)    DEFAULT NULL;
@@ -178,12 +201,15 @@ DECLARE cur_obfuscated                          INT             DEFAULT 0;
 DECLARE cur_date_prefix                         VARCHAR(6)      DEFAULT NULL;
 DECLARE cur_checksum                            INT             DEFAULT 0;
 
+DECLARE cur_bill_flag                           INT             DEFAULT 0;
 DECLARE cur_bill_reference                      VARCHAR(50);
 
 DECLARE DEFAULT_PRICE_PER_HEAD                  DECIMAL(6,1)    DEFAULT NULL;
+DECLARE DEFAULT_PRICE_PER_FARM                  DECIMAL(6,1)    DEFAULT NULL;
 DECLARE DEFAULT_CURRENCY_CODE                   VARCHAR(4)      DEFAULT NULL;
 
 DECLARE cur_country_price_per_head              DECIMAL(6,1)    DEFAULT NULL;
+DECLARE cur_country_price_per_farm              DECIMAL(6,1)    DEFAULT NULL;
 DECLARE cur_country_currency_code               VARCHAR(4)      DEFAULT NULL;
 
 
@@ -264,16 +290,27 @@ FROM    a01_list_of_values
 WHERE   id = LOV_ID_BILLING_NUM_DAYS_DUE_DATE;
 
 
+/* Read GLOBAL_CHARGING_METHOD. */
+SELECT  val_int
+INTO    cur_charging_method
+FROM    a01_list_of_values
+WHERE   id = LOV_ID_GLOBAL_CHARGING_METHOD;
+
+
+
+
     
 /* Read default price_per_head and currency first; this should be in USD;
 This is for accounts outside PH, future expansion
 */
     
 SELECT  currency_code,
-        price_per_head
+        price_per_head,
+        price_per_farm
         
 INTO    DEFAULT_CURRENCY_CODE,
-        DEFAULT_PRICE_PER_HEAD
+        DEFAULT_PRICE_PER_HEAD,
+        DEFAULT_PRICE_PER_FARM
         
 
 FROM    biz_pricing
@@ -316,14 +353,21 @@ loop_here: LOOP
     WHERE id = cur_account_id;
 
 
-    /* Get the price_per_head and currency code from account country;
+    SET cur_country_currency_code   = NULL;
+    SET cur_country_price_per_head  = NULL;
+    SET cur_country_price_per_farm  = NULL;
+
+
+    /* Get the price_per_head, price_per_farm and currency code from account country;
     This is a Full table scan, with very few rows.
     */
     SELECT  currency_code,
-            price_per_head
+            price_per_head,
+            price_per_farm
             
     INTO    cur_country_currency_code,
-            cur_country_price_per_head
+            cur_country_price_per_head,
+            cur_country_price_per_farm
 
     FROM    biz_pricing
     WHERE   country_id = cur_account_country_id
@@ -332,39 +376,22 @@ loop_here: LOOP
 
     /* Set to default pricing if price per country cannot be found*/
     IF cur_country_price_per_head IS NULL THEN 
-        SET cur_country_price_per_head  = DEFAULT_PRICE_PER_HEAD;
         SET cur_country_currency_code   = DEFAULT_CURRENCY_CODE;
-    END IF;
-    
-    
-    /* Create account_bill 
-    Need to consider
-    1.) What happens when previous bill was not yet paid?
-    - should it create a new bill?
-    
-    2.) The current planned process is, 
-    - generate bill
-    - send to account admins
-    - wait for payment verification
-    - due date = date bill_generated + 15 days
-    - if bill is not settled after due date, account  is locked, only the payment
-        verification page is viewable in UI
-    
-    - if bill is paid after account locked up, users can acceess again the app.
-    
-    but waht happens to sow_boar_head counts after bill was issued and bill was settled?
+        SET cur_country_price_per_head  = DEFAULT_PRICE_PER_HEAD;
+        SET cur_country_price_per_farm  = DEFAULT_PRICE_PER_FARM;
         
+    END IF;
+  
+  
+    SET cur_bill_flag   = 0;
     
-    */
-   
-
 
     /* Check first the status of the old bill; When account is billed for the  
     first time, account.current_bill_id is 0; 
     When the bill is paid, account.current_bill_id is 0;
     
     
-    To simplify billing logic, if the account has still an not paid outstanding 
+    To simplify billing logic, if the account has still a not paid outstanding 
     bill, no new bill will be created.
     */
     IF cur_account_current_bill_id = 0 THEN 
@@ -377,11 +404,28 @@ loop_here: LOOP
         END IF;
         
         
-        /* Compute bill charge.*/
-        SET cur_bill_charge = cur_num_billable_pigs * cur_country_price_per_head;
-        
-        
-        /* Subtract any discount, referral reward etc later*/
+        IF cur_charging_method > 0 THEN 
+            /* Per pig farm*/
+            
+            SET cur_num_pig_farm = 0;
+            
+            SELECT  COUNT(*) 
+            INTO    cur_num_pig_farm
+            FROM    pig_farm 
+            WHERE   account_id = cur_account_id;
+            
+            SET cur_bill_charge = cur_num_pig_farm * cur_country_price_per_farm;
+            
+            SET cur_bill_flag   = FLAG_BIT_ACC_CHARGING_METHOD;
+            
+        ELSE
+            /* Per head of breeding pigs*/
+            /* Compute bill charge.*/
+            SET cur_bill_charge = cur_num_billable_pigs * cur_country_price_per_head;
+            
+            
+            /* Subtract any discount, referral reward etc later*/
+        END IF;
         
         
         /* Compute taxes, taxable amount and total_amount_due. */
@@ -458,7 +502,9 @@ loop_here: LOOP
             amount,
             taxable_amount,
             taxes,
-            total_amount_due
+            total_amount_due,
+            
+            flag
         ) VALUES(
             cur_bg_process_run_id,
         
@@ -481,7 +527,9 @@ loop_here: LOOP
             cur_bill_charge,
             cur_taxable_amount,
             cur_taxes,
-            cur_total_amount_due
+            cur_total_amount_due,
+            
+            cur_bill_flag
         );
         SELECT LAST_INSERT_ID() INTO cur_account_bill_id;
         
