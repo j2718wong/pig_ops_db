@@ -25,31 +25,32 @@ For the reasoning behind this approach, see the case study in the
 Procedures are grouped by the domain object they primarily operate on.
 Most directories follow a consistent `add` / `update` / `delete` triad.
 
+```
 procedures/
-├── basic_user_check.sql shared authorization primitive
-├── account/ account lifecycle and onboarding
-├── account_pig_ops/ pig-operation fan-out (see below)
-├── account_sow_due_chklst/ sow due checklist operations
-├── billing/ overdue checks and sow/boar counts
-├── feed_balance/ feed inventory reconciliation
-├── feed_buy/ feed purchase records
-├── pig_farm/ farm configuration
-├── pig_farm_feed_buy/ per-farm feed purchases
-├── pig_farm_staff/ staff records
-├── pig_medvac/ medication and vaccination
-├── pig_pen/ pen assignment
-├── pig_prod_feed/ feed consumption per production
-├── pig_prod_notes/ notes attached to production
-├── pig_prod_pig_dead/ mortality records
-├── pig_prod_pig_ops/ pig operations per production
-├── pig_production/ core production lifecycle
-├── production_group/ grouping multiple productions
-├── production_harvest/ harvest and sale records
-├── sow_boar/ sow and boar master records
-├── sow_boar_balance/ sow/boar counts per account
-├── user/ registration, login, verification
-└── user_request/ account join requests
-
+|-- basic_user_check.sql          shared authorization primitive
+|-- account/                      account lifecycle and onboarding
+|-- account_pig_ops/              pig-operation fan-out (see below)
+|-- account_sow_due_chklst/       sow due checklist operations
+|-- billing/                      overdue checks and sow/boar counts
+|-- feed_balance/                 feed inventory reconciliation
+|-- feed_buy/                     feed purchase records
+|-- pig_farm/                     farm configuration
+|-- pig_farm_feed_buy/            per-farm feed purchases
+|-- pig_farm_staff/               staff records
+|-- pig_medvac/                   medication and vaccination
+|-- pig_pen/                      pen assignment
+|-- pig_prod_feed/                feed consumption per production
+|-- pig_prod_notes/               notes attached to production
+|-- pig_prod_pig_dead/            mortality records
+|-- pig_prod_pig_ops/             pig operations per production
+|-- pig_production/               core production lifecycle
+|-- production_group/             grouping multiple productions
+|-- production_harvest/           harvest and sale records
+|-- sow_boar/                     sow and boar master records
+|-- sow_boar_balance/             sow/boar counts per account
+|-- user/                         registration, login, verification
+`-- user_request/                 account join requests
+```
 
 ---
 
