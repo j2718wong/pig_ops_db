@@ -212,8 +212,8 @@ IF in_done_by_user > 0 THEN
             
             added_by_user_id
         ) VALUES (
-            cur_pig_prod_account_id,
-            cur_pig_prod_pig_farm_id,
+            cur_sow_boar_account_id,
+            cur_sow_boar_pig_farm_id,
             in_user_id,
             CONCAT(cur_user_name_first, ' ', cur_user_name_last),
             
